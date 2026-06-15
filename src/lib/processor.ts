@@ -12,15 +12,6 @@ export type ProductRow = {
   trazabilidad: string
 }
 
-export type ProcessResult = {
-  invoiceNum: string
-  dinNum: string
-  trazabilidad: string
-  rows: ProductRow[]
-  xlsxB64: string
-  driveLink: string
-}
-
 const MCP = [{ type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive' }]
 
 export async function callClaude(content: unknown[], useMcp = false): Promise<unknown> {
@@ -30,7 +21,7 @@ export async function callClaude(content: unknown[], useMcp = false): Promise<un
     messages: [{ role: 'user', content }],
   }
   if (useMcp) body.mcp_servers = MCP
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/api/claude', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -70,15 +61,13 @@ export async function parseInvoice(file: File): Promise<{ invoiceNum: string; tr
   const b64 = await toBase64(file)
   const data = await callClaude([
     { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
-    {
-      type: 'text', text: `This commercial invoice may have TWO code columns: a long supplier code (like "09431-Z-BOLT") and a shorter product CODE (like "09431").
+    { type: 'text', text: `This commercial invoice may have TWO code columns: a long supplier code (like "09431-Z-BOLT") and a shorter product CODE (like "09431").
 Respond ONLY with JSON (no markdown):
 {"invoiceNum":"...","trazabilidad":"MM/YYYY","products":[{"modelo":"09431","cantidad":10416},...]}
 - invoiceNum: invoice reference number
 - trazabilidad: invoice date as MM/YYYY
 - modelo: use ONLY the shorter CODE column (numeric), NOT the supplier code with dashes
-- cantidad: quantity in PCS/units`
-    }
+- cantidad: quantity in PCS/units` }
   ])
   const txt = getText(data)
   return JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || '{}')
@@ -88,12 +77,10 @@ export async function parseDIN(file: File): Promise<{ dinNum: string; items: { i
   const b64 = await toBase64(file)
   const data = await callClaude([
     { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
-    {
-      type: 'text', text: `Extract from this Chilean DIN (Declaración de Ingreso) and respond ONLY with JSON (no markdown):
+    { type: 'text', text: `Extract from this Chilean DIN (Declaración de Ingreso) and respond ONLY with JSON (no markdown):
 {"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000},...]}
 - dinNum: NUMERO DE IDENTIFICACION
-- items: all items with item number and PCS quantity (look for "000XXXXX.000000 PCS" pattern)`
-    }
+- items: all items with item number and PCS quantity (look for "000XXXXX.000000 PCS" pattern)` }
   ])
   const txt = getText(data)
   return JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || '{}')
@@ -128,9 +115,7 @@ export async function generateExcel(rows: ProductRow[], invoiceNum: string, dinN
   const prodLines = rows.map((r, i) =>
     `Row ${11 + i}: B="${r.nombre}", C="${r.proto}", D="${r.modelo}", E=${r.cantidad}, G="${r.trazabilidad}", H="${r.qr}", I="${r.sistema}", K="${dinNum}", L="${r.itemDin}", M="${invoiceNum}"`
   ).join('\n')
-
-  const data = await callClaude([{
-    type: 'text', text: `Create an Excel file using Python openpyxl and return ONLY the base64 string. No explanation, no markdown.
+  const data = await callClaude([{ type: 'text', text: `Create an Excel file using Python openpyxl and return ONLY the base64 string. No explanation, no markdown.
 Sheet: "SOLICITUD DE INSPECCION"
 A1="FORM 131-503-001" D1="Rev. 03   Jun-2025"
 B2="SOLICITUD DE CERTIFICACIÓN DE SEGUIMIENTOS MÁS DECLARACIÓN DE CONFORMIDAD"
@@ -143,9 +128,7 @@ B8="Lugar a realizar el muestreo" D8="Santa Margarita #0742, San Bernardo"
 B9="Ensayo solicitado (Seguimiento, Producción, Comercio)" D9="Seguimiento"
 Row 10 headers: A10="N.º de SOLICITUD (Llenado por organismo certificador)" B10="Producto" C10="Protocolo" D10="Modelo" E10="Cantidad del producto, tamaño del lote o partida" F10="N.º de MUESTRA (Llenado por organismo certificador)" G10="Identificación o trazabilidad (N° de serie o mes año)" H10="N° del código QR o N° de certificado de aprobación" I10="Sistema de certificacion" J10="Rango de control (Solo aplica sistema 2)" K10="Nº DIN (Indicar y adjuntarla en mail)" L10="ítems en DIN" M10="Invoice o Factura (Indicar y Adjuntarla en mail)"
 ${prodLines}
-Use: import io,base64,openpyxl; write to BytesIO; print only base64 string.`
-  }])
-
+Use: import io,base64,openpyxl; write to BytesIO; print only base64 string.` }])
   const txt = getText(data)
   return txt.match(/[A-Za-z0-9+/]{100,}={0,2}/)?.[0] || txt.replace(/```[\s\S]*?```/g, '').replace(/\s/g, '').trim()
 }
