@@ -2,11 +2,35 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { parseInvoice, parseDIN, crossWithBD, generateExcel, createDriveFolder, uploadToDrive, todayFormatted, type ProductRow } from '../lib/processor'
+import { parseInvoice, parseDIN, crossWithBD, generateExcel, createDriveFolder, uploadFileToDrive, todayFormatted, toBase64, type ProductRow } from '../lib/processor'
 
 type StepState = { label: string; status: 'pending' | 'running' | 'done' | 'error'; detail?: string }
-
 const DIN_ITEMS = ['', 'ITEM 1','ITEM 2','ITEM 3','ITEM 4','ITEM 5','ITEM 6','ITEM 7','ITEM 8','ITEM 9','ITEM 10','ITEM 11','ITEM 12']
+
+function DropZone({ label, hint, file, onFile }: { label: string; hint: string; file: File | null; onFile: (f: File | null) => void }) {
+  const [drag, setDrag] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  return (
+    <div
+      className={`drop-zone${file ? ' has-file' : ''}${drag ? ' dragging' : ''}`}
+      onDragOver={e => { e.preventDefault(); setDrag(true) }}
+      onDragLeave={() => setDrag(false)}
+      onDrop={e => { e.preventDefault(); setDrag(false); if (e.dataTransfer.files[0]) onFile(e.dataTransfer.files[0]) }}
+      onClick={() => !file && inputRef.current?.click()}
+    >
+      <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }}
+        onChange={e => e.target.files?.[0] && onFile(e.target.files[0])} />
+      <div className="dz-icon">
+        {file ? <CheckCircle2 size={18} color="#4ade80" /> : <Upload size={18} color="rgba(255,255,255,0.3)" />}
+      </div>
+      <div className="dz-text">
+        <div className="dz-label">{file ? file.name : label}</div>
+        <div className="dz-hint">{file ? `${(file.size / 1024).toFixed(1)} KB · listo` : hint}</div>
+      </div>
+      {file && <button className="btn-icon" onClick={e => { e.stopPropagation(); onFile(null) }}><X size={14} /></button>}
+    </div>
+  )
+}
 
 export default function NuevoPage() {
   const navigate = useNavigate()
@@ -20,8 +44,6 @@ export default function NuevoPage() {
   const [dinNum, setDinNum] = useState('')
   const [xlsxB64, setXlsxB64] = useState('')
   const [driveLink, setDriveLink] = useState('')
-  const invRef = useRef<HTMLInputElement>(null)
-  const dinRef = useRef<HTMLInputElement>(null)
 
   const setStep = (i: number, u: Partial<StepState>) =>
     setSteps(prev => prev.map((s, j) => j === i ? { ...s, ...u } : s))
@@ -43,11 +65,13 @@ export default function NuevoPage() {
       { label: 'Generando Excel de solicitud', status: 'pending' },
       { label: 'Creando carpeta en Google Drive', status: 'pending' },
       { label: 'Subiendo Excel a Drive', status: 'pending' },
+      { label: 'Subiendo Invoice PDF a Drive', status: 'pending' },
+      { label: 'Subiendo DIN PDF a Drive', status: 'pending' },
       { label: 'Guardando en historial', status: 'pending' },
     ])
 
     try {
-      // 1. Parse Invoice
+      // 1. Invoice
       setStep(0, { status: 'running' })
       const invData = await parseInvoice(invoiceFile)
       const parsedInvNum = invData.invoiceNum || ''
@@ -55,20 +79,20 @@ export default function NuevoPage() {
       setInvoiceNum(parsedInvNum)
       setStep(0, { status: 'done', detail: `Invoice ${parsedInvNum} · ${invData.products.length} productos` })
 
-      // 2. Parse DIN
+      // 2. DIN
       setStep(1, { status: 'running' })
       const dinData = await parseDIN(dinFile)
       const parsedDinNum = dinData.dinNum || ''
       setDinNum(parsedDinNum)
       setStep(1, { status: 'done', detail: `DIN ${parsedDinNum} · ${dinData.items.length} ítems` })
 
-      // 3. Cross with BD
+      // 3. Cross BD
       setStep(2, { status: 'running' })
       const newRows = crossWithBD(invData.products, dinData.items, parsedTraz)
       setRows(newRows)
       const missing = newRows.filter(r => !r.itemDin).length
       setStep(2, { status: 'done', detail: `${newRows.length} certificables de ${invData.products.length} totales${missing ? ` · ${missing} sin ítem DIN` : ''}` })
-      if (!newRows.length) throw new Error('Ningún producto certificable encontrado en esta Invoice')
+      if (!newRows.length) throw new Error('Ningún producto certificable encontrado')
 
       // 4. Generate Excel
       setStep(3, { status: 'running' })
@@ -79,35 +103,32 @@ export default function NuevoPage() {
       // 5. Create Drive folder
       setStep(4, { status: 'running' })
       const { data: cfg } = await supabase.from('configuracion').select('drive_folder_id').single()
-      const folderId = cfg?.drive_folder_id || ''
-      const newFolderId = await createDriveFolder(parsedInvNum, folderId)
-      setStep(4, { status: 'done', detail: `Carpeta "${parsedInvNum}" creada` })
+      const parentFolderId = cfg?.drive_folder_id || ''
+      const newFolderId = await createDriveFolder(parsedInvNum, parentFolderId)
+      setStep(4, { status: 'done', detail: `Carpeta "${parsedInvNum}" creada en Drive` })
 
       // 6. Upload Excel
       setStep(5, { status: 'running' })
       const fname = `Formato_Solicitud_Seguimiento_${parsedInvNum}.xlsx`
-      const link = await uploadToDrive(b64, fname, newFolderId)
-      setDriveLink(link)
-      setStep(5, { status: 'done', detail: 'Subido correctamente' })
+      const excelLink = await uploadFileToDrive(b64, fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', newFolderId)
+      setDriveLink(excelLink)
+      setStep(5, { status: 'done', detail: 'Excel subido' })
 
-      // 7. Save to Supabase history
+      // 7. Upload Invoice PDF
       setStep(6, { status: 'running' })
+      const invB64 = await toBase64(invoiceFile)
+      await uploadFileToDrive(invB64, invoiceFile.name, 'application/pdf', newFolderId)
+      setStep(6, { status: 'done', detail: 'Invoice subida' })
+
+      // 8. Upload DIN PDF
+      setStep(7, { status: 'running' })
+      const dinB64 = await toBase64(dinFile)
+      await uploadFileToDrive(dinB64, dinFile.name, 'application/pdf', newFolderId)
+      setStep(7, { status: 'done', detail: 'DIN subida' })
+
+      // 9. Save to Supabase (only metadata, no files)
+      setStep(8, { status: 'running' })
       const { data: { user } } = await supabase.auth.getUser()
-
-      // Upload PDFs to Supabase Storage
-      let invoicePath = '', dinPath = ''
-      try {
-        const invUp = await supabase.storage.from('documentos').upload(
-          `${user?.id}/${parsedInvNum}/invoice_${Date.now()}.pdf`, invoiceFile, { upsert: true }
-        )
-        invoicePath = invUp.data?.path || ''
-
-        const dinUp = await supabase.storage.from('documentos').upload(
-          `${user?.id}/${parsedInvNum}/din_${Date.now()}.pdf`, dinFile, { upsert: true }
-        )
-        dinPath = dinUp.data?.path || ''
-      } catch {}
-
       await supabase.from('seguimientos').insert({
         invoice_num: parsedInvNum,
         din_num: parsedDinNum,
@@ -115,14 +136,14 @@ export default function NuevoPage() {
         fecha_solicitud: todayFormatted(),
         productos_count: newRows.length,
         estado: 'completado',
-        drive_link: link,
-        invoice_path: invoicePath,
-        din_path: dinPath,
+        drive_link: excelLink,
+        invoice_path: newFolderId,
+        din_path: newFolderId,
         user_email: user?.email || '',
       })
-      setStep(6, { status: 'done', detail: 'Guardado en historial' })
-
+      setStep(8, { status: 'done', detail: 'Guardado en historial' })
       setDone(true)
+
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
       setSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'error', detail: msg } : s))
@@ -143,31 +164,6 @@ export default function NuevoPage() {
     a.click()
   }
 
-  const DropZone = ({ type, file, setFile, ref: inputRef }: { type: string; file: File | null; setFile: (f: File | null) => void; ref: React.RefObject<HTMLInputElement | null> }) => {
-    const [drag, setDrag] = useState(false)
-    const isInv = type === 'invoice'
-    return (
-      <div
-        className={`drop-zone${file ? ' has-file' : ''}${drag ? ' dragging' : ''}`}
-        onDragOver={e => { e.preventDefault(); setDrag(true) }}
-        onDragLeave={() => setDrag(false)}
-        onDrop={e => { e.preventDefault(); setDrag(false); if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]) }}
-        onClick={() => !file && inputRef.current?.click()}
-      >
-        <input ref={inputRef} type="file" accept=".pdf" style={{ display: 'none' }}
-          onChange={e => e.target.files?.[0] && setFile(e.target.files[0])} />
-        <div className="dz-icon">
-          {file ? <CheckCircle2 size={18} color="#4ade80" /> : <Upload size={18} color="rgba(255,255,255,0.3)" />}
-        </div>
-        <div className="dz-text">
-          <div className="dz-label">{file ? file.name : isInv ? 'Invoice (PDF)' : 'DIN (PDF)'}</div>
-          <div className="dz-hint">{file ? `${(file.size / 1024).toFixed(1)} KB · listo` : isInv ? 'Commercial Invoice del proveedor' : 'Declaración de Ingreso de Aduanas'}</div>
-        </div>
-        {file && <button className="btn-icon" onClick={e => { e.stopPropagation(); setFile(null) }}><X size={14} /></button>}
-      </div>
-    )
-  }
-
   return (
     <div className="page">
       <div className="page-title">Nuevo seguimiento</div>
@@ -175,8 +171,8 @@ export default function NuevoPage() {
 
       {!running && !done && (
         <div className="card">
-          <DropZone type="invoice" file={invoiceFile} setFile={setInvoiceFile} ref={invRef} />
-          <DropZone type="din" file={dinFile} setFile={setDinFile} ref={dinRef} />
+          <DropZone label="Invoice (PDF)" hint="Commercial Invoice del proveedor" file={invoiceFile} onFile={setInvoiceFile} />
+          <DropZone label="DIN (PDF)" hint="Declaración de Ingreso de Aduanas" file={dinFile} onFile={setDinFile} />
           <button className="btn btn-primary btn-full" style={{ marginTop: 4 }}
             disabled={!invoiceFile || !dinFile} onClick={process}>
             <Zap size={15} /> Procesar automáticamente
