@@ -13,7 +13,10 @@ export type ProductRow = {
 }
 
 const MCP = [{ type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive' }]
-const MAX_PDF_SIZE = 4 * 1024 * 1024 // 4MB limit for direct API
+const MAX_PDF_SIZE = 4 * 1024 * 1024 // 4MB
+
+// Wait between API calls to avoid 429 rate limit
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export async function callClaude(content: unknown[], useMcp = false): Promise<unknown> {
   const body: Record<string, unknown> = {
@@ -22,13 +25,25 @@ export async function callClaude(content: unknown[], useMcp = false): Promise<un
     messages: [{ role: 'user', content }],
   }
   if (useMcp) body.mcp_servers = MCP
-  const res = await fetch('/api/claude', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) throw new Error(`API error ${res.status}`)
-  return res.json()
+
+  // Retry up to 3 times on 429
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    if (res.status === 429) {
+      const waitTime = (attempt + 1) * 15000 // 15s, 30s, 45s
+      console.log(`Rate limited, waiting ${waitTime/1000}s...`)
+      await wait(waitTime)
+      continue
+    }
+    if (!res.ok) throw new Error(`API error ${res.status}`)
+    await wait(2000) // 2s pause after every successful call
+    return res.json()
+  }
+  throw new Error('Rate limit exceeded after 3 retries')
 }
 
 export function getText(d: unknown): string {
@@ -58,12 +73,10 @@ export function todayFormatted(): string {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }
 
-// Smart PDF parser — uses server-side text extraction for large files
 async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
   const b64 = await toBase64(file)
 
   if (file.size > MAX_PDF_SIZE) {
-    // Large file: extract text server-side first
     const res = await fetch('/api/extract-pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -72,7 +85,6 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
     if (!res.ok) throw new Error(`PDF extract error ${res.status}`)
     return res.json()
   } else {
-    // Small file: send PDF directly to Claude
     const prompt = type === 'invoice'
       ? `This commercial invoice may have TWO code columns: a long supplier code (like "09431-Z-BOLT") and a shorter product CODE (like "09431").
 Respond ONLY with JSON (no markdown):
@@ -145,7 +157,7 @@ B6="Nombre del representante legal" D6="Cristobal Vigil"
 B7="Rut del representante legal" D7="10.288.069-2"
 B8="Lugar a realizar el muestreo" D8="Santa Margarita #0742, San Bernardo"
 B9="Ensayo solicitado (Seguimiento, Producción, Comercio)" D9="Seguimiento"
-Row 10 headers: A10="N.º de SOLICITUD (Llenado por organismo certificador)" B10="Producto" C10="Protocolo" D10="Modelo" E10="Cantidad del producto, tamaño del lote o partida" F10="N.º de MUESTRA (Llenado por organismo certificador)" G10="Identificación o trazabilidad (N° de serie o mes año)" H10="N° del código QR o N° de certificado de aprobación" I10="Sistema de certificacion" J10="Rango de control (Solo aplica sistema 2)" K10="Nº DIN (Indicar y adjuntarla en mail)" L10="ítems en DIN" M10="Invoice o Factura (Indicar y Adjuntarla en mail)"
+Row 10 headers: A10="N.º de SOLICITUD (Llenado por organismo certificador)" B10="Producto" C10="Protocolo" D10="Modelo" E10="Cantidad del producto, tamaño del lote o partida" F10="N.º de MUESTRA (Llenado por organismo certificador)" G10="Identificación o trazabilidad (N° de serie o mes año)" H10="N° del código QR o N° de certificado de aprobación" I10="Sistema de certificacion" J10="Rango de control (Solo aplica sistema 2)" K10="Rango de control (Solo aplica sistema 2)" K10="Nº DIN (Indicar y adjuntarla en mail)" L10="ítems en DIN" M10="Invoice o Factura (Indicar y Adjuntarla en mail)"
 ${prodLines}
 Use: import io,base64,openpyxl; write to BytesIO; print only base64 string.` }])
   const txt = getText(data)
