@@ -86,17 +86,14 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
     return res.json()
   } else {
     const prompt = type === 'invoice'
-      ? `This commercial invoice may have TWO code columns: a long supplier code (like "09431-Z-BOLT") and a shorter product CODE (like "09431").
-Respond ONLY with JSON (no markdown):
-{"invoiceNum":"...","trazabilidad":"MM/YYYY","products":[{"modelo":"09431","cantidad":10416},...]}
-- invoiceNum: invoice reference number
-- trazabilidad: invoice date as MM/YYYY
-- modelo: use ONLY the shorter CODE column (numeric), NOT the supplier code with dashes
-- cantidad: quantity in PCS/units`
-      : `Extract from this Chilean DIN (Declaración de Ingreso) and respond ONLY with JSON (no markdown):
-{"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000},...]}
-- dinNum: NUMERO DE IDENTIFICACION
-- items: all items with item number and PCS quantity (look for "000XXXXX.000000 PCS" pattern)`
+      ? `Extract from this commercial invoice. The invoice has TWO code columns: a long supplier code (like 09431-Z-BOLT) and a shorter CODE (like 09431).
+Return ONLY a valid JSON object. Use double quotes. No markdown. No extra text. No special characters in values.
+Format: {"invoiceNum":"CH-GR-SE2507","trazabilidad":"03/2026","products":[{"modelo":"09431","cantidad":10416},{"modelo":"09432","cantidad":4536}]}
+Rules: invoiceNum=invoice number, trazabilidad=date as MM/YYYY, modelo=shorter numeric CODE only, cantidad=integer PCS quantity.`
+      : `Extract from this Chilean DIN document.
+Return ONLY a valid JSON object. Use double quotes. No markdown. No extra text.
+Format: {"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000}]}
+Rules: dinNum=NUMERO DE IDENTIFICACION, items=all line items with itemNum as string and quantity as integer PCS.`
 
     return callClaude([
       { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
