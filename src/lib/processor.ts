@@ -202,25 +202,16 @@ export function crossWithBD(
 }
 
 export async function generateExcel(rows: ProductRow[], invoiceNum: string, dinNum: string): Promise<string> {
-  const prodLines = rows.map((r, i) =>
-    `Row ${11 + i}: B="${r.nombre}", C="${r.proto}", D="${r.modelo}", E=${r.cantidad}, G="${r.trazabilidad}", H="${r.qr}", I="${r.sistema}", K="${dinNum}", L="${r.itemDin}", M="${invoiceNum}"`
-  ).join('\n')
-  const data = await callClaude([{ type: 'text', text: `Create an Excel file using Python openpyxl and return ONLY the base64 string. No explanation, no markdown.
-Sheet: "SOLICITUD DE INSPECCION"
-A1="FORM 131-503-001" D1="Rev. 03   Jun-2025"
-B2="SOLICITUD DE CERTIFICACIÓN DE SEGUIMIENTOS MÁS DECLARACIÓN DE CONFORMIDAD"
-B3="Fecha Solicitud" D3="${todayFormatted()}"
-B4="Razón social del solicitante" D4="Representaciones Grantt Ltda"
-B5="RUT del solicitante" D5="99.582.120-6"
-B6="Nombre del representante legal" D6="Cristobal Vigil"
-B7="Rut del representante legal" D7="10.288.069-2"
-B8="Lugar a realizar el muestreo" D8="Santa Margarita #0742, San Bernardo"
-B9="Ensayo solicitado (Seguimiento, Producción, Comercio)" D9="Seguimiento"
-Row 10 headers: A10="N.º de SOLICITUD (Llenado por organismo certificador)" B10="Producto" C10="Protocolo" D10="Modelo" E10="Cantidad del producto, tamaño del lote o partida" F10="N.º de MUESTRA (Llenado por organismo certificador)" G10="Identificación o trazabilidad (N° de serie o mes año)" H10="N° del código QR o N° de certificado de aprobación" I10="Sistema de certificacion" J10="Rango de control (Solo aplica sistema 2)" K10="Rango de control (Solo aplica sistema 2)" K10="Nº DIN (Indicar y adjuntarla en mail)" L10="ítems en DIN" M10="Invoice o Factura (Indicar y Adjuntarla en mail)"
-${prodLines}
-Use: import io,base64,openpyxl; write to BytesIO; print only base64 string.` }])
-  const txt = getText(data)
-  return txt.match(/[A-Za-z0-9+/]{100,}={0,2}/)?.[0] || txt.replace(/```[\s\S]*?```/g, '').replace(/\s/g, '').trim()
+  const today = todayFormatted()
+  const res = await fetch('/api/generate-excel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rows, invoiceNum, dinNum, fechaSolicitud: today }),
+  })
+  if (!res.ok) throw new Error(`Excel generation error ${res.status}`)
+  const data = await res.json()
+  if (!data.base64) throw new Error('No base64 returned from Excel generator')
+  return data.base64
 }
 
 export async function createDriveFolder(invoiceNum: string, parentFolderId?: string): Promise<string> {
