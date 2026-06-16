@@ -1,40 +1,28 @@
-// Extracts text from PDF using pdf-parse and sends only text to Claude
-// This avoids the 413 error for large PDFs
-
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   try {
     const { base64, type } = req.body
-
-    // Convert base64 to buffer
     const buffer = Buffer.from(base64, 'base64')
-
-    // Dynamically import pdf-parse
     const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default
     const pdfData = await pdfParse(buffer)
-    const text = pdfData.text
+    const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 8000)
 
-    // Now send just the text to Claude API
-    const prompt = type === 'din'
-      ? `Extract from this Chilean DIN (Declaración de Ingreso) text and respond ONLY with JSON (no markdown):
-{"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000},...]}
-- dinNum: NUMERO DE IDENTIFICACION (format like 3630XXXXXX-X)
-- items: all items with item number and PCS quantity (look for "000XXXXX.000000 PCS" pattern)
+    const prompt = type === 'invoice'
+      ? `Extract from this commercial invoice text. TWO code columns exist: long supplier code (like 09431-Z-BOLT) and shorter CODE (like 09431).
+Return ONLY a valid JSON object. Use double quotes. No markdown. No extra text.
+Format: {"invoiceNum":"CH-GR-SE2507","trazabilidad":"03/2026","products":[{"modelo":"09431","cantidad":10416}]}
+Rules: invoiceNum=invoice number, trazabilidad=date as MM/YYYY, modelo=shorter numeric CODE only, cantidad=integer PCS.
 
-DIN TEXT:
-${text.substring(0, 8000)}`
-      : `Extract from this commercial invoice text and respond ONLY with JSON (no markdown):
-{"invoiceNum":"...","trazabilidad":"MM/YYYY","products":[{"modelo":"09431","cantidad":10416},...]}
-- invoiceNum: invoice reference number
-- trazabilidad: invoice date as MM/YYYY
-- modelo: use ONLY the shorter CODE column (numeric), NOT the supplier code with dashes
-- cantidad: quantity in PCS/units
+TEXT:
+${text}`
+      : `Extract from this Chilean DIN text.
+Return ONLY a valid JSON object. Use double quotes. No markdown. No extra text.
+Format: {"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000}]}
+Rules: dinNum=NUMERO DE IDENTIFICACION, items=all line items with itemNum as string and quantity as integer PCS.
 
-INVOICE TEXT:
-${text.substring(0, 8000)}`
+TEXT:
+${text}`
 
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -52,9 +40,7 @@ ${text.substring(0, 8000)}`
 
     const data = await claudeRes.json()
     return res.status(claudeRes.status).json(data)
-
   } catch (error) {
-    console.error('PDF extract error:', error)
     return res.status(500).json({ error: error.message })
   }
 }
