@@ -1,10 +1,12 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw } from 'lucide-react'
+import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw, FileSearch, FolderUp } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { parseInvoice, parseDIN, crossWithBD, generateExcel, createDriveFolder, uploadFileToDrive, todayFormatted, toBase64, type ProductRow } from '../lib/processor'
 
 type StepState = { label: string; status: 'pending' | 'running' | 'done' | 'error'; detail?: string }
+type Phase = 'upload' | 'reading' | 'review' | 'generating' | 'done'
+
 const DIN_ITEMS = ['', 'ITEM 1','ITEM 2','ITEM 3','ITEM 4','ITEM 5','ITEM 6','ITEM 7','ITEM 8','ITEM 9','ITEM 10','ITEM 11','ITEM 12']
 
 function DropZone({ label, hint, file, onFile }: { label: string; hint: string; file: File | null; onFile: (f: File | null) => void }) {
@@ -34,34 +36,85 @@ function DropZone({ label, hint, file, onFile }: { label: string; hint: string; 
 
 export default function NuevoPage() {
   const navigate = useNavigate()
+  const [phase, setPhase] = useState<Phase>('upload')
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
   const [dinFile, setDinFile] = useState<File | null>(null)
-  const [steps, setSteps] = useState<StepState[]>([])
-  const [running, setRunning] = useState(false)
-  const [done, setDone] = useState(false)
+
+  // Phase 1 state
+  const [readSteps, setReadSteps] = useState<StepState[]>([])
+  const [reading, setReading] = useState(false)
+
+  // Phase 2 state
   const [rows, setRows] = useState<ProductRow[]>([])
   const [invoiceNum, setInvoiceNum] = useState('')
   const [dinNum, setDinNum] = useState('')
+
+  // Phase 3 state
+  const [genSteps, setGenSteps] = useState<StepState[]>([])
+  const [generating, setGenerating] = useState(false)
   const [xlsxB64, setXlsxB64] = useState('')
   const [driveLink, setDriveLink] = useState('')
 
-  const setStep = (i: number, u: Partial<StepState>) =>
-    setSteps(prev => prev.map((s, j) => j === i ? { ...s, ...u } : s))
+  const setReadStep = (i: number, u: Partial<StepState>) =>
+    setReadSteps(prev => prev.map((s, j) => j === i ? { ...s, ...u } : s))
+
+  const setGenStep = (i: number, u: Partial<StepState>) =>
+    setGenSteps(prev => prev.map((s, j) => j === i ? { ...s, ...u } : s))
 
   const reset = () => {
-    setSteps([]); setRunning(false); setDone(false)
+    setPhase('upload'); setReading(false); setGenerating(false)
+    setReadSteps([]); setGenSteps([])
     setRows([]); setInvoiceNum(''); setDinNum('')
     setXlsxB64(''); setDriveLink('')
     setInvoiceFile(null); setDinFile(null)
   }
 
-  const process = async () => {
+  // PASO 1: Leer documentos
+  const readDocs = async () => {
     if (!invoiceFile || !dinFile) return
-    setRunning(true); setDone(false); setRows([])
-    setSteps([
+    setReading(true)
+    setPhase('reading')
+    setReadSteps([
       { label: 'Leyendo Invoice — extrayendo modelos y cantidades', status: 'pending' },
       { label: 'Leyendo DIN — extrayendo número e ítems', status: 'pending' },
       { label: 'Cruzando con BD Maestra — filtrando certificables', status: 'pending' },
+    ])
+
+    try {
+      setReadStep(0, { status: 'running' })
+      const invData = await parseInvoice(invoiceFile)
+      const parsedInvNum = invData.invoiceNum || ''
+      const parsedTraz = invData.trazabilidad || ''
+      setInvoiceNum(parsedInvNum)
+      setReadStep(0, { status: 'done', detail: `Invoice ${parsedInvNum} · ${invData.products.length} productos` })
+
+      setReadStep(1, { status: 'running' })
+      const dinData = await parseDIN(dinFile)
+      const parsedDinNum = dinData.dinNum || ''
+      setDinNum(parsedDinNum)
+      setReadStep(1, { status: 'done', detail: `DIN ${parsedDinNum} · ${dinData.items.length} ítems` })
+
+      setReadStep(2, { status: 'running' })
+      const newRows = crossWithBD(invData.products, dinData.items, parsedTraz)
+      setRows(newRows)
+      const missing = newRows.filter(r => !r.itemDin).length
+      setReadStep(2, { status: 'done', detail: `${newRows.length} certificables de ${invData.products.length} totales${missing ? ` · ${missing} sin ítem DIN` : ''}` })
+      if (!newRows.length) throw new Error('Ningún producto certificable encontrado')
+
+      setPhase('review')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      setReadSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'error', detail: msg } : s))
+    } finally {
+      setReading(false)
+    }
+  }
+
+  // PASO 2: Generar y subir
+  const generate = async () => {
+    setGenerating(true)
+    setPhase('generating')
+    setGenSteps([
       { label: 'Generando Excel de solicitud', status: 'pending' },
       { label: 'Creando carpeta en Google Drive', status: 'pending' },
       { label: 'Subiendo Excel a Drive', status: 'pending' },
@@ -71,84 +124,55 @@ export default function NuevoPage() {
     ])
 
     try {
-      // 1. Invoice
-      setStep(0, { status: 'running' })
-      const invData = await parseInvoice(invoiceFile)
-      const parsedInvNum = invData.invoiceNum || ''
-      const parsedTraz = invData.trazabilidad || ''
-      setInvoiceNum(parsedInvNum)
-      setStep(0, { status: 'done', detail: `Invoice ${parsedInvNum} · ${invData.products.length} productos` })
-
-      // 2. DIN
-      setStep(1, { status: 'running' })
-      const dinData = await parseDIN(dinFile)
-      const parsedDinNum = dinData.dinNum || ''
-      setDinNum(parsedDinNum)
-      setStep(1, { status: 'done', detail: `DIN ${parsedDinNum} · ${dinData.items.length} ítems` })
-
-      // 3. Cross BD
-      setStep(2, { status: 'running' })
-      const newRows = crossWithBD(invData.products, dinData.items, parsedTraz)
-      setRows(newRows)
-      const missing = newRows.filter(r => !r.itemDin).length
-      setStep(2, { status: 'done', detail: `${newRows.length} certificables de ${invData.products.length} totales${missing ? ` · ${missing} sin ítem DIN` : ''}` })
-      if (!newRows.length) throw new Error('Ningún producto certificable encontrado')
-
-      // 4. Generate Excel
-      setStep(3, { status: 'running' })
-      const b64 = await generateExcel(newRows, parsedInvNum, parsedDinNum)
+      setGenStep(0, { status: 'running' })
+      const b64 = await generateExcel(rows, invoiceNum, dinNum)
       setXlsxB64(b64)
-      setStep(3, { status: 'done', detail: `Excel generado · ${newRows.length} filas` })
+      setGenStep(0, { status: 'done', detail: `${rows.length} filas generadas` })
 
-      // 5. Create Drive folder
-      setStep(4, { status: 'running' })
+      setGenStep(1, { status: 'running' })
       const { data: cfg } = await supabase.from('configuracion').select('drive_folder_id').single()
       const parentFolderId = cfg?.drive_folder_id || ''
-      const newFolderId = await createDriveFolder(parsedInvNum, parentFolderId)
-      setStep(4, { status: 'done', detail: `Carpeta "${parsedInvNum}" creada en Drive` })
+      const newFolderId = await createDriveFolder(invoiceNum, parentFolderId)
+      setGenStep(1, { status: 'done', detail: `Carpeta "${invoiceNum}" creada` })
 
-      // 6. Upload Excel
-      setStep(5, { status: 'running' })
-      const fname = `Formato_Solicitud_Seguimiento_${parsedInvNum}.xlsx`
+      setGenStep(2, { status: 'running' })
+      const fname = `Formato_Solicitud_Seguimiento_${invoiceNum}.xlsx`
       const excelLink = await uploadFileToDrive(b64, fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', newFolderId)
       setDriveLink(excelLink)
-      setStep(5, { status: 'done', detail: 'Excel subido' })
+      setGenStep(2, { status: 'done', detail: 'Excel subido' })
 
-      // 7. Upload Invoice PDF
-      setStep(6, { status: 'running' })
-      const invB64 = await toBase64(invoiceFile)
-      await uploadFileToDrive(invB64, invoiceFile.name, 'application/pdf', newFolderId)
-      setStep(6, { status: 'done', detail: 'Invoice subida' })
+      setGenStep(3, { status: 'running' })
+      if (invoiceFile) {
+        const invB64 = await toBase64(invoiceFile)
+        await uploadFileToDrive(invB64, invoiceFile.name, 'application/pdf', newFolderId)
+      }
+      setGenStep(3, { status: 'done', detail: 'Invoice subida' })
 
-      // 8. Upload DIN PDF
-      setStep(7, { status: 'running' })
-      const dinB64 = await toBase64(dinFile)
-      await uploadFileToDrive(dinB64, dinFile.name, 'application/pdf', newFolderId)
-      setStep(7, { status: 'done', detail: 'DIN subida' })
+      setGenStep(4, { status: 'running' })
+      if (dinFile) {
+        const dinB64 = await toBase64(dinFile)
+        await uploadFileToDrive(dinB64, dinFile.name, 'application/pdf', newFolderId)
+      }
+      setGenStep(4, { status: 'done', detail: 'DIN subida' })
 
-      // 9. Save to Supabase (only metadata, no files)
-      setStep(8, { status: 'running' })
+      setGenStep(5, { status: 'running' })
       const { data: { user } } = await supabase.auth.getUser()
       await supabase.from('seguimientos').insert({
-        invoice_num: parsedInvNum,
-        din_num: parsedDinNum,
-        trazabilidad: parsedTraz,
+        invoice_num: invoiceNum, din_num: dinNum,
+        trazabilidad: rows[0]?.trazabilidad || '',
         fecha_solicitud: todayFormatted(),
-        productos_count: newRows.length,
-        estado: 'completado',
-        drive_link: excelLink,
-        invoice_path: newFolderId,
-        din_path: newFolderId,
-        user_email: user?.email || '',
+        productos_count: rows.length, estado: 'completado',
+        drive_link: excelLink, invoice_path: newFolderId,
+        din_path: newFolderId, user_email: user?.email || '',
       })
-      setStep(8, { status: 'done', detail: 'Guardado en historial' })
-      setDone(true)
+      setGenStep(5, { status: 'done', detail: 'Guardado en historial' })
+      setPhase('done')
 
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
-      setSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'error', detail: msg } : s))
+      setGenSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'error', detail: msg } : s))
     } finally {
-      setRunning(false)
+      setGenerating(false)
     }
   }
 
@@ -164,76 +188,133 @@ export default function NuevoPage() {
     a.click()
   }
 
+  const StepList = ({ steps }: { steps: StepState[] }) => (
+    <div className="steps">
+      {steps.map((s, i) => (
+        <div key={i} className={`step-row step-${s.status}`}>
+          <div style={{ flexShrink: 0, marginTop: 1 }}>
+            {s.status === 'done' && <CheckCircle2 size={16} color="#4ade80" />}
+            {s.status === 'running' && <Loader2 size={16} color="#818cf8" className="spin" />}
+            {s.status === 'error' && <AlertCircle size={16} color="#f87171" />}
+            {s.status === 'pending' && <Circle size={16} color="rgba(255,255,255,0.2)" />}
+          </div>
+          <div>
+            <div className="step-label">{s.label}</div>
+            {s.detail && <div className="step-detail">{s.detail}</div>}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <div className="page">
-      <div className="page-title">Nuevo seguimiento</div>
-      <div className="page-sub">Sube la Invoice y DIN — el resto lo hace la app automáticamente</div>
+      <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
+        <div>
+          <div className="page-title">Nuevo seguimiento</div>
+          <div className="page-sub" style={{ marginBottom: 0 }}>
+            {phase === 'upload' && 'Sube la Invoice y DIN para comenzar'}
+            {phase === 'reading' && 'Leyendo documentos...'}
+            {phase === 'review' && 'Revisa los productos antes de generar'}
+            {phase === 'generating' && 'Generando y subiendo a Drive...'}
+            {phase === 'done' && '¡Proceso completado!'}
+          </div>
+        </div>
+        {phase !== 'upload' && (
+          <button className="btn btn-secondary btn-sm" onClick={reset}>
+            <RefreshCw size={12} /> Nuevo lote
+          </button>
+        )}
+      </div>
 
-      {!running && !done && (
+      {/* Progress indicator */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24, alignItems: 'center' }}>
+        {[
+          { key: 'upload', label: '1. Subir' },
+          { key: 'review', label: '2. Revisar' },
+          { key: 'done', label: '3. Listo' },
+        ].map((step, i) => {
+          const isActive = phase === step.key || (step.key === 'upload' && phase === 'reading') || (step.key === 'review' && phase === 'generating')
+          const isDone = (step.key === 'upload' && ['review','generating','done'].includes(phase)) ||
+                        (step.key === 'review' && ['done'].includes(phase))
+          return (
+            <div key={step.key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {i > 0 && <div style={{ width: 32, height: 1, background: isDone ? 'rgba(74,222,128,0.4)' : 'rgba(255,255,255,0.1)' }} />}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500,
+                background: isDone ? 'rgba(74,222,128,0.15)' : isActive ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.05)',
+                color: isDone ? '#4ade80' : isActive ? '#a5b4fc' : 'rgba(255,255,255,0.3)',
+                border: `1px solid ${isDone ? 'rgba(74,222,128,0.3)' : isActive ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              }}>
+                {isDone ? <CheckCircle2 size={12} /> : null}
+                {step.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* FASE 1: Upload */}
+      {(phase === 'upload' || phase === 'reading') && (
         <div className="card">
           <DropZone label="Invoice (PDF)" hint="Commercial Invoice del proveedor" file={invoiceFile} onFile={setInvoiceFile} />
           <DropZone label="DIN (PDF)" hint="Declaración de Ingreso de Aduanas" file={dinFile} onFile={setDinFile} />
-          <button className="btn btn-primary btn-full" style={{ marginTop: 4 }}
-            disabled={!invoiceFile || !dinFile} onClick={process}>
-            <Zap size={15} /> Procesar automáticamente
-          </button>
+
+          {readSteps.length === 0 ? (
+            <button className="btn btn-primary btn-full" style={{ marginTop: 4 }}
+              disabled={!invoiceFile || !dinFile || reading} onClick={readDocs}>
+              <FileSearch size={15} /> Leer documentos
+            </button>
+          ) : (
+            <div style={{ marginTop: 12 }}>
+              <StepList steps={readSteps} />
+            </div>
+          )}
         </div>
       )}
 
-      {(running || done || steps.length > 0) && (
+      {/* FASE 2: Review */}
+      {(phase === 'review' || phase === 'generating' || phase === 'done') && (
         <div className="card">
           <div className="card-header">
-            <div className="card-title">
-              {running ? 'Procesando...' : done ? '¡Listo!' : 'Proceso interrumpido'}
+            <div>
+              <div className="card-title">{rows.length} producto{rows.length !== 1 ? 's' : ''} certificables</div>
+              <div className="text-xs text-muted">Invoice {invoiceNum} · DIN {dinNum}</div>
             </div>
-            {!running && (
-              <button className="btn btn-secondary btn-sm" onClick={reset}>
-                <RefreshCw size={12} /> Nuevo lote
-              </button>
+            {rows.filter(r => !r.itemDin).length > 0 && (
+              <span className="badge badge-amber">{rows.filter(r => !r.itemDin).length} sin ítem DIN</span>
             )}
           </div>
 
-          <div className="steps">
-            {steps.map((s, i) => (
-              <div key={i} className={`step-row step-${s.status}`}>
-                <div style={{ flexShrink: 0, marginTop: 1 }}>
-                  {s.status === 'done' && <CheckCircle2 size={16} color="#4ade80" />}
-                  {s.status === 'running' && <Loader2 size={16} color="#818cf8" className="spin" />}
-                  {s.status === 'error' && <AlertCircle size={16} color="#f87171" />}
-                  {s.status === 'pending' && <Circle size={16} color="rgba(255,255,255,0.2)" />}
-                </div>
-                <div>
-                  <div className="step-label">{s.label}</div>
-                  {s.detail && <div className="step-detail">{s.detail}</div>}
-                </div>
+          <div style={{ marginBottom: 16 }}>
+            {rows.map(r => (
+              <div key={r.id} className={`prod-row${r.itemDin ? '' : ' prod-warn'}`}>
+                <span className="prod-code">{r.modelo}</span>
+                <span className="prod-name">{r.nombre}</span>
+                <span className="prod-qty">{r.cantidad.toLocaleString()}</span>
+                <select
+                  className={`din-select${r.itemDin ? '' : ' din-missing'}`}
+                  value={r.itemDin}
+                  disabled={phase === 'generating' || phase === 'done'}
+                  onChange={e => setRows(prev => prev.map(x => x.id === r.id ? { ...x, itemDin: e.target.value } : x))}>
+                  {DIN_ITEMS.map(o => <option key={o} value={o}>{o || '— Ítem DIN —'}</option>)}
+                </select>
               </div>
             ))}
           </div>
 
-          {rows.length > 0 && (
-            <>
-              <hr className="divider" />
-              <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
-                <span className="text-sm" style={{ fontWeight: 500 }}>{rows.length} producto{rows.length !== 1 ? 's' : ''} certificable{rows.length !== 1 ? 's' : ''}</span>
-                {rows.filter(r => !r.itemDin).length > 0 && (
-                  <span className="badge badge-amber">{rows.filter(r => !r.itemDin).length} sin ítem DIN</span>
-                )}
-              </div>
-              {rows.map(r => (
-                <div key={r.id} className={`prod-row${r.itemDin ? '' : ' prod-warn'}`}>
-                  <span className="prod-code">{r.modelo}</span>
-                  <span className="prod-name">{r.nombre}</span>
-                  <span className="prod-qty">{r.cantidad.toLocaleString()}</span>
-                  <select className={`din-select${r.itemDin ? '' : ' din-missing'}`} value={r.itemDin}
-                    onChange={e => setRows(prev => prev.map(x => x.id === r.id ? { ...x, itemDin: e.target.value } : x))}>
-                    {DIN_ITEMS.map(o => <option key={o} value={o}>{o || '— Ítem DIN —'}</option>)}
-                  </select>
-                </div>
-              ))}
-            </>
+          {phase === 'review' && (
+            <button className="btn btn-primary btn-full" onClick={generate}>
+              <FolderUp size={15} /> Generar Excel y subir a Drive
+            </button>
           )}
 
-          {done && (
+          {(phase === 'generating' || phase === 'done') && genSteps.length > 0 && (
+            <StepList steps={genSteps} />
+          )}
+
+          {phase === 'done' && (
             <>
               <hr className="divider" />
               <div className="summary-grid">
