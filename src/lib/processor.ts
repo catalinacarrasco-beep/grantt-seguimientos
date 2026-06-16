@@ -105,16 +105,35 @@ Respond ONLY with JSON (no markdown):
   }
 }
 
+function safeParseJSON(txt: string): Record<string, unknown> {
+  // Try direct parse first
+  const jsonMatch = txt.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) return {}
+  try {
+    return JSON.parse(jsonMatch[0])
+  } catch {
+    // Clean control characters and try again
+    const cleaned = jsonMatch[0]
+      .replace(/[\x00-\x1F\x7F]/g, ' ')  // remove control chars
+      .replace(/,\s*([\]\}])/g, '$1')       // remove trailing commas
+    try {
+      return JSON.parse(cleaned)
+    } catch {
+      return {}
+    }
+  }
+}
+
 export async function parseInvoice(file: File): Promise<{ invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }> {
   const data = await parsePDF(file, 'invoice')
   const txt = getText(data)
-  return JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || '{}')
+  return safeParseJSON(txt) as { invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }
 }
 
 export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number }[] }> {
   const data = await parsePDF(file, 'din')
   const txt = getText(data)
-  return JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || '{}')
+  return safeParseJSON(txt) as { dinNum: string; items: { itemNum: string; quantity: number }[] }
 }
 
 function findSubsetSumAssignments(
