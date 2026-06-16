@@ -117,29 +117,72 @@ export async function parseDIN(file: File): Promise<{ dinNum: string; items: { i
   return JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || '{}')
 }
 
+function findSubsetSumAssignments(
+  certProducts: { modelo: string; cantidad: number }[],
+  dinItems: { itemNum: string; quantity: number }[]
+): Record<string, string> {
+  const assignments: Record<string, string> = {}
+  for (const p of certProducts) assignments[p.modelo] = ''
+
+  // Sort DIN items smallest first for efficiency
+  const sortedDin = [...dinItems].sort((a, b) => a.quantity - b.quantity)
+
+  for (const din of sortedDin) {
+    const target = din.quantity
+    const itemLabel = `ITEM ${din.itemNum}`
+    const unassigned = certProducts.filter(p => !assignments[p.modelo])
+    let found = false
+
+    // Try subsets of size 1, 2, 3...
+    for (let size = 1; size <= unassigned.length && !found; size++) {
+      const combos = getCombinations(unassigned, size)
+      for (const combo of combos) {
+        if (combo.reduce((sum, p) => sum + p.cantidad, 0) === target) {
+          for (const p of combo) assignments[p.modelo] = itemLabel
+          found = true
+          break
+        }
+      }
+    }
+  }
+  return assignments
+}
+
+function getCombinations<T>(arr: T[], size: number): T[][] {
+  if (size === 1) return arr.map(x => [x])
+  const result: T[][] = []
+  for (let i = 0; i <= arr.length - size; i++) {
+    const rest = getCombinations(arr.slice(i + 1), size - 1)
+    for (const combo of rest) result.push([arr[i], ...combo])
+  }
+  return result
+}
+
 export function crossWithBD(
   invProducts: { modelo: string; cantidad: number }[],
   dinItems: { itemNum: string; quantity: number }[],
   trazabilidad: string
 ): ProductRow[] {
-  const rows: ProductRow[] = []
-  for (const prod of invProducts) {
-    const entry = lookupProduct(prod.modelo)
-    if (!entry) continue
-    let bestItem = '', bestDiff = Infinity
-    for (const di of dinItems) {
-      const diff = Math.abs(di.quantity - prod.cantidad)
-      if (diff < bestDiff) { bestDiff = diff; bestItem = `ITEM ${di.itemNum}` }
-    }
-    const matched = bestDiff < prod.cantidad * 0.6 ? bestItem : ''
-    rows.push({
+  // First filter only certifiable products
+  const certifiable = invProducts.filter(p => lookupProduct(p.modelo) !== null)
+
+  // Find exact subset-sum assignments
+  const assignments = findSubsetSumAssignments(certifiable, dinItems)
+
+  return certifiable.map(prod => {
+    const entry = lookupProduct(prod.modelo)!
+    return {
       id: Math.random().toString(36).slice(2),
-      modelo: prod.modelo, cantidad: prod.cantidad,
-      itemDin: matched, proto: entry.proto, nombre: entry.nombre,
-      qr: String(entry.qr), sistema: entry.sistema, trazabilidad,
-    })
-  }
-  return rows
+      modelo: prod.modelo,
+      cantidad: prod.cantidad,
+      itemDin: assignments[prod.modelo] || '',
+      proto: entry.proto,
+      nombre: entry.nombre,
+      qr: String(entry.qr),
+      sistema: entry.sistema,
+      trazabilidad,
+    }
+  })
 }
 
 export async function generateExcel(rows: ProductRow[], invoiceNum: string, dinNum: string): Promise<string> {
