@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw, FileSearch, FolderUp } from 'lucide-react'
+import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw, FileSearch, FolderUp, FolderOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { parseInvoice, parseDIN, crossWithBD, generateExcel, createDriveFolder, uploadFileToDrive, todayFormatted, toBase64, type ProductRow } from '../lib/processor'
 
@@ -54,6 +54,7 @@ export default function NuevoPage() {
   const [generating, setGenerating] = useState(false)
   const [xlsxB64, setXlsxB64] = useState('')
   const [driveLink, setDriveLink] = useState('')
+  const [targetFolderId, setTargetFolderId] = useState('')
 
   const setReadStep = (i: number, u: Partial<StepState>) =>
     setReadSteps(prev => prev.map((s, j) => j === i ? { ...s, ...u } : s))
@@ -65,7 +66,7 @@ export default function NuevoPage() {
     setPhase('upload'); setReading(false); setGenerating(false)
     setReadSteps([]); setGenSteps([])
     setRows([]); setInvoiceNum(''); setDinNum('')
-    setXlsxB64(''); setDriveLink('')
+    setXlsxB64(''); setDriveLink(''); setTargetFolderId('')
     setInvoiceFile(null); setDinFile(null)
   }
 
@@ -130,15 +131,9 @@ export default function NuevoPage() {
       setGenStep(0, { status: 'done', detail: `${rows.length} filas generadas` })
 
       setGenStep(1, { status: 'running' })
-      const { data: cfg } = await supabase.from('configuracion').select('drive_folder_id').single()
-      const parentFolderId = cfg?.drive_folder_id || ''
-      // Try to create subfolder, fallback to parent folder if fails
-      let newFolderId = parentFolderId
-      try {
-        const createdId = await createDriveFolder(invoiceNum, parentFolderId)
-        if (createdId) newFolderId = createdId
-      } catch {}
-      setGenStep(1, { status: 'done', detail: newFolderId !== parentFolderId ? `Carpeta "${invoiceNum}" creada` : `Usando carpeta principal` })
+      // Use the folder ID entered by user in the form
+      const newFolderId = targetFolderId.trim()
+      setGenStep(1, { status: 'done', detail: newFolderId ? `Usando carpeta Drive configurada` : `Sin carpeta — subiendo a raíz` })
 
       setGenStep(2, { status: 'running' })
       const fname = `Formato_Solicitud_Seguimiento_${invoiceNum}.xlsx`
