@@ -208,9 +208,21 @@ Use: import io,base64,openpyxl; write to BytesIO; print only base64 string.` }])
 }
 
 export async function createDriveFolder(invoiceNum: string, parentFolderId?: string): Promise<string> {
+  // Try with parent folder first
+  if (parentFolderId) {
+    try {
+      const data = await callClaude([{
+        type: 'text',
+        text: `Create a folder named "${invoiceNum}" inside Google Drive folder with ID "${parentFolderId}". Return only the new folder ID as plain text.`
+      }], true)
+      const result = getMcpResult(data)
+      if (result?.id) return result.id as string
+    } catch {}
+  }
+  // Fallback: create in root
   const data = await callClaude([{
     type: 'text',
-    text: `Create a folder named "${invoiceNum}" in Google Drive${parentFolderId ? ` inside folder ID "${parentFolderId}"` : ''}. Return only the new folder ID.`
+    text: `Create a folder named "${invoiceNum}" in the root of Google Drive. Return only the new folder ID as plain text.`
   }], true)
   const result = getMcpResult(data)
   return (result?.id as string) || ''
