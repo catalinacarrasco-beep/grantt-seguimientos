@@ -208,33 +208,25 @@ Use: import io,base64,openpyxl; write to BytesIO; print only base64 string.` }])
 }
 
 export async function createDriveFolder(invoiceNum: string, parentFolderId?: string): Promise<string> {
-  // Try with parent folder first
-  if (parentFolderId) {
-    try {
-      const data = await callClaude([{
-        type: 'text',
-        text: `Create a folder named "${invoiceNum}" inside Google Drive folder with ID "${parentFolderId}". Return only the new folder ID as plain text.`
-      }], true)
-      const result = getMcpResult(data)
-      if (result?.id) return result.id as string
-    } catch {}
-  }
-  // Fallback: create in root
-  const data = await callClaude([{
-    type: 'text',
-    text: `Create a folder named "${invoiceNum}" in the root of Google Drive. Return only the new folder ID as plain text.`
-  }], true)
-  const result = getMcpResult(data)
-  return (result?.id as string) || ''
+  const res = await fetch('/api/drive', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'create_folder', params: { name: invoiceNum, parentId: parentFolderId || '' } }),
+  })
+  if (!res.ok) throw new Error(`Drive folder error ${res.status}`)
+  const data = await res.json()
+  return (data.id as string) || ''
 }
 
 export async function uploadFileToDrive(b64: string, fileName: string, mimeType: string, folderId: string): Promise<string> {
-  const data = await callClaude([{
-    type: 'text',
-    text: `Upload a file named "${fileName}" with mime type "${mimeType}" to Google Drive folder ID "${folderId}". Base64 content: ${b64}. Return the file's webViewLink.`
-  }], true)
-  const result = getMcpResult(data)
-  return (result?.webViewLink as string) || (result?.id ? `https://drive.google.com/file/d/${result.id}/view` : '')
+  const res = await fetch('/api/drive', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'upload_file', params: { name: fileName, base64: b64, mimeType, parentId: folderId } }),
+  })
+  if (!res.ok) throw new Error(`Drive upload error ${res.status}`)
+  const data = await res.json()
+  return (data.webViewLink as string) || (data.id ? `https://drive.google.com/file/d/${data.id}/view` : '')
 }
 
 export async function uploadToDrive(b64: string, fileName: string, folderId?: string): Promise<string> {
