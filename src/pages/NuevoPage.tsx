@@ -261,6 +261,22 @@ export default function NuevoPage() {
           <DropZone label="Invoice (PDF)" hint="Commercial Invoice del proveedor" file={invoiceFile} onFile={setInvoiceFile} />
           <DropZone label="DIN (PDF)" hint="Declaración de Ingreso de Aduanas" file={dinFile} onFile={setDinFile} />
 
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <FolderOpen size={11} /> ID carpeta de destino en Google Drive
+            </label>
+            <input
+              className="field-input"
+              value={targetFolderId}
+              onChange={e => setTargetFolderId(e.target.value)}
+              placeholder="Pega el ID de la carpeta donde se guardarán los archivos"
+              style={{ fontSize: 12 }}
+            />
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>
+              drive.google.com/drive/folders/<span style={{ color: 'rgba(99,102,241,0.6)' }}>ESTE_ES_EL_ID</span>
+            </div>
+          </div>
+
           {readSteps.length === 0 ? (
             <button className="btn btn-primary btn-full" style={{ marginTop: 4 }}
               disabled={!invoiceFile || !dinFile || reading} onClick={readDocs}>
