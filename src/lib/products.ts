@@ -13,7 +13,10 @@ const PRODUCTS_DB = productsRaw as Record<string, ProductEntry>
 const NO_CERT_CODES = new Set((noCertRaw as string[]).map(c => c.trim().toUpperCase()))
 
 function norm(cod: unknown): string {
-  const s = String(cod).trim().replace(/\.0+$/, '')
+  let s = String(cod).trim().replace(/\.0+$/, '')
+  // Normalize spaces around dashes and standalone spaces to dashes
+  // e.g. "HX PLPE27A-B" -> "HX-PLPE27A-B"
+  s = s.replace(/\s*-\s*/g, '-').replace(/\s+/g, '-')
   return /^\d+$/.test(s) ? String(parseInt(s, 10)) : s.toUpperCase()
 }
 
