@@ -1,4 +1,5 @@
 import productsRaw from './productsDB.json'
+import noCertRaw from './noChertCodes.json'
 
 export type ProductEntry = {
   nombre: string
@@ -9,6 +10,7 @@ export type ProductEntry = {
 }
 
 const PRODUCTS_DB = productsRaw as Record<string, ProductEntry>
+const NO_CERT_CODES = new Set((noCertRaw as string[]).map(c => c.trim().toUpperCase()))
 
 function norm(cod: unknown): string {
   const s = String(cod).trim().replace(/\.0+$/, '')
@@ -21,9 +23,18 @@ for (const [k, v] of Object.entries(PRODUCTS_DB)) {
 }
 
 export function lookupProduct(codigo: string): ProductEntry | null {
-  return DB_INDEX[norm(codigo)] || null
+  const normalised = norm(codigo)
+  // Check blacklist first — fast skip
+  if (NO_CERT_CODES.has(normalised) || NO_CERT_CODES.has(codigo.trim().toUpperCase())) {
+    return null
+  }
+  return DB_INDEX[normalised] || null
 }
 
 export function getCertifiableCount(): number {
   return Object.keys(DB_INDEX).length
+}
+
+export function getNoCertCount(): number {
+  return NO_CERT_CODES.size
 }
