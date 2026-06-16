@@ -13,6 +13,7 @@ export type ProductRow = {
 }
 
 const MCP = [{ type: 'url', url: 'https://drivemcp.googleapis.com/mcp/v1', name: 'google-drive' }]
+const MAX_PDF_SIZE = 4 * 1024 * 1024 // 4MB limit for direct API
 
 export async function callClaude(content: unknown[], useMcp = false): Promise<unknown> {
   const body: Record<string, unknown> = {
@@ -57,31 +58,49 @@ export function todayFormatted(): string {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }
 
-export async function parseInvoice(file: File): Promise<{ invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }> {
+// Smart PDF parser — uses server-side text extraction for large files
+async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
   const b64 = await toBase64(file)
-  const data = await callClaude([
-    { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
-    { type: 'text', text: `This commercial invoice may have TWO code columns: a long supplier code (like "09431-Z-BOLT") and a shorter product CODE (like "09431").
+
+  if (file.size > MAX_PDF_SIZE) {
+    // Large file: extract text server-side first
+    const res = await fetch('/api/extract-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64: b64, type }),
+    })
+    if (!res.ok) throw new Error(`PDF extract error ${res.status}`)
+    return res.json()
+  } else {
+    // Small file: send PDF directly to Claude
+    const prompt = type === 'invoice'
+      ? `This commercial invoice may have TWO code columns: a long supplier code (like "09431-Z-BOLT") and a shorter product CODE (like "09431").
 Respond ONLY with JSON (no markdown):
 {"invoiceNum":"...","trazabilidad":"MM/YYYY","products":[{"modelo":"09431","cantidad":10416},...]}
 - invoiceNum: invoice reference number
 - trazabilidad: invoice date as MM/YYYY
 - modelo: use ONLY the shorter CODE column (numeric), NOT the supplier code with dashes
-- cantidad: quantity in PCS/units` }
-  ])
+- cantidad: quantity in PCS/units`
+      : `Extract from this Chilean DIN (Declaración de Ingreso) and respond ONLY with JSON (no markdown):
+{"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000},...]}
+- dinNum: NUMERO DE IDENTIFICACION
+- items: all items with item number and PCS quantity (look for "000XXXXX.000000 PCS" pattern)`
+
+    return callClaude([
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
+      { type: 'text', text: prompt }
+    ])
+  }
+}
+
+export async function parseInvoice(file: File): Promise<{ invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }> {
+  const data = await parsePDF(file, 'invoice')
   const txt = getText(data)
   return JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || '{}')
 }
 
 export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number }[] }> {
-  const b64 = await toBase64(file)
-  const data = await callClaude([
-    { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
-    { type: 'text', text: `Extract from this Chilean DIN (Declaración de Ingreso) and respond ONLY with JSON (no markdown):
-{"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000},...]}
-- dinNum: NUMERO DE IDENTIFICACION
-- items: all items with item number and PCS quantity (look for "000XXXXX.000000 PCS" pattern)` }
-  ])
+  const data = await parsePDF(file, 'din')
   const txt = getText(data)
   return JSON.parse(txt.match(/\{[\s\S]*\}/)?.[0] || '{}')
 }
