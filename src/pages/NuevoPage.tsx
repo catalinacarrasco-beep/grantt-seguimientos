@@ -116,7 +116,7 @@ export default function NuevoPage() {
     setPhase('generating')
     setGenSteps([
       { label: 'Generando Excel de solicitud', status: 'pending' },
-      { label: 'Creando carpeta en Google Drive', status: 'pending' },
+      { label: 'Preparando carpeta en Google Drive', status: 'pending' },
       { label: 'Subiendo Excel a Drive', status: 'pending' },
       { label: 'Subiendo Invoice PDF a Drive', status: 'pending' },
       { label: 'Subiendo DIN PDF a Drive', status: 'pending' },
@@ -132,8 +132,13 @@ export default function NuevoPage() {
       setGenStep(1, { status: 'running' })
       const { data: cfg } = await supabase.from('configuracion').select('drive_folder_id').single()
       const parentFolderId = cfg?.drive_folder_id || ''
-      const newFolderId = await createDriveFolder(invoiceNum, parentFolderId)
-      setGenStep(1, { status: 'done', detail: `Carpeta "${invoiceNum}" creada` })
+      // Try to create subfolder, fallback to parent folder if fails
+      let newFolderId = parentFolderId
+      try {
+        const createdId = await createDriveFolder(invoiceNum, parentFolderId)
+        if (createdId) newFolderId = createdId
+      } catch {}
+      setGenStep(1, { status: 'done', detail: newFolderId !== parentFolderId ? `Carpeta "${invoiceNum}" creada` : `Usando carpeta principal` })
 
       setGenStep(2, { status: 'running' })
       const fname = `Formato_Solicitud_Seguimiento_${invoiceNum}.xlsx`
