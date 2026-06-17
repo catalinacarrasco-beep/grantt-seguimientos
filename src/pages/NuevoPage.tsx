@@ -136,7 +136,7 @@ export default function NuevoPage() {
       setGenStep(1, { status: 'done', detail: newFolderId ? `Usando carpeta Drive configurada` : `Sin carpeta — subiendo a raíz` })
 
       setGenStep(2, { status: 'running' })
-      const fname = `Formato_Solicitud_Seguimiento_${invoiceNum}.xlsx`
+      const fname = `Formato_Solicitud_Seguimiento_${invoiceNum}.xls`
       const excelLink = await uploadFileToDrive(b64, fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', newFolderId)
       setDriveLink(excelLink)
       setGenStep(2, { status: 'done', detail: 'Excel subido' })
@@ -182,8 +182,8 @@ export default function NuevoPage() {
     const arr = new Uint8Array(bytes.length)
     for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i)
     const a = Object.assign(document.createElement('a'), {
-      href: URL.createObjectURL(new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })),
-      download: `Formato_Solicitud_Seguimiento_${invoiceNum}.xlsx`,
+      href: URL.createObjectURL(new Blob([arr], { type: 'application/vnd.ms-excel' })),
+      download: `Formato_Solicitud_Seguimiento_${invoiceNum}.xls`,
     })
     a.click()
   }
