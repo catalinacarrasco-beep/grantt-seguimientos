@@ -95,10 +95,12 @@ Format: {"invoiceNum":"26FS-0301-3","trazabilidad":"04/2026","products":[{"model
 - cantidad: integer PCS quantity only`
       : `Extract from this Chilean DIN (Declaracion de Ingreso de Aduanas).
 Return ONLY valid JSON, no markdown, no extra text.
-Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160},{"itemNum":"2","quantity":5000}]}
+Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"description":"PORTALAMPARAS E27"},{"itemNum":"2","quantity":5000,"description":"INTERRUPTORES"}]}
 - dinNum: NUMERO DE IDENTIFICACION (format XXXXXXXXXX-X)
-- items: ALL line items. quantity must be integer PCS (look for patterns like "000017400.000000 PCS" -> 17400, or "17.400,000 PCS" -> 17400)
-- quantity MUST be integer, never decimal`
+- items: ALL line items with their description in uppercase
+- quantity must be integer PCS (look for patterns like "000017400.000000 PCS" -> 17400, or "17.400,000 PCS" -> 17400)
+- quantity MUST be integer, never decimal
+- IMPORTANT: Exclude any items whose description contains words related to PVC conduit, cable trunking, or accessories such as: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE`
 
     return callClaude([
       { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
@@ -132,10 +134,38 @@ export async function parseInvoice(file: File): Promise<{ invoiceNum: string; tr
   return safeParseJSON(txt) as { invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }
 }
 
-export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number }[] }> {
+const EXCLUDED_DIN_KEYWORDS = [
+  'PVC', 'CANALETA', 'CANALETAS', 'TRUNKING', 'DUCTO', 'DUCTOS',
+  'CONDUIT', 'ACCESORIO', 'ACCESORIOS', 'FITTING', 'FITTINGS',
+  'BRACKET', 'CLIPS', 'TAPA', 'TAPAS', 'UNION', 'UNIONES',
+  'CURVA', 'CURVAS', 'TEE',
+]
+
+function isExcludedDinItem(description: string): boolean {
+  const upper = description.toUpperCase()
+  return EXCLUDED_DIN_KEYWORDS.some(kw => upper.includes(kw))
+}
+
+export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number; description?: string }[] }> {
   const data = await parsePDF(file, 'din')
   const txt = getText(data)
-  return safeParseJSON(txt) as { dinNum: string; items: { itemNum: string; quantity: number }[] }
+  const raw = safeParseJSON(txt) as { dinNum: string; items: { itemNum: string; quantity: number; description?: string }[] }
+
+  // Second line of defense: filter out canaletas/PVC regardless of what Claude returned
+  if (raw.items) {
+    const before = raw.items.length
+    raw.items = raw.items.filter(item => {
+      if (isExcludedDinItem(item.description || '')) {
+        console.log(`[DIN] Descartando ítem ${item.itemNum} (${item.description})`)
+        return false
+      }
+      return true
+    })
+    if (raw.items.length < before)
+      console.log(`[DIN] Filtrados ${before - raw.items.length} ítems excluidos, quedan ${raw.items.length}`)
+  }
+
+  return raw
 }
 
 function findSubsetSumAssignments(
@@ -146,6 +176,9 @@ function findSubsetSumAssignments(
   // Normalize all quantities to integers to avoid float comparison issues
   const products = certProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
   for (const p of products) assignments[p.modelo] = ''
+
+  console.log('[SubsetSum] Productos certificables:', products.map(p => `${p.modelo}=${p.cantidad}`).join(', '))
+  console.log('[SubsetSum] Ítems DIN:', dinItems.map(d => `ITEM ${d.itemNum}=${Math.round(d.quantity)}`).join(', '))
 
   // Sort DIN items smallest first so small items don't get consumed by larger ones
   const sortedDin = [...dinItems].sort((a, b) => a.quantity - b.quantity)
@@ -161,12 +194,14 @@ function findSubsetSumAssignments(
       const combos = getCombinations(unassigned, size)
       for (const combo of combos) {
         if (combo.reduce((sum, p) => sum + p.cantidad, 0) === target) {
+          console.log(`[SubsetSum] ${itemLabel} (${target}) → ${combo.map(p => p.modelo).join(' + ')}`)
           for (const p of combo) assignments[p.modelo] = itemLabel
           found = true
           break
         }
       }
     }
+    if (!found) console.log(`[SubsetSum] ${itemLabel} (${target}) → sin match, quedará en blanco`)
   }
   return assignments
 }
@@ -190,9 +225,14 @@ export function crossWithBD(
   const normalizedProducts = invProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
   // First filter only certifiable products
   const certifiable = normalizedProducts.filter(p => lookupProduct(p.modelo) !== null)
+  const notCert = normalizedProducts.filter(p => lookupProduct(p.modelo) === null)
+  console.log(`[CrossBD] ${certifiable.length} certificables, ${notCert.length} descartados:`, notCert.map(p => p.modelo).join(', ') || 'ninguno')
+
+  // Normalize DIN item quantities too
+  const normalizedDin = dinItems.map(d => ({ ...d, quantity: Math.round(d.quantity) }))
 
   // Find exact subset-sum assignments
-  const assignments = findSubsetSumAssignments(certifiable, dinItems)
+  const assignments = findSubsetSumAssignments(certifiable, normalizedDin)
 
   return certifiable.map(prod => {
     const entry = lookupProduct(prod.modelo)!
