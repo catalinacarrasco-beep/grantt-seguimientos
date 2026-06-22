@@ -93,7 +93,10 @@ export default function NuevoPage() {
       const dinData = await parseDIN(dinFile)
       const parsedDinNum = dinData.dinNum || ''
       setDinNum(parsedDinNum)
-      setReadStep(1, { status: 'done', detail: `DIN ${parsedDinNum} · ${dinData.items.length} ítems` })
+      const dinDetail = dinData.items.length
+        ? `DIN ${parsedDinNum} · ${dinData.items.length} ítems: ${dinData.items.map(i => `ITEM ${i.itemNum}=${i.quantity}`).join(', ')}`
+        : `DIN ${parsedDinNum} · 0 ítems extraídos`
+      setReadStep(1, { status: 'done', detail: dinDetail })
 
       setReadStep(2, { status: 'running' })
       const newRows = crossWithBD(invData.products, dinData.items, parsedTraz)

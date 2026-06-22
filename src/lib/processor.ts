@@ -134,16 +134,24 @@ export async function parseInvoice(file: File): Promise<{ invoiceNum: string; tr
   return safeParseJSON(txt) as { invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }
 }
 
+// Only words that UNAMBIGUOUSLY identify cable trunking / PVC conduit.
+// Do NOT include generic words like ACCESORIO, TAPA, UNION, CURVA, TEE, FITTING
+// because they also appear in valid electrical product descriptions
+// (e.g. "INTERRUPTORES Y ACCESORIOS ELECTRICOS", "TOMACORRIENTE CON TAPA").
 const EXCLUDED_DIN_KEYWORDS = [
-  'PVC', 'CANALETA', 'CANALETAS', 'TRUNKING', 'DUCTO', 'DUCTOS',
-  'CONDUIT', 'ACCESORIO', 'ACCESORIOS', 'FITTING', 'FITTINGS',
-  'BRACKET', 'CLIPS', 'TAPA', 'TAPAS', 'UNION', 'UNIONES',
-  'CURVA', 'CURVAS', 'TEE',
+  'CANALETA', 'CANALETAS',
+  'TRUNKING',
+  'DUCTO', 'DUCTOS',
+  'CONDUIT',
 ]
 
 function isExcludedDinItem(description: string): boolean {
   const upper = description.toUpperCase()
-  return EXCLUDED_DIN_KEYWORDS.some(kw => upper.includes(kw))
+  // Definitive conduit words → always exclude
+  if (EXCLUDED_DIN_KEYWORDS.some(kw => upper.includes(kw))) return true
+  // "PVC" only excludes if accompanied by a structural word (not "cable PVC")
+  if (upper.includes('PVC') && /\b(CANAL|DUCT|TUBO|TUBERIA|FITTING|TAPA|UNION|CURVA|TEE|BRACKET|CLIP)\b/.test(upper)) return true
+  return false
 }
 
 export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number; description?: string }[] }> {
