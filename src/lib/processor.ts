@@ -21,7 +21,7 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 export async function callClaude(content: unknown[], useMcp = false): Promise<unknown> {
   const body: Record<string, unknown> = {
     model: 'claude-sonnet-4-6',
-    max_tokens: 1000,
+    max_tokens: 2000,
     messages: [{ role: 'user', content }],
   }
   if (useMcp) body.mcp_servers = MCP
@@ -86,14 +86,19 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
     return res.json()
   } else {
     const prompt = type === 'invoice'
-      ? `Extract from this commercial invoice. The invoice has TWO code columns: a long supplier code (like 09431-Z-BOLT) and a shorter CODE (like 09431).
-Return ONLY a valid JSON object. Use double quotes. No markdown. No extra text. No special characters in values.
-Format: {"invoiceNum":"CH-GR-SE2507","trazabilidad":"03/2026","products":[{"modelo":"09431","cantidad":10416},{"modelo":"09432","cantidad":4536}]}
-Rules: invoiceNum=invoice number, trazabilidad=date as MM/YYYY, modelo=shorter numeric CODE only, cantidad=integer PCS quantity.`
-      : `Extract from this Chilean DIN document.
-Return ONLY a valid JSON object. Use double quotes. No markdown. No extra text.
-Format: {"dinNum":"3630750509-0","items":[{"itemNum":"1","quantity":20000},{"itemNum":"2","quantity":5000}]}
-Rules: dinNum=NUMERO DE IDENTIFICACION, items=all line items with itemNum as string and quantity as integer PCS.`
+      ? `Extract from this commercial invoice.
+Return ONLY valid JSON, no markdown, no extra text.
+Format: {"invoiceNum":"26FS-0301-3","trazabilidad":"04/2026","products":[{"modelo":"09431","cantidad":10416}]}
+- invoiceNum: invoice reference number
+- trazabilidad: invoice date as MM/YYYY
+- modelo: if TWO code columns exist, use ONLY the shorter numeric code (like "09431"), NOT the supplier code with dashes (like "09431-Z-BOLT")
+- cantidad: integer PCS quantity only`
+      : `Extract from this Chilean DIN (Declaracion de Ingreso de Aduanas).
+Return ONLY valid JSON, no markdown, no extra text.
+Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160},{"itemNum":"2","quantity":5000}]}
+- dinNum: NUMERO DE IDENTIFICACION (format XXXXXXXXXX-X)
+- items: ALL line items. quantity must be integer PCS (look for patterns like "000017400.000000 PCS" -> 17400, or "17.400,000 PCS" -> 17400)
+- quantity MUST be integer, never decimal`
 
     return callClaude([
       { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
@@ -138,15 +143,17 @@ function findSubsetSumAssignments(
   dinItems: { itemNum: string; quantity: number }[]
 ): Record<string, string> {
   const assignments: Record<string, string> = {}
-  for (const p of certProducts) assignments[p.modelo] = ''
+  // Normalize all quantities to integers to avoid float comparison issues
+  const products = certProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
+  for (const p of products) assignments[p.modelo] = ''
 
-  // Sort DIN items smallest first for efficiency
+  // Sort DIN items smallest first so small items don't get consumed by larger ones
   const sortedDin = [...dinItems].sort((a, b) => a.quantity - b.quantity)
 
   for (const din of sortedDin) {
-    const target = din.quantity
+    const target = Math.round(din.quantity)
     const itemLabel = `ITEM ${din.itemNum}`
-    const unassigned = certProducts.filter(p => !assignments[p.modelo])
+    const unassigned = products.filter(p => !assignments[p.modelo])
     let found = false
 
     // Try subsets of size 1, 2, 3...
@@ -179,8 +186,10 @@ export function crossWithBD(
   dinItems: { itemNum: string; quantity: number }[],
   trazabilidad: string
 ): ProductRow[] {
+  // Normalize quantities to integers before any processing
+  const normalizedProducts = invProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
   // First filter only certifiable products
-  const certifiable = invProducts.filter(p => lookupProduct(p.modelo) !== null)
+  const certifiable = normalizedProducts.filter(p => lookupProduct(p.modelo) !== null)
 
   // Find exact subset-sum assignments
   const assignments = findSubsetSumAssignments(certifiable, dinItems)
