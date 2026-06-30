@@ -40,7 +40,6 @@ export async function callClaude(content: unknown[], useMcp = false): Promise<un
       continue
     }
     if (!res.ok) throw new Error(`API error ${res.status}`)
-    await wait(2000) // 2s pause after every successful call
     return res.json()
   }
   throw new Error('Rate limit exceeded after 3 retries')
