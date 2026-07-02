@@ -244,7 +244,7 @@ export default function NuevoPage() {
           </div>
         </div>
         {phase !== 'upload' && (
-          <button className="btn btn-secondary btn-sm" onClick={reset}>
+          <button className="btn btn-secondary btn-sm" onClick={() => { if (window.confirm('¿Comenzar un nuevo lote? Se perderán los datos actuales.')) reset() }}>
             <RefreshCw size={12} /> Nuevo lote
           </button>
         )}
