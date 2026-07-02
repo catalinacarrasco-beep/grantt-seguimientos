@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Upload, CheckCircle2, Camera, Loader2, FileSearch, X, RefreshCw, ArrowRight } from 'lucide-react'
 import jsQR from 'jsqr'
@@ -56,6 +56,27 @@ export default function CalidadPage() {
   const fileRef = useRef<HTMLInputElement>(null)
   const qrRef = useRef<HTMLInputElement>(null)
   const [pendingQr, setPendingQr] = useState<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
+  const [draftLoaded, setDraftLoaded] = useState(false)
+
+  // Restore draft on mount (survives refreshes and accidental navigation)
+  useEffect(() => {
+    const raw = localStorage.getItem('calidad_draft')
+    if (!raw) return
+    try {
+      const d = JSON.parse(raw)
+      if (d.products?.length) {
+        setInvoiceNum(d.invoiceNum || ''); setTrazabilidad(d.trazabilidad || '')
+        setDinNum(d.dinNum || ''); setColorLote(d.colorLote || '')
+        setProducts(d.products); setPhase('checklist'); setDraftLoaded(true)
+      }
+    } catch { /* ignore malformed draft */ }
+  }, [])
+
+  // Save draft whenever checklist state changes
+  useEffect(() => {
+    if (phase !== 'checklist') return
+    localStorage.setItem('calidad_draft', JSON.stringify({ invoiceNum, trazabilidad, dinNum, colorLote, products }))
+  }, [products, dinNum, colorLote, invoiceNum, trazabilidad, phase])
 
   const readInvoice = async () => {
     if (!invoiceFile) return
@@ -137,13 +158,16 @@ export default function CalidadPage() {
         cumple, user_email: user?.email || '',
       })
       setSavedOk(true)
+      localStorage.removeItem('calidad_draft')
     } catch { /* table may not exist yet — non-fatal */ }
     setSaving(false)
   }
 
   const reset = () => {
+    localStorage.removeItem('calidad_draft')
     setPhase('upload'); setInvoiceFile(null); setInvoiceNum(''); setTrazabilidad('')
     setDinNum(''); setColorLote(''); setProducts([]); setSavedOk(false); setReadError('')
+    setDraftLoaded(false)
   }
 
   return (
@@ -185,18 +209,33 @@ export default function CalidadPage() {
       {/* Checklist */}
       {phase === 'checklist' && (
         <>
+          {/* Draft restored banner */}
+          {draftLoaded && (
+            <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: 11, color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: 6 }}>
+              ↺ Borrador restaurado — tus respuestas se guardaron automáticamente
+            </div>
+          )}
+
           {/* Header info */}
           <div className="card" style={{ marginBottom: 12 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div><div className="text-xs text-muted" style={{ marginBottom: 3 }}>Invoice</div><div style={{ fontWeight: 600, fontSize: 13 }}>{invoiceNum || '—'}</div></div>
-              <div><div className="text-xs text-muted" style={{ marginBottom: 3 }}>Trazabilidad</div><div style={{ fontWeight: 600, fontSize: 13 }}>{trazabilidad || '—'}</div></div>
+              <div>
+                <div className="text-xs text-muted" style={{ marginBottom: 3 }}>Trazabilidad</div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{trazabilidad || '—'}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Código de trazabilidad del envío</div>
+              </div>
               <div>
                 <label className="text-xs text-muted" style={{ display: 'block', marginBottom: 3 }}>N° DIN</label>
-                <input className="field-input" value={dinNum} onChange={e => setDinNum(e.target.value)} placeholder="Opcional" style={{ fontSize: 12 }} />
+                <input className="field-input" value={dinNum} onChange={e => setDinNum(e.target.value)} placeholder="Ej: 1234567" style={{ fontSize: 12 }}
+                  title="Número de Declaración de Ingreso de Aduanas" />
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Declaración de Ingreso (opcional)</div>
               </div>
               <div>
                 <label className="text-xs text-muted" style={{ display: 'block', marginBottom: 3 }}>Color Lote</label>
-                <input className="field-input" value={colorLote} onChange={e => setColorLote(e.target.value)} placeholder="Ej: Azul" style={{ fontSize: 12 }} />
+                <input className="field-input" value={colorLote} onChange={e => setColorLote(e.target.value)} placeholder="Ej: Azul" style={{ fontSize: 12 }}
+                  title="Color del lote para identificación visual del marcado" />
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Color del marcado en el lote</div>
               </div>
             </div>
           </div>
