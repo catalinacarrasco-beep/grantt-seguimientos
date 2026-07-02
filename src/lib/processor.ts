@@ -32,10 +32,10 @@ export async function callClaude(content: unknown[]): Promise<unknown> {
       await wait((attempt + 1) * 15000)
       continue
     }
-    if (!res.ok) throw new Error(`API error ${res.status}`)
+    if (!res.ok) throw new Error('Error al leer el documento — intenta de nuevo')
     return res.json()
   }
-  throw new Error('Rate limit exceeded after 3 retries')
+  throw new Error('Servicio temporalmente ocupado — espera unos segundos e intenta de nuevo')
 }
 
 export function getText(d: unknown): string {
@@ -66,7 +66,7 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ base64: b64, type }),
     })
-    if (!res.ok) throw new Error(`PDF extract error ${res.status}`)
+    if (!res.ok) throw new Error('Error al leer el documento — intenta de nuevo')
     return res.json()
   }
 
@@ -251,9 +251,9 @@ export async function generateExcel(rows: ProductRow[], invoiceNum: string, dinN
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ rows, invoiceNum, dinNum, fechaSolicitud: todayFormatted() }),
   })
-  if (!res.ok) throw new Error(`Excel generation error ${res.status}`)
+  if (!res.ok) throw new Error('Error generando el Excel — intenta de nuevo')
   const data = await res.json()
-  if (!data.base64) throw new Error('No base64 returned from Excel generator')
+  if (!data.base64) throw new Error('Error generando el Excel — intenta de nuevo')
   return data.base64
 }
 
@@ -263,7 +263,7 @@ export async function uploadFileToDrive(b64: string, fileName: string, mimeType:
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'upload_file', params: { name: fileName, base64: b64, mimeType, parentId: folderId } }),
   })
-  if (!res.ok) throw new Error(`Drive upload error ${res.status}`)
+  if (!res.ok) throw new Error('Error al subir a Drive — revisa tu conexión e intenta de nuevo')
   const data = await res.json()
   return (data.webViewLink as string) || (data.id ? `https://drive.google.com/file/d/${data.id}/view` : '')
 }
