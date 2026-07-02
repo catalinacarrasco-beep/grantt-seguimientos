@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Zap, Plus, Clock, Settings, LogOut, ClipboardCheck, ArrowRight } from 'lucide-react'
+import { Plus, Clock, Settings, LogOut, ClipboardCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function Sidebar({ email, isOpen, onClose }: { email: string; isOpen: boolean; onClose: () => void }) {
@@ -15,7 +15,7 @@ export default function Sidebar({ email, isOpen, onClose }: { email: string; isO
   return (
     <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
       <div className="sidebar-brand">
-        <div className="brand-icon"><Zap size={16} /></div>
+        <div className="brand-icon"><ClipboardCheck size={16} /></div>
         <div>
           <div className="brand-name">AutoSeguimiento</div>
           <div className="brand-sub">Grantt</div>
