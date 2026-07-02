@@ -65,7 +65,7 @@ export default function CalidadPage() {
       setInvoiceNum(inv.invoiceNum || '')
       setTrazabilidad(inv.trazabilidad || '')
       const cert = (inv.products || []).filter(p => lookupProduct(p.modelo) !== null)
-      if (!cert.length) throw new Error('Ningún producto certificable encontrado')
+      if (!cert.length) throw new Error('Ningún producto certificable encontrado en esta invoice. Verifica que los modelos estén en la BD Grantt.')
       setProducts(cert.map(p => {
         const entry = lookupProduct(p.modelo)!
         return {
@@ -240,8 +240,8 @@ export default function CalidadPage() {
             </div>
           ))}
 
-          {/* Actions */}
-          <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'flex-end' }}>
+          {/* Actions — inline (desktop) */}
+          <div className="card action-bar-inline" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'flex-end' }}>
             {allAnswered && (
               <span className={`badge ${cumple ? 'badge-green' : 'badge-red'}`} style={{ fontSize: 13, padding: '6px 16px' }}>
                 {cumple ? '✓ CUMPLE' : '✗ NO CUMPLE'}
@@ -256,6 +256,19 @@ export default function CalidadPage() {
             </button>
           </div>
         </>
+      )}
+
+      {/* Actions — sticky bottom bar (mobile only, shown during checklist) */}
+      {phase === 'checklist' && (
+        <div className="action-bar-sticky">
+          <button className="btn btn-secondary" disabled={saving || !allAnswered} onClick={save}>
+            {saving ? <Loader2 size={13} className="spin" /> : null}
+            {savedOk ? '✓ Guardado' : 'Guardar'}
+          </button>
+          <button className="btn btn-primary" onClick={() => navigate('/nuevo', { state: { fromCalidad: { invoiceNum, trazabilidad, products: products.map(p => ({ modelo: p.modelo, cantidad: p.cantidad })) } } })}>
+            Ir a Solicitud <ArrowRight size={14} />
+          </button>
+        </div>
       )}
     </div>
   )
