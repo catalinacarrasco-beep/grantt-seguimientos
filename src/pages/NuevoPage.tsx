@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw, FileSearch, FolderUp, FolderOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -55,7 +55,7 @@ export default function NuevoPage() {
   const [generating, setGenerating] = useState(false)
   const [xlsxB64, setXlsxB64] = useState('')
   const [driveLink, setDriveLink] = useState('')
-  const [targetFolderId, setTargetFolderId] = useState('')
+  const [targetFolderId, setTargetFolderId] = useState(() => localStorage.getItem('drive_folder_id') ?? '')
 
   const setReadStep = (i: number, u: Partial<StepState>) =>
     setReadSteps(prev => prev.map((s, j) => j === i ? { ...s, ...u } : s))
@@ -67,9 +67,22 @@ export default function NuevoPage() {
     setPhase('upload'); setReading(false); setGenerating(false)
     setReadSteps([]); setGenSteps([])
     setRows([]); setInvoiceNum(fromCalidad?.invoiceNum || ''); setDinNum('')
-    setXlsxB64(''); setDriveLink(''); setTargetFolderId('')
+    setXlsxB64(''); setDriveLink('')
     setInvoiceFile(null); setDinFile(null)
+    // Keep targetFolderId — it's a persistent preference, not per-session data
   }
+
+  // Enter key shortcut: trigger "Leer documentos" when files are ready
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' || phase !== 'upload' || reading) return
+      if ((!invoiceFile && !fromCalidad) || !dinFile) return
+      readDocs()
+    }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, reading, invoiceFile, dinFile])
 
   const readDocs = async () => {
     if ((!invoiceFile && !fromCalidad) || !dinFile) return
@@ -317,12 +330,14 @@ export default function NuevoPage() {
             <input
               className="field-input"
               value={targetFolderId}
-              onChange={e => setTargetFolderId(e.target.value)}
-              placeholder="Pega el ID de la carpeta donde se guardarán los archivos"
+              onChange={e => { const v = e.target.value; setTargetFolderId(v); localStorage.setItem('drive_folder_id', v) }}
+              placeholder="Ej: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2"
               style={{ fontSize: 12 }}
+              title="ID de la carpeta de Google Drive donde se subirán los archivos. Se guarda automáticamente para próximas solicitudes."
             />
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 4 }}>
-              drive.google.com/drive/folders/<span style={{ color: 'rgba(99,102,241,0.6)' }}>ESTE_ES_EL_ID</span>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+              Copia el ID de la URL: drive.google.com/drive/folders/<span style={{ color: 'rgba(99,102,241,0.7)' }}>ID_AQUÍ</span>
+              {targetFolderId && <span style={{ color: 'rgba(74,222,128,0.7)', marginLeft: 8 }}>· guardado automáticamente</span>}
             </div>
           </div>
 
