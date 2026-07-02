@@ -161,7 +161,7 @@ export default function CalidadPage() {
             {phase === 'checklist' && `${products.length} productos certificables · ${invoiceNum}`}
           </div>
         </div>
-        {phase !== 'upload' && <button className="btn btn-secondary btn-sm" onClick={reset}><RefreshCw size={12} /> Nueva</button>}
+        {phase !== 'upload' && <button className="btn btn-secondary btn-sm" onClick={() => { if (window.confirm('¿Iniciar nueva inspección? Se perderán los datos actuales.')) reset() }}><RefreshCw size={12} /> Nueva</button>}
       </div>
 
       {/* Upload */}
