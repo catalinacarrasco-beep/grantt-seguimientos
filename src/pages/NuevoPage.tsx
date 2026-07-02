@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw, FileSearch, FolderUp, FolderOpen } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { parseInvoice, parseDIN, crossWithBD, generateExcel, createDriveFolder, uploadFileToDrive, todayFormatted, toBase64, type ProductRow } from '../lib/processor'
+import { parseInvoice, parseDIN, crossWithBD, generateExcel, uploadFileToDrive, todayFormatted, toBase64, type ProductRow } from '../lib/processor'
 
 type StepState = { label: string; status: 'pending' | 'running' | 'done' | 'error'; detail?: string }
 type Phase = 'upload' | 'reading' | 'review' | 'generating' | 'done'
@@ -36,20 +36,21 @@ function DropZone({ label, hint, file, onFile }: { label: string; hint: string; 
 
 export default function NuevoPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // Data pre-filled from Control de Calidad module
+  const fromCalidad = location.state?.fromCalidad as { invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] } | null
+
   const [phase, setPhase] = useState<Phase>('upload')
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
   const [dinFile, setDinFile] = useState<File | null>(null)
 
-  // Phase 1 state
   const [readSteps, setReadSteps] = useState<StepState[]>([])
   const [reading, setReading] = useState(false)
 
-  // Phase 2 state
   const [rows, setRows] = useState<ProductRow[]>([])
-  const [invoiceNum, setInvoiceNum] = useState('')
+  const [invoiceNum, setInvoiceNum] = useState(fromCalidad?.invoiceNum || '')
   const [dinNum, setDinNum] = useState('')
 
-  // Phase 3 state
   const [genSteps, setGenSteps] = useState<StepState[]>([])
   const [generating, setGenerating] = useState(false)
   const [xlsxB64, setXlsxB64] = useState('')
@@ -65,29 +66,48 @@ export default function NuevoPage() {
   const reset = () => {
     setPhase('upload'); setReading(false); setGenerating(false)
     setReadSteps([]); setGenSteps([])
-    setRows([]); setInvoiceNum(''); setDinNum('')
+    setRows([]); setInvoiceNum(fromCalidad?.invoiceNum || ''); setDinNum('')
     setXlsxB64(''); setDriveLink(''); setTargetFolderId('')
     setInvoiceFile(null); setDinFile(null)
   }
 
-  // PASO 1: Leer documentos
   const readDocs = async () => {
-    if (!invoiceFile || !dinFile) return
+    if ((!invoiceFile && !fromCalidad) || !dinFile) return
     setReading(true)
     setPhase('reading')
-    setReadSteps([
-      { label: 'Leyendo Invoice — extrayendo modelos y cantidades', status: 'pending' },
-      { label: 'Leyendo DIN — extrayendo número e ítems', status: 'pending' },
-      { label: 'Cruzando con BD Maestra — filtrando certificables', status: 'pending' },
-    ])
+
+    const initialSteps: StepState[] = fromCalidad
+      ? [
+          { label: `Invoice ${fromCalidad.invoiceNum} — pre-cargada desde Control de Calidad`, status: 'done', detail: `${fromCalidad.products.length} productos` },
+          { label: 'Leyendo DIN — extrayendo número e ítems', status: 'pending' },
+          { label: 'Cruzando con BD Maestra — filtrando certificables', status: 'pending' },
+        ]
+      : [
+          { label: 'Leyendo Invoice — extrayendo modelos y cantidades', status: 'pending' },
+          { label: 'Leyendo DIN — extrayendo número e ítems', status: 'pending' },
+          { label: 'Cruzando con BD Maestra — filtrando certificables', status: 'pending' },
+        ]
+    setReadSteps(initialSteps)
 
     try {
-      setReadStep(0, { status: 'running' })
-      const invData = await parseInvoice(invoiceFile)
-      const parsedInvNum = invData.invoiceNum || ''
-      const parsedTraz = invData.trazabilidad || ''
-      setInvoiceNum(parsedInvNum)
-      setReadStep(0, { status: 'done', detail: `Invoice ${parsedInvNum} · ${invData.products.length} productos` })
+      let parsedInvNum: string
+      let parsedTraz: string
+      let invProducts: { modelo: string; cantidad: number }[]
+
+      if (fromCalidad) {
+        parsedInvNum = fromCalidad.invoiceNum
+        parsedTraz = fromCalidad.trazabilidad
+        invProducts = fromCalidad.products
+        setInvoiceNum(parsedInvNum)
+      } else {
+        setReadStep(0, { status: 'running' })
+        const invData = await parseInvoice(invoiceFile!)
+        parsedInvNum = invData.invoiceNum || ''
+        parsedTraz = invData.trazabilidad || ''
+        invProducts = invData.products
+        setInvoiceNum(parsedInvNum)
+        setReadStep(0, { status: 'done', detail: `Invoice ${parsedInvNum} · ${invProducts.length} productos` })
+      }
 
       setReadStep(1, { status: 'running' })
       const dinData = await parseDIN(dinFile)
@@ -99,10 +119,10 @@ export default function NuevoPage() {
       setReadStep(1, { status: 'done', detail: dinDetail })
 
       setReadStep(2, { status: 'running' })
-      const newRows = crossWithBD(invData.products, dinData.items, parsedTraz)
+      const newRows = crossWithBD(invProducts, dinData.items, parsedTraz)
       setRows(newRows)
       const missing = newRows.filter(r => !r.itemDin).length
-      setReadStep(2, { status: 'done', detail: `${newRows.length} certificables de ${invData.products.length} totales${missing ? ` · ${missing} sin ítem DIN` : ''}` })
+      setReadStep(2, { status: 'done', detail: `${newRows.length} certificables de ${invProducts.length} totales${missing ? ` · ${missing} sin ítem DIN` : ''}` })
       if (!newRows.length) throw new Error('Ningún producto certificable encontrado')
 
       setPhase('review')
@@ -114,7 +134,6 @@ export default function NuevoPage() {
     }
   }
 
-  // PASO 2: Generar y subir
   const generate = async () => {
     setGenerating(true)
     setPhase('generating')
@@ -134,9 +153,8 @@ export default function NuevoPage() {
       setGenStep(0, { status: 'done', detail: `${rows.length} filas generadas` })
 
       setGenStep(1, { status: 'running' })
-      // Use the folder ID entered by user in the form
       const newFolderId = targetFolderId.trim()
-      setGenStep(1, { status: 'done', detail: newFolderId ? `Usando carpeta Drive configurada` : `Sin carpeta — subiendo a raíz` })
+      setGenStep(1, { status: 'done', detail: newFolderId ? 'Usando carpeta Drive configurada' : 'Sin carpeta — subiendo a raíz' })
 
       setGenStep(2, { status: 'running' })
       const fname = `Formato_Solicitud_Seguimiento_${invoiceNum}.xlsx`
@@ -148,8 +166,10 @@ export default function NuevoPage() {
       if (invoiceFile) {
         const invB64 = await toBase64(invoiceFile)
         await uploadFileToDrive(invB64, invoiceFile.name, 'application/pdf', newFolderId)
+        setGenStep(3, { status: 'done', detail: 'Invoice subida' })
+      } else {
+        setGenStep(3, { status: 'done', detail: 'Invoice no subida (pre-cargada desde Calidad)' })
       }
-      setGenStep(3, { status: 'done', detail: 'Invoice subida' })
 
       setGenStep(4, { status: 'running' })
       if (dinFile) {
@@ -214,7 +234,7 @@ export default function NuevoPage() {
     <div className="page">
       <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
         <div>
-          <div className="page-title">Nuevo seguimiento</div>
+          <div className="page-title">Solicitud de seguimiento</div>
           <div className="page-sub" style={{ marginBottom: 0 }}>
             {phase === 'upload' && 'Sube la Invoice y DIN para comenzar'}
             {phase === 'reading' && 'Leyendo documentos...'}
@@ -261,7 +281,33 @@ export default function NuevoPage() {
       {/* FASE 1: Upload */}
       {(phase === 'upload' || phase === 'reading') && (
         <div className="card">
-          <DropZone label="Invoice (PDF)" hint="Commercial Invoice del proveedor" file={invoiceFile} onFile={setInvoiceFile} />
+          {/* Banner when coming from Calidad */}
+          {fromCalidad && (
+            <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CheckCircle2 size={14} />
+              Invoice pre-cargada desde Control de Calidad · <strong>{fromCalidad.invoiceNum}</strong> · {fromCalidad.products.length} productos
+            </div>
+          )}
+
+          {/* Invoice upload: optional if fromCalidad, required otherwise */}
+          {!fromCalidad && (
+            <DropZone label="Invoice (PDF)" hint="Commercial Invoice del proveedor" file={invoiceFile} onFile={setInvoiceFile} />
+          )}
+          {fromCalidad && invoiceFile && (
+            <DropZone label="Invoice (PDF)" hint="Opcional — para subir a Drive" file={invoiceFile} onFile={setInvoiceFile} />
+          )}
+          {fromCalidad && !invoiceFile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <div className="drop-zone" style={{ opacity: 0.5, cursor: 'default', flex: 1 }}>
+                <div className="dz-icon"><Upload size={18} color="rgba(255,255,255,0.2)" /></div>
+                <div className="dz-text">
+                  <div className="dz-label" style={{ color: 'rgba(255,255,255,0.4)' }}>Invoice (opcional)</div>
+                  <div className="dz-hint">Ya procesada — sube solo para Drive</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <DropZone label="DIN (PDF)" hint="Declaración de Ingreso de Aduanas" file={dinFile} onFile={setDinFile} />
 
           <div style={{ marginBottom: 12 }}>
@@ -282,7 +328,7 @@ export default function NuevoPage() {
 
           {readSteps.length === 0 ? (
             <button className="btn btn-primary btn-full" style={{ marginTop: 4 }}
-              disabled={!invoiceFile || !dinFile || reading} onClick={readDocs}>
+              disabled={(!invoiceFile && !fromCalidad) || !dinFile || reading} onClick={readDocs}>
               <FileSearch size={15} /> Leer documentos
             </button>
           ) : (
