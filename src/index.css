@@ -115,7 +115,7 @@ body {
   background: rgba(255,255,255,0.08);
   box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
 }
-.field-hint { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 5px; }
+.field-hint { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 5px; }
 .field-hint-accent { color: rgba(99,102,241,0.7); }
 .field-textarea { resize: vertical; min-height: 80px; }
 .field-select option { background: #1a1d28; }
@@ -133,7 +133,7 @@ body {
 .dz-icon { width: 38px; height: 38px; border-radius: 9px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .dz-text { flex: 1; min-width: 0; }
 .dz-label { font-size: 13px; font-weight: 500; color: #e2e8f0; }
-.dz-hint { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dz-hint { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Steps */
 .steps { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
@@ -195,7 +195,7 @@ body {
 .empty { text-align: center; padding: 48px 20px; }
 .empty-icon { margin: 0 auto 12px; opacity: 0.35; }
 .empty-title { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.45); }
-.empty-sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+.empty-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
 
 /* Misc */
 .flex { display: flex; }
