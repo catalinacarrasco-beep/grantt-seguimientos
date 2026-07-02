@@ -334,6 +334,12 @@ export default function NuevoPage() {
           ) : (
             <div style={{ marginTop: 12 }}>
               <StepList steps={readSteps} />
+              {readSteps.some(s => s.status === 'error') && (
+                <button className="btn btn-secondary btn-full" style={{ marginTop: 10 }}
+                  onClick={() => setReadSteps([])}>
+                  <RefreshCw size={13} /> Reintentar
+                </button>
+              )}
             </div>
           )}
         </div>
