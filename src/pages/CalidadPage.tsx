@@ -70,6 +70,12 @@ export default function CalidadPage() {
   const cancelledRef = useRef(false)
   const [drag, setDrag] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const [scannedCode, setScannedCode] = useState<string | null>(null)
+  const [scanOk, setScanOk] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const rafRef = useRef<number>(0)
+  const scanTargetRef = useRef<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
 
   // ── Load session from URL param (mobile opens shared link) ──
   useEffect(() => {
@@ -171,6 +177,75 @@ export default function CalidadPage() {
     cancelledRef.current = true
     setReading(false)
     setPhase('upload')
+  }
+
+  // ── Live QR scanner (camera → jsQR RAF loop) ──
+  useEffect(() => {
+    if (!scannerOpen) return
+    let active = true
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+
+    const tick = () => {
+      if (!active || !videoRef.current) return
+      const v = videoRef.current
+      if (v.readyState >= 2 && v.videoWidth > 0) {
+        if (canvas.width !== v.videoWidth) { canvas.width = v.videoWidth; canvas.height = v.videoHeight }
+        ctx.drawImage(v, 0, 0)
+        const id = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const found = jsQR(id.data, id.width, id.height)
+        if (found && scanTargetRef.current) {
+          const tgt = scanTargetRef.current
+          const ok = verifyQR(tgt.modelo, found.data)
+          setScannedCode(found.data)
+          setScanOk(ok)
+          setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
+            ...p,
+            [tgt.section]: { ...p[tgt.section], sello_qr: ok ? 'SI' : p[tgt.section].sello_qr, qrScanned: found.data, qrOk: ok },
+          } : p))
+          if (ok) {
+            active = false
+            setTimeout(() => setScannerOpen(false), 1500)
+          } else {
+            // Keep scanner open — reset and resume scanning after showing error
+            setTimeout(() => { setScannedCode(null); if (active) rafRef.current = requestAnimationFrame(tick) }, 2200)
+          }
+          return
+        }
+      }
+      rafRef.current = requestAnimationFrame(tick)
+    }
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(stream => {
+        if (!active) { stream.getTracks().forEach(t => t.stop()); return }
+        if (!videoRef.current) return
+        videoRef.current.srcObject = stream
+        videoRef.current.play().then(() => { if (active) tick() }).catch(() => {})
+      })
+      .catch(() => {
+        // getUserMedia not available — fall back to file picker
+        active = false
+        setScannerOpen(false)
+        const tgt = scanTargetRef.current
+        if (tgt) { setPendingQr(tgt); setTimeout(() => qrRef.current?.click(), 50) }
+      })
+
+    return () => {
+      active = false
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      if (videoRef.current?.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop())
+        videoRef.current.srcObject = null
+      }
+    }
+  }, [scannerOpen])
+
+  const openScanner = (modelo: string, section: 'envase' | 'cuerpo') => {
+    scanTargetRef.current = { modelo, section }
+    setScannedCode(null)
+    setScanOk(false)
+    setScannerOpen(true)
   }
 
   const refreshFromSession = async () => {
@@ -467,7 +542,7 @@ export default function CalidadPage() {
                         {prod.envase.qrOk ? `✓ ${prod.envase.qrScanned}` : `✗ ${prod.envase.qrScanned}`}
                       </span>
                     )}
-                    <button className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', fontSize: 10, marginLeft: 'auto' }} onClick={() => scanQR(prod.modelo, 'envase')}>
+                    <button className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', fontSize: 10, marginLeft: 'auto' }} onClick={() => openScanner(prod.modelo, 'envase')}>
                       <Camera size={10} /> Escanear
                     </button>
                   </div>
@@ -513,6 +588,81 @@ export default function CalidadPage() {
           <button className="btn btn-primary" onClick={() => navigate('/nuevo', { state: { fromCalidad: { invoiceNum, trazabilidad, products: products.map(p => ({ modelo: p.modelo, cantidad: p.cantidad })) } } })}>
             Ir a Solicitud <ArrowRight size={14} />
           </button>
+        </div>
+      )}
+
+      {/* ── Live QR Scanner overlay ── */}
+      {scannerOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9000,
+          background: '#000',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: '14px 16px', flexShrink: 0,
+            display: 'flex', alignItems: 'center', gap: 12,
+            background: 'rgba(0,0,0,0.85)',
+          }}>
+            <button className="btn-icon" onClick={() => setScannerOpen(false)} style={{ color: '#fff' }}>
+              <X size={20} />
+            </button>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Escanear Sello QR</span>
+          </div>
+
+          {/* Camera view */}
+          <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+            <video ref={videoRef} playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {/* Guide frame — box-shadow creates the dimmed surround */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              pointerEvents: 'none',
+            }}>
+              <div style={{
+                width: 220, height: 220, borderRadius: 14,
+                boxShadow: '0 0 0 100vmax rgba(0,0,0,0.5)',
+                border: `2.5px solid ${scannedCode ? (scanOk ? '#4ade80' : '#f87171') : '#6366f1'}`,
+                transition: 'border-color 0.25s',
+              }} />
+            </div>
+          </div>
+
+          {/* Status bar */}
+          <div style={{
+            flexShrink: 0, background: '#0c0e14',
+            borderTop: '1px solid rgba(255,255,255,0.07)',
+            padding: '24px 16px', textAlign: 'center', minHeight: 120,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {!scannedCode ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <Loader2 size={14} className="spin" style={{ color: '#6366f1' }} />
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Buscando código QR...</span>
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>
+                  Apunta al sello QR del envase del producto
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 38, marginBottom: 4, lineHeight: 1, color: scanOk ? '#4ade80' : '#f87171' }}>
+                  {scanOk ? '✓' : '✗'}
+                </div>
+                <div style={{
+                  fontSize: 17, fontWeight: 700, letterSpacing: '0.06em',
+                  fontVariantNumeric: 'tabular-nums',
+                  color: scanOk ? '#4ade80' : '#f87171', marginBottom: 6,
+                }}>
+                  {scannedCode}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                  {scanOk ? 'QR correcto — cerrando...' : 'No coincide con la planilla — intentando de nuevo...'}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
