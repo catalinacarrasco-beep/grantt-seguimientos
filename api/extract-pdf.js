@@ -21,11 +21,12 @@ TEXT:
 ${text}`
       : `Extract from this Chilean DIN (Declaracion de Ingreso de Aduanas) text.
 Return ONLY valid JSON, no markdown, no extra text.
-Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"description":"PORTALAMPARAS E27"},{"itemNum":"2","quantity":5000,"description":"INTERRUPTORES"}]}
+Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"description":"PORTALAMPARAS E27"},{"itemNum":"2","quantity":1000,"description":"EXTENSION CABLE CONDUCTOR","supplierCode":"99089"}]}
 - dinNum: NUMERO DE IDENTIFICACION (format XXXXXXXXXX-X)
 - items: ALL line items with their description in uppercase
-- quantity must be integer PCS (look for patterns like "000017400.000000 PCS" -> 17400, or "17.400,000 PCS" -> 17400)
+- quantity must be integer PCS (look for patterns like "000017400.000000 PIEZAS" -> 17400, or "17.400,000 PCS" -> 17400)
 - quantity MUST be integer, never decimal
+- supplierCode: if a 4-6 digit numeric code appears in the item name/attributes (e.g. after "NINGBO-F;" or "BO-F;" like "NINGBO-F; 99142; ELECTRICO..."), extract ONLY the digits. Omit this field if not present.
 - IMPORTANT: Exclude any items whose description contains words related to PVC conduit, cable trunking, or accessories such as: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE
 
 TEXT:
