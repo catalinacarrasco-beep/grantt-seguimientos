@@ -56,6 +56,7 @@ export default function CalidadPage() {
   const [products, setProducts] = useState<ProdCheck[]>([])
   const [saving, setSaving] = useState(false)
   const [savedOk, setSavedOk] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const qrRef = useRef<HTMLInputElement>(null)
   const [pendingQr, setPendingQr] = useState<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
@@ -97,6 +98,10 @@ export default function CalidadPage() {
           setReadError('Sesión no encontrada o expirada. Pide que generen un nuevo QR desde el computador.')
           setReading(false)
         }
+      })
+      .catch(() => {
+        setReading(false)
+        setReadError('Error de conexión. Recarga la página.')
       })
   }, [sessionParam])
 
@@ -219,7 +224,7 @@ export default function CalidadPage() {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
       .then(stream => {
         if (!active) { stream.getTracks().forEach(t => t.stop()); return }
-        if (!videoRef.current) return
+        if (!videoRef.current) { stream.getTracks().forEach(t => t.stop()); return }
         videoRef.current.srcObject = stream
         videoRef.current.play().then(() => { if (active) tick() }).catch(() => {})
       })
@@ -308,11 +313,6 @@ export default function CalidadPage() {
   const upd = (modelo: string, section: 'envase' | 'cuerpo', field: string, val: CheckVal) =>
     setProducts(prev => prev.map(p => p.modelo === modelo ? { ...p, [section]: { ...p[section], [field]: val } } : p))
 
-  const scanQR = (modelo: string, section: 'envase' | 'cuerpo') => {
-    setPendingQr({ modelo, section })
-    qrRef.current?.click()
-  }
-
   const onQRImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     const pending = pendingQr
@@ -350,7 +350,7 @@ export default function CalidadPage() {
   )
 
   const save = async () => {
-    setSaving(true)
+    setSaving(true); setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
       await supabase.from('inspecciones').insert({
@@ -365,7 +365,7 @@ export default function CalidadPage() {
         await supabase.from('calidad_sessions').delete().eq('id', sessionId)
         setSessionId(null)
       }
-    } catch { /* non-fatal */ }
+    } catch { setSaveError('Error al guardar. Intenta de nuevo.') }
     setSaving(false)
   }
 
@@ -374,7 +374,7 @@ export default function CalidadPage() {
     if (sessionId) supabase.from('calidad_sessions').delete().eq('id', sessionId)
     setPhase('upload'); setInvoiceFile(null); setInvoiceNum(''); setTrazabilidad('')
     setDinNum(''); setColorLote(''); setProducts([]); setSavedOk(false); setReadError('')
-    setDraftLoaded(false); setSessionId(null); setQrDataUrl(''); setIsRemoteSession(false)
+    setDraftLoaded(false); setSessionId(null); setQrDataUrl(''); setIsRemoteSession(false); setSaveError('')
   }
 
   return (
@@ -562,6 +562,7 @@ export default function CalidadPage() {
 
           {/* Actions inline (desktop) */}
           <div className="card action-bar-inline" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'flex-end' }}>
+            {saveError && <div style={{ color: '#f87171', fontSize: 11, width: '100%', textAlign: 'center' }}>{saveError}</div>}
             {allAnswered && (
               <span className={`badge ${cumple ? 'badge-green' : 'badge-red'}`} style={{ fontSize: 13, padding: '6px 16px' }}>
                 {cumple ? '✓ CUMPLE' : '✗ NO CUMPLE'}
