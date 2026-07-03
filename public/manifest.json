@@ -1,0 +1,11 @@
+{
+  "name": "AutoSeguimiento Grantt",
+  "short_name": "Grantt",
+  "description": "Control de calidad y seguimiento de certificaciones SEC",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0e14",
+  "theme_color": "#6366f1"
+}
