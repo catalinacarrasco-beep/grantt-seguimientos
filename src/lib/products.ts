@@ -25,13 +25,20 @@ for (const [k, v] of Object.entries(PRODUCTS_DB)) {
   DB_INDEX[norm(k)] = v
 }
 
-// Secondary index: some invoices use supplier codes (e.g. 99142) that appear
-// at the END of the nombre field in BD (e.g. "...s/sw Blc 99142").
-// Maps trailing 4-6 digit code → { entry, modelo (the real BD model code) }
+// Secondary index: some invoices use supplier codes that appear in the nombre
+// field in two formats: plain trailing ("...Blc 99142") or parenthesized ("...(99152)").
+// Maps each found 4-6 digit code → { entry, modelo (the real BD model code) }
 const DESC_CODE_INDEX: Record<string, { entry: ProductEntry; modelo: string }> = {}
 for (const [k, v] of Object.entries(PRODUCTS_DB)) {
-  const m = v.nombre.match(/\b(\d{4,6})\s*$/)
-  if (m) DESC_CODE_INDEX[m[1]] = { entry: v, modelo: k }
+  const codes = new Set<string>()
+  // Format 1: code in parentheses anywhere in nombre — e.g. "(99152)"
+  for (const m of v.nombre.matchAll(/\((\d{4,6})\)/g)) codes.add(m[1])
+  // Format 2: plain trailing code — e.g. "...Blc 99142"
+  const trail = v.nombre.match(/\b(\d{4,6})\s*$/)
+  if (trail) codes.add(trail[1])
+  for (const c of codes) {
+    if (!DESC_CODE_INDEX[c]) DESC_CODE_INDEX[c] = { entry: v, modelo: k }
+  }
 }
 
 export function lookupProduct(codigo: string): ProductEntry | null {
