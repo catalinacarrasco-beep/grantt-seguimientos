@@ -1,4 +1,4 @@
-import { lookupProduct } from './products'
+import { lookupProduct, lookupProductByDescCode } from './products'
 
 export type ProductRow = {
   id: string
@@ -213,15 +213,32 @@ function getCombinations<T>(arr: T[], size: number): T[][] {
   return result
 }
 
+// Resolve an invoice product code to a BD model code.
+// Direct lookup wins; falls back to matching the code against trailing supplier
+// codes embedded in BD product descriptions (e.g. "...s/sw Blc 99142" → EK-ESX4-30-B).
+function resolveModelo(invoiceModelo: string): string | null {
+  if (lookupProduct(invoiceModelo) !== null) return invoiceModelo
+  const byDesc = lookupProductByDescCode(invoiceModelo)
+  return byDesc ? byDesc.modelo : null
+}
+
 export function crossWithBD(
   invProducts: { modelo: string; cantidad: number }[],
   dinItems: { itemNum: string; quantity: number; description?: string }[],
   trazabilidad: string
 ): ProductRow[] {
   const normalizedProducts = invProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
-  const certifiable = normalizedProducts.filter(p => lookupProduct(p.modelo) !== null)
-  const notCert = normalizedProducts.filter(p => lookupProduct(p.modelo) === null)
-  console.log(`[CrossBD] ${certifiable.length} certificables, ${notCert.length} descartados:`, notCert.map(p => p.modelo).join(', ') || 'ninguno')
+
+  // Resolve each invoice code → BD model code (direct or via description lookup)
+  const certifiable: { modelo: string; cantidad: number }[] = []
+  const notCert: string[] = []
+  for (const p of normalizedProducts) {
+    const resolved = resolveModelo(p.modelo)
+    if (resolved) certifiable.push({ modelo: resolved, cantidad: p.cantidad })
+    else notCert.push(p.modelo)
+  }
+
+  console.log(`[CrossBD] ${certifiable.length} certificables, ${notCert.length} descartados:`, notCert.join(', ') || 'ninguno')
 
   const normalizedDin = dinItems.map(d => ({ ...d, quantity: Math.round(d.quantity) }))
 
