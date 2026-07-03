@@ -67,6 +67,8 @@ export default function CalidadPage() {
   const [isRemoteSession, setIsRemoteSession] = useState(false)
   const [sessionSyncing, setSessionSyncing] = useState(false)
   const lastLocalTs = useRef(0)
+  const cancelledRef = useRef(false)
+  const [drag, setDrag] = useState(false)
 
   // ── Load session from URL param (mobile opens shared link) ──
   useEffect(() => {
@@ -156,12 +158,20 @@ export default function CalidadPage() {
     }).then(setQrDataUrl)
   }, [sessionId, isRemoteSession])
 
+  const cancelReading = () => {
+    cancelledRef.current = true
+    setReading(false)
+    setPhase('upload')
+  }
+
   // ── Read invoice and create shared session ──
   const readInvoice = async () => {
     if (!invoiceFile) return
+    cancelledRef.current = false
     setReading(true); setReadError(''); setPhase('reading')
     try {
       const inv = await parseInvoice(invoiceFile)
+      if (cancelledRef.current) return
       setInvoiceNum(inv.invoiceNum || '')
       setTrazabilidad(inv.trazabilidad || '')
       const cert = (inv.products || []).filter(p => lookupProduct(p.modelo) !== null)
@@ -175,6 +185,7 @@ export default function CalidadPage() {
           cuerpo:  { modelo: null, sello_qr: null, fecha_fab: null, pais_fab: null },
         }
       })
+      if (cancelledRef.current) return
       setProducts(mapped)
       setPhase('checklist')
 
@@ -184,11 +195,12 @@ export default function CalidadPage() {
         trazabilidad: inv.trazabilidad || '',
         products: mapped,
       }).select('id').single()
-      if (data?.id) setSessionId(data.id)
+      if (data?.id && !cancelledRef.current) setSessionId(data.id)
     } catch (e) {
+      if (cancelledRef.current) return
       setReadError(e instanceof Error ? e.message : 'Error leyendo invoice')
       setPhase('upload')
-    } finally { setReading(false) }
+    } finally { if (!cancelledRef.current) setReading(false) }
   }
 
   const upd = (modelo: string, section: 'envase' | 'cuerpo', field: string, val: CheckVal) =>
@@ -287,20 +299,33 @@ export default function CalidadPage() {
       {/* ── Upload phase (desktop) ── */}
       {(phase === 'upload' || (phase === 'reading' && !sessionParam)) && (
         <div className="card">
-          <div className={`drop-zone${invoiceFile ? ' has-file' : ''}`} onClick={() => !invoiceFile && fileRef.current?.click()}>
+          <div
+            className={`drop-zone${invoiceFile ? ' has-file' : ''}${drag ? ' dragging' : ''}`}
+            onClick={() => !invoiceFile && fileRef.current?.click()}
+            onDragOver={e => { e.preventDefault(); if (!invoiceFile) setDrag(true) }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={e => { e.preventDefault(); setDrag(false); const f = e.dataTransfer.files[0]; if (f && !invoiceFile) setInvoiceFile(f) }}
+          >
             <div className="dz-icon">
               {invoiceFile ? <CheckCircle2 size={18} color="#4ade80" /> : <Upload size={18} color="rgba(255,255,255,0.3)" />}
             </div>
             <div className="dz-text">
               <div className="dz-label">{invoiceFile ? invoiceFile.name : 'Invoice (PDF)'}</div>
-              <div className="dz-hint">{invoiceFile ? `${(invoiceFile.size/1024).toFixed(1)} KB` : 'Commercial Invoice del proveedor'}</div>
+              <div className="dz-hint">{invoiceFile ? `${(invoiceFile.size/1024).toFixed(1)} KB` : 'Arrastrá el PDF acá o hacé clic para elegir'}</div>
             </div>
             {invoiceFile && <button className="btn-icon" onClick={e => { e.stopPropagation(); setInvoiceFile(null) }}><X size={14} /></button>}
           </div>
           {readError && <div style={{ color: '#f87171', fontSize: 12, marginBottom: 10 }}>{readError}</div>}
-          <button className="btn btn-primary btn-full" disabled={!invoiceFile || reading} onClick={readInvoice}>
-            {reading ? <><Loader2 size={14} className="spin" /> Leyendo...</> : <><FileSearch size={14} /> Leer Invoice</>}
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} disabled={!invoiceFile || reading} onClick={readInvoice}>
+              {reading ? <><Loader2 size={14} className="spin" /> Leyendo...</> : <><FileSearch size={14} /> Leer Invoice</>}
+            </button>
+            {reading && (
+              <button className="btn btn-secondary" onClick={cancelReading}>
+                <X size={14} /> Cancelar
+              </button>
+            )}
+          </div>
         </div>
       )}
 
