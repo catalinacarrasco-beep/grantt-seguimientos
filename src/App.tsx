@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import AuthPage from './pages/AuthPage'
 import NuevoPage from './pages/NuevoPage'
 import HistorialPage from './pages/HistorialPage'
+import InspeccionesPage from './pages/InspeccionesPage'
 import ConfigPage from './pages/ConfigPage'
 import CalidadPage from './pages/CalidadPage'
 import Sidebar from './components/Sidebar'
@@ -47,6 +48,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/calidad" replace />} />
           <Route path="/calidad" element={<CalidadPage />} />
+          <Route path="/inspecciones" element={<InspeccionesPage />} />
           <Route path="/nuevo" element={<NuevoPage />} />
           <Route path="/historial" element={<HistorialPage />} />
           <Route path="/config" element={<ConfigPage />} />
