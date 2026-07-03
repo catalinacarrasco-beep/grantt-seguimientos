@@ -84,7 +84,7 @@ Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"descr
 - dinNum: NUMERO DE IDENTIFICACION (format XXXXXXXXXX-X)
 - items: ALL line items with their description in uppercase
 - quantity: look for PCS/UNIDADES in "observaciones" or item totals. Chilean format: "9.000,000 PCS" = 9000, "17.400,000 PCS" = 17400 (dot=thousands, comma=decimal). quantity MUST be integer.
-- supplierCode: if a 4-6 digit numeric code appears in the item name/attributes (e.g. after "NINGBO-F;" or "BO-F;" like "NINGBO-F; 99142; ELECTRICO..."), extract ONLY the digits. Omit this field if not present.
+- supplierCode: extract the code that appears after the supplier pattern ("NINGBO-F;", "BO-F;", "FEISHUN-F;", etc.). May be numeric ("99142") or alphanumeric ("HX-PLP"). Extract only what follows immediately after the semicolon. Omit if no clear code is present.
 - IMPORTANT: Exclude items whose description contains: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE`
 
   return callClaude([
@@ -141,8 +141,14 @@ export async function parseDIN(file: File): Promise<{ dinNum: string; items: { i
 
 // Extracts meaningful words from a DIN description for product matching
 function descKeywords(description: string): string[] {
-  // Strip short/generic words, keep category words like PORTALAMPARAS, INTERRUPTORES, ALARGADORES
-  return description.toUpperCase().split(/[\s,/]+/).filter(w => w.length >= 4)
+  return description.toUpperCase().split(/[\s,/]+/)
+    .filter(w => w.length >= 4)
+    .map(w => {
+      // Normalize Spanish plurals so "PORTALAMPARAS" matches "PORTALAMPARA", "ALARGADORES" → "ALARGADOR"
+      if (w.endsWith('ES') && w.length > 6) return w.slice(0, -2)
+      if (w.endsWith('S') && w.length > 5) return w.slice(0, -1)
+      return w
+    })
 }
 
 function findSubsetSumAssignments(
@@ -173,14 +179,28 @@ function findSubsetSumAssignments(
 
     let found = false
 
-    // Priority 0: supplier code in DIN item name (e.g. YLK format "NINGBO-F; 99142; ...")
-    // Maps directly to a BD product via DESC_CODE_INDEX — skips keyword/qty ambiguity
+    // Priority 0: code embedded in DIN item name → direct product match
     if (din.supplierCode && !found) {
-      const byCode = lookupProductByDescCode(din.supplierCode)
-      if (byCode) {
-        const match = unassigned.find(p => p.modelo === byCode.modelo)
+      const code = din.supplierCode.trim()
+      if (/^\d{4,6}$/.test(code)) {
+        // Numeric code (YLK format: "NINGBO-F; 99142") → DESC_CODE_INDEX lookup
+        const byCode = lookupProductByDescCode(code)
+        if (byCode) {
+          const match = unassigned.find(p => p.modelo === byCode.modelo)
+          if (match) {
+            console.log(`[SubsetSum] ${itemLabel} supplierCode=${code} → ${match.modelo}`)
+            assignments[match.modelo] = itemLabel
+            found = true
+          }
+        }
+      } else {
+        // Alphanumeric code (Feishun format: "FEISHUN-F; HX-PLP") → BD model prefix + qty check
+        const upper = code.toUpperCase().replace(/\s+/g, '-')
+        const match = unassigned.find(p =>
+          p.modelo.toUpperCase().replace(/\s+/g, '-').startsWith(upper) && p.cantidad === target
+        )
         if (match) {
-          console.log(`[SubsetSum] ${itemLabel} supplierCode=${din.supplierCode} → ${match.modelo}`)
+          console.log(`[SubsetSum] ${itemLabel} modelPrefix=${code} → ${match.modelo}`)
           assignments[match.modelo] = itemLabel
           found = true
         }
