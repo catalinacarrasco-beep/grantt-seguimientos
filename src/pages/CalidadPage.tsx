@@ -4,7 +4,7 @@ import { Upload, CheckCircle2, Camera, Loader2, FileSearch, X, RefreshCw, ArrowR
 import QRCode from 'qrcode'
 import jsQR from 'jsqr'
 import { parseInvoice } from '../lib/processor'
-import { lookupProduct } from '../lib/products'
+import { lookupProduct, lookupProductByDescCode } from '../lib/products'
 import { lookupQR, verifyQR } from '../lib/qr'
 import { supabase } from '../lib/supabase'
 
@@ -195,17 +195,23 @@ export default function CalidadPage() {
       if (cancelledRef.current) return
       setInvoiceNum(inv.invoiceNum || '')
       setTrazabilidad(inv.trazabilidad || '')
-      const cert = (inv.products || []).filter(p => lookupProduct(p.modelo) !== null)
-      if (!cert.length) throw new Error('Ningún producto certificable encontrado en esta invoice. Verifica que los modelos estén en la BD Grantt.')
-      const mapped: ProdCheck[] = cert.map(p => {
-        const entry = lookupProduct(p.modelo)!
-        return {
-          modelo: p.modelo, nombre: entry.nombre, cantidad: p.cantidad,
-          qrEsperado: lookupQR(p.modelo),
-          envase: { modelo: null, sello_qr: null, fecha_fab: null, placa_info: null, pais_fab: null },
-          cuerpo:  { modelo: null, sello_qr: null, fecha_fab: null, pais_fab: null },
-        }
-      })
+      // Resolve each invoice code → BD model (direct or via trailing supplier code in description)
+      const resolved = (inv.products || []).map(p => {
+        const direct = lookupProduct(p.modelo)
+        if (direct) return { modelo: p.modelo, cantidad: p.cantidad, entry: direct }
+        const byDesc = lookupProductByDescCode(p.modelo)
+        if (byDesc) return { modelo: byDesc.modelo, cantidad: p.cantidad, entry: byDesc.entry }
+        return null
+      }).filter(Boolean) as { modelo: string; cantidad: number; entry: NonNullable<ReturnType<typeof lookupProduct>> }[]
+
+      if (!resolved.length) throw new Error('Ningún producto certificable encontrado en esta invoice. Verifica que los modelos estén en la BD Grantt.')
+
+      const mapped: ProdCheck[] = resolved.map(r => ({
+        modelo: r.modelo, nombre: r.entry.nombre, cantidad: r.cantidad,
+        qrEsperado: lookupQR(r.modelo),
+        envase: { modelo: null, sello_qr: null, fecha_fab: null, placa_info: null, pais_fab: null },
+        cuerpo:  { modelo: null, sello_qr: null, fecha_fab: null, pais_fab: null },
+      }))
       if (cancelledRef.current) return
       setProducts(mapped)
       setPhase('checklist')
