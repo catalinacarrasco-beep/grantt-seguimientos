@@ -80,10 +80,11 @@ Format: {"invoiceNum":"26FS-0301-3","trazabilidad":"04/2026","products":[{"model
 - cantidad: integer PCS quantity only`
     : `Extract from this Chilean DIN (Declaracion de Ingreso de Aduanas).
 Return ONLY valid JSON, no markdown, no extra text.
-Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"description":"PORTALAMPARAS E27"},{"itemNum":"2","quantity":5000,"description":"INTERRUPTORES"}]}
+Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"description":"PORTALAMPARAS E27"},{"itemNum":"2","quantity":1000,"description":"EXTENSION CABLE CONDUCTOR","supplierCode":"99089"}]}
 - dinNum: NUMERO DE IDENTIFICACION (format XXXXXXXXXX-X)
 - items: ALL line items with their description in uppercase
 - quantity: look for PCS/UNIDADES in "observaciones" or item totals. Chilean format: "9.000,000 PCS" = 9000, "17.400,000 PCS" = 17400 (dot=thousands, comma=decimal). quantity MUST be integer.
+- supplierCode: if a 4-6 digit numeric code appears in the item name/attributes (e.g. after "NINGBO-F;" or "BO-F;" like "NINGBO-F; 99142; ELECTRICO..."), extract ONLY the digits. Omit this field if not present.
 - IMPORTANT: Exclude items whose description contains: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE`
 
   return callClaude([
@@ -120,7 +121,7 @@ function isExcludedDinItem(description: string): boolean {
   return false
 }
 
-export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number; description?: string }[] }> {
+export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[] }> {
   const data = await parsePDF(file, 'din')
   const txt = getText(data)
   const raw = safeParseJSON(txt) as { dinNum: string; items: { itemNum: string; quantity: number; description?: string }[] }
@@ -146,7 +147,7 @@ function descKeywords(description: string): string[] {
 
 function findSubsetSumAssignments(
   certProducts: { modelo: string; cantidad: number; nombre: string }[],
-  dinItems: { itemNum: string; quantity: number; description?: string }[]
+  dinItems: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[]
 ): Record<string, string> {
   const assignments: Record<string, string> = {}
   const products = certProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
@@ -171,6 +172,20 @@ function findSubsetSumAssignments(
       : []
 
     let found = false
+
+    // Priority 0: supplier code in DIN item name (e.g. YLK format "NINGBO-F; 99142; ...")
+    // Maps directly to a BD product via DESC_CODE_INDEX — skips keyword/qty ambiguity
+    if (din.supplierCode && !found) {
+      const byCode = lookupProductByDescCode(din.supplierCode)
+      if (byCode) {
+        const match = unassigned.find(p => p.modelo === byCode.modelo)
+        if (match) {
+          console.log(`[SubsetSum] ${itemLabel} supplierCode=${din.supplierCode} → ${match.modelo}`)
+          assignments[match.modelo] = itemLabel
+          found = true
+        }
+      }
+    }
 
     // Try description-filtered group first
     if (byDesc.length) {
@@ -224,7 +239,7 @@ function resolveModelo(invoiceModelo: string): string | null {
 
 export function crossWithBD(
   invProducts: { modelo: string; cantidad: number }[],
-  dinItems: { itemNum: string; quantity: number; description?: string }[],
+  dinItems: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[],
   trazabilidad: string
 ): ProductRow[] {
   const normalizedProducts = invProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
