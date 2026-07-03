@@ -104,6 +104,14 @@ export default function CalidadPage() {
         setInvoiceNum(d.invoiceNum || ''); setTrazabilidad(d.trazabilidad || '')
         setDinNum(d.dinNum || ''); setColorLote(d.colorLote || '')
         setProducts(d.products); setPhase('checklist'); setDraftLoaded(true)
+        // Create session so QR appears for mobile sharing
+        supabase.from('calidad_sessions').insert({
+          invoice_num: d.invoiceNum || '',
+          trazabilidad: d.trazabilidad || '',
+          products: d.products,
+        }).select('id').single().then(({ data }) => {
+          if (data?.id) setSessionId(data.id)
+        })
       }
     } catch { /* ignore */ }
   }, [])
