@@ -27,7 +27,7 @@ Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"descr
 - quantity must be integer PCS (look for patterns like "000017400.000000 PIEZAS" -> 17400, or "17.400,000 PCS" -> 17400)
 - quantity MUST be integer, never decimal
 - supplierCode: extract the code that appears after the supplier pattern ("NINGBO-F;", "BO-F;", "FEISHUN-F;", etc.). May be numeric ("99142") or alphanumeric ("HX-PLP"). Extract only what follows immediately after the semicolon. Omit if no clear code is present.
-- IMPORTANT: Exclude any items whose description contains words related to PVC conduit, cable trunking, or accessories such as: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE
+- IMPORTANT: Exclude any items whose description contains words related to PVC conduit, cable trunking, reels, or accessories such as: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, CARRETE, CARRETES, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE
 
 TEXT:
 ${text}`
