@@ -85,7 +85,7 @@ Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"descr
 - items: ALL line items with their description in uppercase
 - quantity: look for PCS/UNIDADES in "observaciones" or item totals. Chilean format: "9.000,000 PCS" = 9000, "17.400,000 PCS" = 17400 (dot=thousands, comma=decimal). quantity MUST be integer.
 - supplierCode: extract the code that appears after the supplier pattern ("NINGBO-F;", "BO-F;", "FEISHUN-F;", etc.). May be numeric ("99142") or alphanumeric ("HX-PLP"). Extract only what follows immediately after the semicolon. Omit if no clear code is present.
-- IMPORTANT: Exclude items whose description contains: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE`
+- IMPORTANT: Exclude items whose description contains: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, CARRETE, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE`
 
   return callClaude([
     { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
@@ -112,7 +112,7 @@ export async function parseInvoice(file: File): Promise<{ invoiceNum: string; tr
   return safeParseJSON(txt) as { invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }
 }
 
-const EXCLUDED_DIN_KEYWORDS = ['CANALETA', 'CANALETAS', 'TRUNKING', 'DUCTO', 'DUCTOS', 'CONDUIT']
+const EXCLUDED_DIN_KEYWORDS = ['CANALETA', 'CANALETAS', 'TRUNKING', 'DUCTO', 'DUCTOS', 'CONDUIT', 'CARRETE', 'CARRETES']
 
 function isExcludedDinItem(description: string): boolean {
   const upper = description.toUpperCase()
@@ -220,20 +220,7 @@ function findSubsetSumAssignments(
       }
     }
 
-    // Fallback: try all unassigned (quantity-only, for when description doesn't narrow it)
-    if (!found) {
-      for (let size = 1; size <= unassigned.length && !found; size++) {
-        for (const combo of getCombinations(unassigned, size)) {
-          if (combo.reduce((s, p) => s + p.cantidad, 0) === target) {
-            console.log(`[SubsetSum] ${itemLabel} qty-fallback → ${combo.map(p => p.modelo).join('+')}`)
-            for (const p of combo) assignments[p.modelo] = itemLabel
-            found = true; break
-          }
-        }
-      }
-    }
-
-    if (!found) console.log(`[SubsetSum] ${itemLabel} (${target}) → sin match`)
+    if (!found) console.log(`[SubsetSum] ${itemLabel} (${target}) → sin match — se deja en blanco para asignación manual`)
   }
   return assignments
 }
