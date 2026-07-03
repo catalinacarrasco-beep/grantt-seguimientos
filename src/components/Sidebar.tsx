@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Plus, Clock, Settings, LogOut, ClipboardCheck } from 'lucide-react'
+import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function Sidebar({ email, isOpen, onClose }: { email: string; isOpen: boolean; onClose: () => void }) {
@@ -26,6 +26,9 @@ export default function Sidebar({ email, isOpen, onClose }: { email: string; isO
         <div className="nav-section-label">Control de calidad</div>
         <NavLink to="/calidad" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
           <ClipboardCheck size={15} /> Inspección marcado
+        </NavLink>
+        <NavLink to="/inspecciones" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+          <ClipboardList size={15} /> Historial inspecciones
         </NavLink>
 
         <div className="nav-section-label" style={{ marginTop: 8 }}>Solicitud seguimiento</div>
