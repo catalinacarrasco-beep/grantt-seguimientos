@@ -311,9 +311,16 @@ export default function CalidadPage() {
           </div>
         </div>
         {phase !== 'upload' && (
-          <button className="btn btn-secondary btn-sm" onClick={() => { if (window.confirm('¿Iniciar nueva inspección? Se perderán los datos actuales.')) reset() }}>
-            <RefreshCw size={12} /> Nueva
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {sessionId && (
+              <button className="btn btn-secondary btn-sm" onClick={refreshFromSession} disabled={refreshing} title="Actualizar cambios desde el celular">
+                {refreshing ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />} Actualizar
+              </button>
+            )}
+            <button className="btn btn-secondary btn-sm" onClick={() => { if (window.confirm('¿Cancelar esta inspección? Los datos no guardados se perderán.')) reset() }}>
+              <X size={12} /> Cancelar
+            </button>
+          </div>
         )}
       </div>
 
@@ -373,8 +380,8 @@ export default function CalidadPage() {
                   {sessionSyncing && <span style={{ color: 'rgba(99,102,241,0.7)', marginLeft: 6 }}>· guardando...</span>}
                 </div>
               </div>
-              <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto', flexShrink: 0 }} onClick={refreshFromSession} disabled={refreshing}>
-                {refreshing ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />}
+              <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto', flexShrink: 0 }} onClick={refreshFromSession} disabled={refreshing} title="Actualizar">
+                {refreshing ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />} Actualizar
               </button>
             </div>
           )}
@@ -424,11 +431,8 @@ export default function CalidadPage() {
                   </div>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6 }}>
                     Escanea este QR con tu celular para abrir el checklist con todos los productos ya cargados.<br />
-                    <span style={{ color: 'rgba(255,255,255,0.3)' }}>Los cambios se sincronizan entre dispositivos.</span>
+                    <span style={{ color: 'rgba(255,255,255,0.3)' }}>Los cambios se sincronizan entre dispositivos. Usa "Actualizar" arriba para traer cambios del celular.</span>
                   </div>
-                  <button className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={refreshFromSession} disabled={refreshing}>
-                    {refreshing ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />} Actualizar desde celular
-                  </button>
                 </div>
               </div>
             )}
