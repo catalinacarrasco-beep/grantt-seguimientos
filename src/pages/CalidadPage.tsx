@@ -69,6 +69,7 @@ export default function CalidadPage() {
   const lastLocalTs = useRef(0)
   const cancelledRef = useRef(false)
   const [drag, setDrag] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   // ── Load session from URL param (mobile opens shared link) ──
   useEffect(() => {
@@ -170,6 +171,18 @@ export default function CalidadPage() {
     cancelledRef.current = true
     setReading(false)
     setPhase('upload')
+  }
+
+  const refreshFromSession = async () => {
+    if (!sessionId) return
+    setRefreshing(true)
+    const { data } = await supabase.from('calidad_sessions').select('*').eq('id', sessionId).single()
+    if (data) {
+      setProducts(data.products as ProdCheck[])
+      setDinNum((data.din_num as string) || '')
+      setColorLote((data.color_lote as string) || '')
+    }
+    setRefreshing(false)
   }
 
   // ── Read invoice and create shared session ──
@@ -360,6 +373,9 @@ export default function CalidadPage() {
                   {sessionSyncing && <span style={{ color: 'rgba(99,102,241,0.7)', marginLeft: 6 }}>· guardando...</span>}
                 </div>
               </div>
+              <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto', flexShrink: 0 }} onClick={refreshFromSession} disabled={refreshing}>
+                {refreshing ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />}
+              </button>
             </div>
           )}
 
@@ -410,6 +426,9 @@ export default function CalidadPage() {
                     Escanea este QR con tu celular para abrir el checklist con todos los productos ya cargados.<br />
                     <span style={{ color: 'rgba(255,255,255,0.3)' }}>Los cambios se sincronizan entre dispositivos.</span>
                   </div>
+                  <button className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={refreshFromSession} disabled={refreshing}>
+                    {refreshing ? <Loader2 size={12} className="spin" /> : <RefreshCw size={12} />} Actualizar desde celular
+                  </button>
                 </div>
               </div>
             )}
