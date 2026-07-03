@@ -25,7 +25,8 @@
                          "xlsx":  "^0.18.5",
                          "xlsx-style":  "^0.8.13",
                          "pdf-parse":  "^1.1.1",
-                         "googleapis":  "^144.0.0"
+                         "googleapis":  "^144.0.0",
+                         "qrcode":  "^1.5.3"
                      },
     "private":  true
 }
