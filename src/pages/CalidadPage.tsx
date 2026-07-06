@@ -77,6 +77,7 @@ export default function CalidadPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const scanIntervalRef = useRef<number>(0)
   const torchTrackRef = useRef<MediaStreamTrack | null>(null)
+  const realtimeChRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [torchOn, setTorchOn] = useState(false)
   const scanTargetRef = useRef<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
 
@@ -151,7 +152,7 @@ export default function CalidadPage() {
     return () => clearTimeout(timer)
   }, [products, dinNum, colorLote, sessionId, phase])
 
-  // ── Supabase Realtime: receive changes from the other device ──
+  // ── Supabase Realtime: receive changes + navigate broadcasts from the other device ──
   useEffect(() => {
     if (!sessionId) return
     const ch = supabase.channel(`calidad-${sessionId}`)
@@ -159,7 +160,6 @@ export default function CalidadPage() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'calidad_sessions', filter: `id=eq.${sessionId}` },
         ({ new: d }) => {
-          // Ignore updates that originated from this device (within 2s window)
           if (Date.now() - lastLocalTs.current < 2000) return
           const row = d as Record<string, unknown>
           setProducts(row.products as ProdCheck[])
@@ -167,8 +167,13 @@ export default function CalidadPage() {
           setColorLote((row.color_lote as string) || '')
         }
       )
+      .on('broadcast', { event: 'navigate' }, ({ payload }) => {
+        const p = payload as { to: string; state: unknown }
+        navigate(p.to, { state: p.state })
+      })
       .subscribe()
-    return () => { supabase.removeChannel(ch) }
+    realtimeChRef.current = ch
+    return () => { realtimeChRef.current = null; supabase.removeChannel(ch) }
   }, [sessionId])
 
   // ── Generate QR code image when session is created (desktop only) ──
@@ -392,6 +397,17 @@ export default function CalidadPage() {
     setSaving(false)
   }
 
+  const handleIrSolicitud = async () => {
+    const state = { fromCalidad: { invoiceNum, trazabilidad, products: products.map(p => ({ modelo: p.modelo, cantidad: p.cantidad })) } }
+    // Broadcast to the other device so both navigate simultaneously
+    if (sessionId && realtimeChRef.current) {
+      try {
+        await realtimeChRef.current.send({ type: 'broadcast', event: 'navigate', payload: { to: '/nuevo', state } })
+      } catch {}
+    }
+    navigate('/nuevo', { state })
+  }
+
   const reset = () => {
     localStorage.removeItem('calidad_draft')
     if (sessionId) supabase.from('calidad_sessions').delete().eq('id', sessionId)
@@ -595,7 +611,7 @@ export default function CalidadPage() {
               {saving && <Loader2 size={13} className="spin" />}
               {savedOk ? '✓ Guardado' : 'Guardar inspección'}
             </button>
-            <button className="btn btn-primary" onClick={() => navigate('/nuevo', { state: { fromCalidad: { invoiceNum, trazabilidad, products: products.map(p => ({ modelo: p.modelo, cantidad: p.cantidad })) } } })}>
+            <button className="btn btn-primary" onClick={handleIrSolicitud}>
               Ir a Solicitud <ArrowRight size={14} />
             </button>
           </div>
@@ -609,7 +625,7 @@ export default function CalidadPage() {
             {saving ? <Loader2 size={13} className="spin" /> : null}
             {savedOk ? '✓ Guardado' : 'Guardar'}
           </button>
-          <button className="btn btn-primary" onClick={() => navigate('/nuevo', { state: { fromCalidad: { invoiceNum, trazabilidad, products: products.map(p => ({ modelo: p.modelo, cantidad: p.cantidad })) } } })}>
+          <button className="btn btn-primary" onClick={handleIrSolicitud}>
             Ir a Solicitud <ArrowRight size={14} />
           </button>
         </div>
