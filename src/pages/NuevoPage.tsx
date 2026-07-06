@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, ExternalLink, RefreshCw, FileSearch, FolderUp, FolderOpen } from 'lucide-react'
+import { Zap, Upload, CheckCircle2, AlertCircle, Circle, Loader2, X, Download, RefreshCw, FileSearch } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { parseInvoice, parseDIN, crossWithBD, generateExcel, uploadFileToDrive, todayFormatted, toBase64, type ProductRow } from '../lib/processor'
+import { parseInvoice, parseDIN, crossWithBD, generateExcel, todayFormatted, type ProductRow } from '../lib/processor'
 
 type StepState = { label: string; status: 'pending' | 'running' | 'done' | 'error'; detail?: string }
 type Phase = 'upload' | 'reading' | 'review' | 'generating' | 'done'
@@ -55,8 +55,6 @@ export default function NuevoPage() {
   const [genSteps, setGenSteps] = useState<StepState[]>([])
   const [generating, setGenerating] = useState(false)
   const [xlsxB64, setXlsxB64] = useState('')
-  const [driveLink, setDriveLink] = useState('')
-  const [targetFolderId, setTargetFolderId] = useState(() => localStorage.getItem('drive_folder_id') ?? '')
 
   const setReadStep = (i: number, u: Partial<StepState>) =>
     setReadSteps(prev => prev.map((s, j) => j === i ? { ...s, ...u } : s))
@@ -68,9 +66,8 @@ export default function NuevoPage() {
     setPhase('upload'); setReading(false); setGenerating(false)
     setReadSteps([]); setGenSteps([])
     setRows([]); setInvoiceNum(fromCalidad?.invoiceNum || ''); setDinNum(''); setDinItemOptions([''])
-    setXlsxB64(''); setDriveLink('')
+    setXlsxB64('')
     setInvoiceFile(null); setDinFile(null)
-    // Keep targetFolderId — it's a persistent preference, not per-session data
   }
 
   // Enter key shortcut: trigger "Leer documentos" when files are ready
@@ -154,10 +151,6 @@ export default function NuevoPage() {
     setPhase('generating')
     setGenSteps([
       { label: 'Generando Excel de solicitud', status: 'pending' },
-      { label: 'Preparando carpeta en Google Drive', status: 'pending' },
-      { label: 'Subiendo Excel a Drive', status: 'pending' },
-      { label: 'Subiendo Invoice PDF a Drive', status: 'pending' },
-      { label: 'Subiendo DIN PDF a Drive', status: 'pending' },
       { label: 'Guardando en historial', status: 'pending' },
     ])
 
@@ -168,42 +161,15 @@ export default function NuevoPage() {
       setGenStep(0, { status: 'done', detail: `${rows.length} filas generadas` })
 
       setGenStep(1, { status: 'running' })
-      const newFolderId = targetFolderId.trim()
-      setGenStep(1, { status: 'done', detail: newFolderId ? 'Usando carpeta Drive configurada' : 'Sin carpeta — subiendo a raíz' })
-
-      setGenStep(2, { status: 'running' })
-      const fname = `Formato_Solicitud_Seguimiento_${invoiceNum}.xlsx`
-      const excelLink = await uploadFileToDrive(b64, fname, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', newFolderId)
-      setDriveLink(excelLink)
-      setGenStep(2, { status: 'done', detail: 'Excel subido' })
-
-      setGenStep(3, { status: 'running' })
-      if (invoiceFile) {
-        const invB64 = await toBase64(invoiceFile)
-        await uploadFileToDrive(invB64, invoiceFile.name, 'application/pdf', newFolderId)
-        setGenStep(3, { status: 'done', detail: 'Invoice subida' })
-      } else {
-        setGenStep(3, { status: 'done', detail: 'Invoice no subida (pre-cargada desde Calidad)' })
-      }
-
-      setGenStep(4, { status: 'running' })
-      if (dinFile) {
-        const dinB64 = await toBase64(dinFile)
-        await uploadFileToDrive(dinB64, dinFile.name, 'application/pdf', newFolderId)
-      }
-      setGenStep(4, { status: 'done', detail: 'DIN subida' })
-
-      setGenStep(5, { status: 'running' })
       const { data: { user } } = await supabase.auth.getUser()
       await supabase.from('seguimientos').insert({
         invoice_num: invoiceNum, din_num: dinNum,
         trazabilidad: rows[0]?.trazabilidad || '',
         fecha_solicitud: todayFormatted(),
         productos_count: rows.length, estado: 'completado',
-        drive_link: excelLink, invoice_path: newFolderId,
-        din_path: newFolderId, user_email: user?.email || '',
+        user_email: user?.email || '',
       })
-      setGenStep(5, { status: 'done', detail: 'Guardado en historial' })
+      setGenStep(1, { status: 'done', detail: 'Guardado en historial' })
       setPhase('done')
 
     } catch (e: unknown) {
@@ -254,7 +220,7 @@ export default function NuevoPage() {
             {phase === 'upload' && 'Sube la Invoice y DIN para comenzar'}
             {phase === 'reading' && 'Leyendo documentos...'}
             {phase === 'review' && 'Revisa los productos antes de generar'}
-            {phase === 'generating' && 'Generando y subiendo a Drive...'}
+            {phase === 'generating' && 'Generando Excel...'}
             {phase === 'done' && '¡Proceso completado!'}
           </div>
         </div>
@@ -308,40 +274,7 @@ export default function NuevoPage() {
           {!fromCalidad && (
             <DropZone label="Invoice (PDF)" hint="Commercial Invoice del proveedor" file={invoiceFile} onFile={setInvoiceFile} />
           )}
-          {fromCalidad && invoiceFile && (
-            <DropZone label="Invoice (PDF)" hint="Opcional — para subir a Drive" file={invoiceFile} onFile={setInvoiceFile} />
-          )}
-          {fromCalidad && !invoiceFile && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <div className="drop-zone" style={{ opacity: 0.5, cursor: 'default', flex: 1 }}>
-                <div className="dz-icon"><Upload size={18} color="rgba(255,255,255,0.2)" /></div>
-                <div className="dz-text">
-                  <div className="dz-label" style={{ color: 'rgba(255,255,255,0.4)' }}>Invoice (opcional)</div>
-                  <div className="dz-hint">Ya procesada — sube solo para Drive</div>
-                </div>
-              </div>
-            </div>
-          )}
-
           <DropZone label="DIN (PDF)" hint="Declaración de Ingreso de Aduanas" file={dinFile} onFile={setDinFile} />
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              <FolderOpen size={11} /> ID carpeta de destino en Google Drive
-            </label>
-            <input
-              className="field-input"
-              value={targetFolderId}
-              onChange={e => { const v = e.target.value; setTargetFolderId(v); localStorage.setItem('drive_folder_id', v) }}
-              placeholder="Ej: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2"
-              style={{ fontSize: 12 }}
-              title="ID de la carpeta de Google Drive donde se subirán los archivos. Se guarda automáticamente para próximas solicitudes."
-            />
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
-              Copia el ID de la URL: drive.google.com/drive/folders/<span style={{ color: 'rgba(99,102,241,0.7)' }}>ID_AQUÍ</span>
-              {targetFolderId && <span style={{ color: 'rgba(74,222,128,0.7)', marginLeft: 8 }}>· guardado automáticamente</span>}
-            </div>
-          </div>
 
           {readSteps.length === 0 ? (
             <button className="btn btn-primary btn-full" style={{ marginTop: 4 }}
@@ -394,7 +327,7 @@ export default function NuevoPage() {
 
           {phase === 'review' && (
             <button className="btn btn-primary btn-full" onClick={generate}>
-              <FolderUp size={15} /> Generar Excel y subir a Drive
+              <Download size={15} /> Generar Excel
             </button>
           )}
 
@@ -411,8 +344,7 @@ export default function NuevoPage() {
                 <div className="summary-card"><div className="summary-label">Certificables</div><div className="summary-val green">{rows.length}</div></div>
               </div>
               <div className="flex gap-2">
-                {xlsxB64 && <button className="btn btn-secondary" onClick={downloadXlsx}><Download size={14} /> Descargar Excel</button>}
-                {driveLink && <button className="btn btn-success" onClick={() => window.open(driveLink, '_blank')}><ExternalLink size={14} /> Abrir en Drive</button>}
+                {xlsxB64 && <button className="btn btn-primary" onClick={downloadXlsx}><Download size={14} /> Descargar Excel</button>}
                 <button className="btn btn-secondary" onClick={() => navigate('/historial')} style={{ marginLeft: 'auto' }}>Ver historial →</button>
               </div>
             </>
