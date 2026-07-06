@@ -37,7 +37,9 @@ for (const [k, v] of Object.entries(PRODUCTS_DB)) {
   const trail = v.nombre.match(/\b(\d{4,6})\s*$/)
   if (trail) codes.add(trail[1])
   for (const c of codes) {
-    if (!DESC_CODE_INDEX[c]) DESC_CODE_INDEX[c] = { entry: v, modelo: k }
+    // Normalize leading zeros so "09431" and "9431" resolve to the same key
+    const key = String(parseInt(c, 10))
+    if (!DESC_CODE_INDEX[key]) DESC_CODE_INDEX[key] = { entry: v, modelo: k }
   }
 }
 
@@ -55,8 +57,9 @@ export function lookupProduct(codigo: string): ProductEntry | null {
 export function lookupProductByDescCode(code: string): { entry: ProductEntry; modelo: string } | null {
   const trimmed = code.trim()
   if (!/^\d{4,6}$/.test(trimmed)) return null
-  if (NO_CERT_CODES.has(trimmed.toUpperCase())) return null
-  return DESC_CODE_INDEX[trimmed] || null
+  const key = String(parseInt(trimmed, 10))  // normalize leading zeros: "09431" → "9431"
+  if (NO_CERT_CODES.has(key) || NO_CERT_CODES.has(trimmed.toUpperCase())) return null
+  return DESC_CODE_INDEX[key] || null
 }
 
 export function getCertifiableCount(): number {
