@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(base64, 'base64')
     const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default
     const pdfData = await pdfParse(buffer)
-    const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 8000)
+    const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 15000)
 
     const prompt = type === 'invoice'
       ? `Extract from this commercial invoice text.
