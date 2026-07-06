@@ -60,7 +60,9 @@ export function todayFormatted(): string {
 async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
   const b64 = await toBase64(file)
 
-  if (file.size > MAX_PDF_SIZE) {
+  // DINs always go through server-side text extraction (pdf-parse reads all pages
+  // deterministically; direct Claude PDF can miss items on late pages of multi-page DINs)
+  if (file.size > MAX_PDF_SIZE || type === 'din') {
     const res = await fetch('/api/extract-pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
