@@ -8,6 +8,17 @@ export default async function handler(req, res) {
     const pdfData = await pdfParse(buffer)
     const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 15000)
 
+    // For DINs: pre-extract supplier codes via regex (deterministic fallback).
+    // Claude may miss codes on later pages; regex catches all of them.
+    const preExtracted = {}
+    if (type === 'din') {
+      const re = /ITEM\s+(\d+)\b[\s\S]{1,600}?(?:NINGBO(?:\s+YLK)?-F|BO-F|FEISHUN-F);\s*([A-Z0-9][A-Z0-9-]{0,9})/gi
+      let m
+      while ((m = re.exec(text)) !== null) {
+        if (!preExtracted[m[1]]) preExtracted[m[1]] = m[2].trim()
+      }
+    }
+
     const prompt = type === 'invoice'
       ? `Extract from this commercial invoice text.
 Return ONLY valid JSON, no markdown, no extra text.
@@ -26,7 +37,7 @@ Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"descr
 - items: ALL line items with their description in uppercase
 - quantity must be integer PCS (look for patterns like "000017400.000000 PIEZAS" -> 17400, or "17.400,000 PCS" -> 17400)
 - quantity MUST be integer, never decimal
-- supplierCode: extract the code that appears after the supplier pattern ("NINGBO-F;", "BO-F;", "FEISHUN-F;", etc.). May be numeric ("99142") or alphanumeric ("HX-PLP"). Extract only what follows immediately after the semicolon. Omit if no clear code is present.
+- supplierCode: extract the code that appears after any supplier pattern like "NINGBO YLK-F;", "NINGBO-F;", "BO-F;", "FEISHUN-F;". May be numeric ("99002") or alphanumeric ("HX-PLP"). Extract EVERY item's code — do not skip any.
 - IMPORTANT: Exclude any items whose description contains words related to PVC conduit, cable trunking, reels, or accessories such as: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, CARRETE, CARRETES, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE
 
 TEXT:
@@ -47,6 +58,27 @@ ${text}`
     })
 
     const data = await claudeRes.json()
+
+    // Fill in any supplier codes that Claude missed using the pre-extracted regex results
+    if (type === 'din' && Object.keys(preExtracted).length && data.content?.[0]?.text) {
+      try {
+        const ct = data.content[0].text
+        const jm = ct.match(/\{[\s\S]*\}/)
+        if (jm) {
+          const parsed = JSON.parse(jm[0])
+          let changed = false
+          for (const item of (parsed.items || [])) {
+            const key = String(item.itemNum)
+            if (!item.supplierCode && preExtracted[key]) {
+              item.supplierCode = preExtracted[key]
+              changed = true
+            }
+          }
+          if (changed) data.content[0].text = ct.replace(jm[0], JSON.stringify(parsed))
+        }
+      } catch (_) {}
+    }
+
     return res.status(claudeRes.status).json(data)
   } catch (error) {
     return res.status(500).json({ error: error.message })
