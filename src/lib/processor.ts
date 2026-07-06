@@ -209,12 +209,14 @@ function findSubsetSumAssignments(
       }
     }
 
-    // Try description-filtered group first
-    if (byDesc.length) {
-      for (let size = 1; size <= byDesc.length && !found; size++) {
-        for (const combo of getCombinations(byDesc, size)) {
+    // Try description-filtered group first, then all unassigned as fallback
+    const pools = byDesc.length ? [byDesc, unassigned] : [unassigned]
+    for (const pool of pools) {
+      if (found) break
+      for (let size = 1; size <= pool.length && !found; size++) {
+        for (const combo of getCombinations(pool, size)) {
           if (combo.reduce((s, p) => s + p.cantidad, 0) === target) {
-            console.log(`[SubsetSum] ${itemLabel} desc-match → ${combo.map(p => p.modelo).join('+')}`)
+            console.log(`[SubsetSum] ${itemLabel} qty-match → ${combo.map(p => p.modelo).join('+')}`)
             for (const p of combo) assignments[p.modelo] = itemLabel
             found = true; break
           }
