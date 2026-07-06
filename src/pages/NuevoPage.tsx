@@ -7,7 +7,7 @@ import { parseInvoice, parseDIN, crossWithBD, generateExcel, uploadFileToDrive, 
 type StepState = { label: string; status: 'pending' | 'running' | 'done' | 'error'; detail?: string }
 type Phase = 'upload' | 'reading' | 'review' | 'generating' | 'done'
 
-const DIN_ITEMS = ['', 'ITEM 1','ITEM 2','ITEM 3','ITEM 4','ITEM 5','ITEM 6','ITEM 7','ITEM 8','ITEM 9','ITEM 10','ITEM 11','ITEM 12']
+// DIN item options are built dynamically from parsed DIN data
 
 function DropZone({ label, hint, file, onFile }: { label: string; hint: string; file: File | null; onFile: (f: File | null) => void }) {
   const [drag, setDrag] = useState(false)
@@ -50,6 +50,7 @@ export default function NuevoPage() {
   const [rows, setRows] = useState<ProductRow[]>([])
   const [invoiceNum, setInvoiceNum] = useState(fromCalidad?.invoiceNum || '')
   const [dinNum, setDinNum] = useState('')
+  const [dinItemOptions, setDinItemOptions] = useState<string[]>([''])
 
   const [genSteps, setGenSteps] = useState<StepState[]>([])
   const [generating, setGenerating] = useState(false)
@@ -66,7 +67,7 @@ export default function NuevoPage() {
   const reset = () => {
     setPhase('upload'); setReading(false); setGenerating(false)
     setReadSteps([]); setGenSteps([])
-    setRows([]); setInvoiceNum(fromCalidad?.invoiceNum || ''); setDinNum('')
+    setRows([]); setInvoiceNum(fromCalidad?.invoiceNum || ''); setDinNum(''); setDinItemOptions([''])
     setXlsxB64(''); setDriveLink('')
     setInvoiceFile(null); setDinFile(null)
     // Keep targetFolderId — it's a persistent preference, not per-session data
@@ -126,6 +127,7 @@ export default function NuevoPage() {
       const dinData = await parseDIN(dinFile)
       const parsedDinNum = dinData.dinNum || ''
       setDinNum(parsedDinNum)
+      setDinItemOptions(['', ...dinData.items.map(i => `ITEM ${i.itemNum}`)])
       const dinDetail = dinData.items.length
         ? `DIN ${parsedDinNum} · ${dinData.items.length} ítems: ${dinData.items.map(i => `ITEM ${i.itemNum}=${i.quantity}`).join(', ')}`
         : `DIN ${parsedDinNum} · 0 ítems extraídos`
@@ -384,7 +386,7 @@ export default function NuevoPage() {
                   value={r.itemDin}
                   disabled={phase === 'generating' || phase === 'done'}
                   onChange={e => setRows(prev => prev.map(x => x.id === r.id ? { ...x, itemDin: e.target.value } : x))}>
-                  {DIN_ITEMS.map(o => <option key={o} value={o}>{o || '— Ítem DIN —'}</option>)}
+                  {dinItemOptions.map(o => <option key={o} value={o}>{o || '— Ítem DIN —'}</option>)}
                 </select>
               </div>
             ))}
