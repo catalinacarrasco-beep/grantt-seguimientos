@@ -66,38 +66,44 @@ ${text}`
 
     const data = await claudeRes.json()
 
-    // Post-process: fill missing supplier codes AND inject items Claude missed entirely
+    // For DINs with regex pre-extraction: merge regex (authoritative for qty+supplierCode)
+    // with Claude's output (provides descriptions, catches items regex missed like item 1).
     if (type === 'din' && Object.keys(preExtracted).length && data.content?.[0]?.text) {
       try {
-        const ct = data.content[0].text
-        const jm = ct.match(/\{[\s\S]*\}/)
+        const jm = data.content[0].text.match(/\{[\s\S]*\}/)
         if (jm) {
           const parsed = JSON.parse(jm[0])
-          parsed.items = parsed.items || []
-          let changed = false
-          const seen = new Set(parsed.items.map(i => String(i.itemNum)))
+          const claudeItems = Array.isArray(parsed.items) ? parsed.items : []
 
-          // Fill missing supplier codes for items Claude extracted
-          for (const item of parsed.items) {
-            const key = String(item.itemNum)
-            if (!item.supplierCode && preExtracted[key] && preExtracted[key].supplierCode) {
-              item.supplierCode = preExtracted[key].supplierCode
-              changed = true
+          // Build map of Claude items for description lookup
+          const claudeMap = {}
+          for (const item of claudeItems) claudeMap[String(item.itemNum)] = item
+
+          // Final list: regex items first (guaranteed quantity + supplierCode),
+          // then Claude-only items that regex didn't find (e.g. item 1 from page 1)
+          const finalItems = []
+          const seen = new Set()
+
+          for (const [itemNum, pre] of Object.entries(preExtracted)) {
+            if (!pre.quantity) continue
+            const claudeItem = claudeMap[itemNum] || {}
+            const entry = { itemNum, quantity: pre.quantity, description: claudeItem.description || '' }
+            if (pre.supplierCode) entry.supplierCode = pre.supplierCode
+            else if (claudeItem.supplierCode) entry.supplierCode = claudeItem.supplierCode
+            finalItems.push(entry)
+            seen.add(itemNum)
+          }
+
+          for (const item of claudeItems) {
+            if (!seen.has(String(item.itemNum))) {
+              finalItems.push(item)
+              seen.add(String(item.itemNum))
             }
           }
 
-          // Inject items Claude missed entirely (requires quantity from regex)
-          for (const itemNum of Object.keys(preExtracted)) {
-            if (!seen.has(itemNum) && preExtracted[itemNum].quantity) {
-              const pre = preExtracted[itemNum]
-              const newItem = { itemNum, quantity: pre.quantity, description: '' }
-              if (pre.supplierCode) newItem.supplierCode = pre.supplierCode
-              parsed.items.push(newItem)
-              changed = true
-            }
-          }
-
-          if (changed) data.content[0].text = ct.replace(jm[0], JSON.stringify(parsed))
+          finalItems.sort((a, b) => parseInt(a.itemNum) - parseInt(b.itemNum))
+          parsed.items = finalItems
+          data.content[0].text = JSON.stringify(parsed)
         }
       } catch (_) {}
     }
