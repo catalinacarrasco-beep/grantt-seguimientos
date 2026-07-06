@@ -306,8 +306,8 @@ export async function uploadFileToDrive(b64: string, fileName: string, mimeType:
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'upload_file', params: { name: fileName, base64: b64, mimeType, parentId: folderId } }),
   })
-  if (!res.ok) throw new Error('Error al subir a Drive — revisa tu conexión e intenta de nuevo')
   const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Error al subir a Drive — revisa tu conexión e intenta de nuevo')
   return (data.webViewLink as string) || (data.id ? `https://drive.google.com/file/d/${data.id}/view` : '')
 }
 
