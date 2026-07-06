@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Upload, CheckCircle2, Camera, Loader2, FileSearch, X, RefreshCw, ArrowRight, Smartphone, Wifi } from 'lucide-react'
+import { Upload, CheckCircle2, Camera, Loader2, FileSearch, X, RefreshCw, ArrowRight, Smartphone, Wifi, Zap } from 'lucide-react'
 import QRCode from 'qrcode'
 import jsQR from 'jsqr'
 import { parseInvoice } from '../lib/processor'
@@ -75,7 +75,9 @@ export default function CalidadPage() {
   const [scannedCode, setScannedCode] = useState<string | null>(null)
   const [scanOk, setScanOk] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
-  const rafRef = useRef<number>(0)
+  const scanIntervalRef = useRef<number>(0)
+  const torchTrackRef = useRef<MediaStreamTrack | null>(null)
+  const [torchOn, setTorchOn] = useState(false)
   const scanTargetRef = useRef<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
 
   // ── Load session from URL param (mobile opens shared link) ──
@@ -184,52 +186,61 @@ export default function CalidadPage() {
     setPhase('upload')
   }
 
-  // ── Live QR scanner (camera → jsQR RAF loop) ──
+  // ── Live QR scanner (camera → jsQR interval loop) ──
   useEffect(() => {
     if (!scannerOpen) return
     let active = true
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
 
-    const tick = () => {
-      if (!active || !videoRef.current) return
-      const v = videoRef.current
-      if (v.readyState >= 2 && v.videoWidth > 0) {
-        if (canvas.width !== v.videoWidth) { canvas.width = v.videoWidth; canvas.height = v.videoHeight }
-        ctx.drawImage(v, 0, 0)
-        const id = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const found = jsQR(id.data, id.width, id.height)
-        if (found && scanTargetRef.current) {
-          const tgt = scanTargetRef.current
-          const ok = verifyQR(tgt.modelo, found.data)
-          setScannedCode(found.data)
-          setScanOk(ok)
-          setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
-            ...p,
-            [tgt.section]: { ...p[tgt.section], sello_qr: ok ? 'SI' : p[tgt.section].sello_qr, qrScanned: found.data, qrOk: ok },
-          } : p))
-          if (ok) {
-            active = false
-            setTimeout(() => setScannerOpen(false), 1500)
-          } else {
-            // Keep scanner open — reset and resume scanning after showing error
-            setTimeout(() => { setScannedCode(null); if (active) rafRef.current = requestAnimationFrame(tick) }, 2200)
-          }
-          return
-        }
-      }
-      rafRef.current = requestAnimationFrame(tick)
-    }
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-      .then(stream => {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false,
+    })
+      .then(async stream => {
         if (!active) { stream.getTracks().forEach(t => t.stop()); return }
         if (!videoRef.current) { stream.getTracks().forEach(t => t.stop()); return }
+
+        const track = stream.getVideoTracks()[0]
+        torchTrackRef.current = track
+        // Request continuous autofocus if supported
+        try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] }) } catch {}
+
         videoRef.current.srcObject = stream
-        videoRef.current.play().then(() => { if (active) tick() }).catch(() => {})
+        await videoRef.current.play().catch(() => {})
+        if (!active) return
+
+        // Scan every 250ms — enough for jsQR to process without dropping frames
+        scanIntervalRef.current = window.setInterval(() => {
+          if (!active || !videoRef.current) return
+          const v = videoRef.current
+          if (v.readyState < 2 || v.videoWidth === 0) return
+          if (canvas.width !== v.videoWidth) { canvas.width = v.videoWidth; canvas.height = v.videoHeight }
+          ctx.drawImage(v, 0, 0)
+          const id = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          // attemptBoth handles QR codes on both light and dark backgrounds
+          const found = jsQR(id.data, id.width, id.height, { inversionAttempts: 'attemptBoth' })
+          if (found && scanTargetRef.current) {
+            const tgt = scanTargetRef.current
+            const ok = verifyQR(tgt.modelo, found.data)
+            setScannedCode(found.data)
+            setScanOk(ok)
+            setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
+              ...p,
+              [tgt.section]: { ...p[tgt.section], sello_qr: ok ? 'SI' : p[tgt.section].sello_qr, qrScanned: found.data, qrOk: ok },
+            } : p))
+            if (ok) {
+              active = false
+              clearInterval(scanIntervalRef.current)
+              setTimeout(() => setScannerOpen(false), 1500)
+            } else {
+              // Reset result after 2.2s — interval keeps running automatically
+              setTimeout(() => setScannedCode(null), 2200)
+            }
+          }
+        }, 250)
       })
       .catch(() => {
-        // getUserMedia not available — fall back to file picker
         active = false
         setScannerOpen(false)
         const tgt = scanTargetRef.current
@@ -238,7 +249,8 @@ export default function CalidadPage() {
 
     return () => {
       active = false
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      clearInterval(scanIntervalRef.current)
+      torchTrackRef.current = null
       if (videoRef.current?.srcObject) {
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop())
         videoRef.current.srcObject = null
@@ -250,7 +262,18 @@ export default function CalidadPage() {
     scanTargetRef.current = { modelo, section }
     setScannedCode(null)
     setScanOk(false)
+    setTorchOn(false)
     setScannerOpen(true)
+  }
+
+  const toggleTorch = async () => {
+    const track = torchTrackRef.current
+    if (!track) return
+    try {
+      const next = !torchOn
+      await track.applyConstraints({ advanced: [{ torch: next } as MediaTrackConstraintSet] })
+      setTorchOn(next)
+    } catch {}
   }
 
   const refreshFromSession = async () => {
@@ -608,7 +631,15 @@ export default function CalidadPage() {
             <button className="btn-icon" onClick={() => setScannerOpen(false)} style={{ color: '#fff' }}>
               <X size={20} />
             </button>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Escanear Sello QR</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', flex: 1 }}>Escanear Sello QR</span>
+            <button
+              className="btn-icon"
+              onClick={toggleTorch}
+              title="Linterna"
+              style={{ color: torchOn ? '#fbbf24' : 'rgba(255,255,255,0.4)' }}
+            >
+              <Zap size={20} fill={torchOn ? '#fbbf24' : 'none'} />
+            </button>
           </div>
 
           {/* Camera view */}
