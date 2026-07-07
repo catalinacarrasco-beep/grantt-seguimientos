@@ -137,6 +137,14 @@ export default function NuevoPage() {
       setReadStep(2, { status: 'done', detail: `${newRows.length} certificables de ${invProducts.length} totales${missing ? ` · ${missing} sin ítem DIN` : ''}` })
       if (!newRows.length) throw new Error('Ningún producto certificable encontrado')
 
+      // Save codes for Nota de Venta module
+      const pendingNotas: unknown[] = JSON.parse(localStorage.getItem('notas_venta') || '[]')
+      const idx = pendingNotas.findIndex((n: any) => n.invoiceNum === parsedInvNum)
+      const nota = { invoiceNum: parsedInvNum, codes: newRows.map(r => ({ modelo: r.modelo, nombre: r.nombre })), quantities: {} as Record<string, string>, timestamp: Date.now() }
+      newRows.forEach(r => { nota.quantities[r.modelo] = '' })
+      if (idx >= 0) pendingNotas[idx] = nota; else pendingNotas.push(nota)
+      localStorage.setItem('notas_venta', JSON.stringify(pendingNotas))
+
       setPhase('review')
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
