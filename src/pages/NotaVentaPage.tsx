@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Send, Trash2, FileText, Plus, X } from 'lucide-react'
-import productsDB from '../lib/productsDB.json'
+import { lookupProduct } from '../lib/products'
 
 type NotaEntry = {
   invoiceNum: string
@@ -17,14 +17,6 @@ function loadNotas(): NotaEntry[] {
 
 function saveNotas(notas: NotaEntry[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notas))
-}
-
-function findProduct(code: string): string | null {
-  const norm = code.toUpperCase().replace(/\s+/g, '-').replace(/\.0$/, '').replace(/^0+/, '')
-  const p = (productsDB as any[]).find(
-    p => (p.codigo || '').toUpperCase().replace(/\s+/g, '-').replace(/\.0$/, '').replace(/^0+/, '') === norm
-  )
-  return p ? (p.nombre || null) : null
 }
 
 export default function NotaVentaPage() {
@@ -51,7 +43,8 @@ export default function NotaVentaPage() {
       const updated = prev.map(n => {
         if (n.invoiceNum !== invoiceNum) return n
         if (n.codes.find(c => c.modelo === code)) return n
-        const nombre = findProduct(code) || code
+        let nombre = code
+      try { const p = lookupProduct(code); if (p) nombre = p.nombre } catch {}
         return {
           ...n,
           codes: [...n.codes, { modelo: code, nombre }],
