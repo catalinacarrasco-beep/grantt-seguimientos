@@ -27,10 +27,14 @@ export default function HistorialPage() {
     setRows(prev => prev.filter(r => r.id !== id))
   }
 
-  const openNotaVenta = (invoiceNum: string) => {
+  const openNotaVenta = (r: Seguimiento) => {
     const notas = JSON.parse(localStorage.getItem('notas_venta') || '[]')
-    if (!notas.find((n: any) => n.invoiceNum === invoiceNum)) {
-      notas.push({ invoiceNum, codes: [], quantities: {}, timestamp: Date.now() })
+    if (!notas.find((n: any) => n.invoiceNum === r.invoice_num)) {
+      const data = (r as any).productos_data as { modelo: string; nombre: string }[] | null
+      const codes = data || []
+      const quantities: Record<string, string> = {}
+      codes.forEach(c => { quantities[c.modelo] = '' })
+      notas.push({ invoiceNum: r.invoice_num, codes, quantities, timestamp: Date.now() })
       localStorage.setItem('notas_venta', JSON.stringify(notas))
     }
     navigate('/nota-venta')
@@ -94,7 +98,7 @@ export default function HistorialPage() {
                   <td>
                     <div className="flex gap-2">
                       <button className="btn-icon" title="Nota de venta"
-                        onClick={() => openNotaVenta(r.invoice_num)}
+                        onClick={() => openNotaVenta(r)}
                         style={{ color: 'rgba(165,180,252,0.6)' }}>
                         <FileText size={14} />
                       </button>
