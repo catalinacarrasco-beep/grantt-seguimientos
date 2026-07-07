@@ -27,6 +27,15 @@ export default function HistorialPage() {
     setRows(prev => prev.filter(r => r.id !== id))
   }
 
+  const openNotaVenta = (invoiceNum: string) => {
+    const notas = JSON.parse(localStorage.getItem('notas_venta') || '[]')
+    if (!notas.find((n: any) => n.invoiceNum === invoiceNum)) {
+      notas.push({ invoiceNum, codes: [], quantities: {}, timestamp: Date.now() })
+      localStorage.setItem('notas_venta', JSON.stringify(notas))
+    }
+    navigate('/nota-venta')
+  }
+
   const estadoBadge = (e: string) => {
     if (e === 'completado') return <span className="badge badge-green">Completado</span>
     if (e === 'error') return <span className="badge badge-red">Error</span>
@@ -84,12 +93,11 @@ export default function HistorialPage() {
                   <td>{estadoBadge(r.estado)}</td>
                   <td>
                     <div className="flex gap-2">
-                      {r.drive_link && (
-                        <button className="btn-icon" title="Abrir en Drive"
-                          onClick={() => window.open(r.drive_link!, '_blank')}>
-                          <ExternalLink size={14} />
-                        </button>
-                      )}
+                      <button className="btn-icon" title="Nota de venta"
+                        onClick={() => openNotaVenta(r.invoice_num)}
+                        style={{ color: 'rgba(165,180,252,0.6)' }}>
+                        <FileText size={14} />
+                      </button>
                       <button className="btn-icon" style={{ color: 'rgba(239,68,68,0.5)' }}
                         title="Eliminar" onClick={() => del(r.id)}>
                         <Trash2 size={14} />
