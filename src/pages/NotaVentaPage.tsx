@@ -76,14 +76,15 @@ export default function NotaVentaPage() {
     })
     if (!filled.length) return
 
-    const lines = filled.map(c => `${c.modelo}    ${nota.quantities[c.modelo]}`)
+    const lines = filled.map((c, i) => `${i + 1}. ${c.modelo} — ${nota.quantities[c.modelo]} unidades`)
     const body = [
       'Estimada Paula,',
       '',
       'Favor su ayuda con nota de venta para muestras para certificación de seguimiento para CESMEC, los modelos son:',
       '',
-      'CÓDIGO                    CANTIDAD',
       ...lines,
+      '',
+      'Saludos cordiales',
     ].join('\n')
 
     const subject = `Nota de venta para muestras ${nota.invoiceNum}`
