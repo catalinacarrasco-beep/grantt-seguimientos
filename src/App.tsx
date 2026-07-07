@@ -7,6 +7,7 @@ import HistorialPage from './pages/HistorialPage'
 import InspeccionesPage from './pages/InspeccionesPage'
 import ConfigPage from './pages/ConfigPage'
 import CalidadPage from './pages/CalidadPage'
+import BDMaestraPage from './pages/BDMaestraPage'
 import Sidebar from './components/Sidebar'
 import type { User } from '@supabase/supabase-js'
 
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="/inspecciones" element={<InspeccionesPage />} />
           <Route path="/nuevo" element={<NuevoPage />} />
           <Route path="/historial" element={<HistorialPage />} />
+          <Route path="/bd-maestra" element={<BDMaestraPage />} />
           <Route path="/config" element={<ConfigPage />} />
         </Routes>
       </div>
