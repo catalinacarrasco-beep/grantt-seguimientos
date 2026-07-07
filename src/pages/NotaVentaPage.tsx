@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Send, Trash2, FileText, Save } from 'lucide-react'
+import { useState } from 'react'
+import { Send, Trash2, FileText, Plus, X } from 'lucide-react'
+import productsDB from '../lib/productsDB.json'
 
 type NotaEntry = {
   invoiceNum: string
@@ -18,8 +19,17 @@ function saveNotas(notas: NotaEntry[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notas))
 }
 
+function findProduct(code: string): string | null {
+  const norm = code.toUpperCase().replace(/\s+/g, '-').replace(/\.0$/, '').replace(/^0+/, '')
+  const p = (productsDB as any[]).find(
+    p => (p.codigo || '').toUpperCase().replace(/\s+/g, '-').replace(/\.0$/, '').replace(/^0+/, '') === norm
+  )
+  return p ? (p.nombre || null) : null
+}
+
 export default function NotaVentaPage() {
   const [notas, setNotas] = useState<NotaEntry[]>(loadNotas)
+  const [newCode, setNewCode] = useState<Record<string, string>>({})
 
   const updateQuantity = (invoiceNum: string, modelo: string, value: string) => {
     setNotas(prev => {
@@ -28,6 +38,39 @@ export default function NotaVentaPage() {
           ? { ...n, quantities: { ...n.quantities, [modelo]: value } }
           : n
       )
+      saveNotas(updated)
+      return updated
+    })
+  }
+
+  const addCode = (invoiceNum: string) => {
+    const raw = (newCode[invoiceNum] || '').trim()
+    if (!raw) return
+    const code = raw.toUpperCase().replace(/\s+/g, '-')
+    setNotas(prev => {
+      const updated = prev.map(n => {
+        if (n.invoiceNum !== invoiceNum) return n
+        if (n.codes.find(c => c.modelo === code)) return n
+        const nombre = findProduct(code) || code
+        return {
+          ...n,
+          codes: [...n.codes, { modelo: code, nombre }],
+          quantities: { ...n.quantities, [code]: '' },
+        }
+      })
+      saveNotas(updated)
+      return updated
+    })
+    setNewCode(prev => ({ ...prev, [invoiceNum]: '' }))
+  }
+
+  const removeCode = (invoiceNum: string, modelo: string) => {
+    setNotas(prev => {
+      const updated = prev.map(n => {
+        if (n.invoiceNum !== invoiceNum) return n
+        const { [modelo]: _, ...rest } = n.quantities
+        return { ...n, codes: n.codes.filter(c => c.modelo !== modelo), quantities: rest }
+      })
       saveNotas(updated)
       return updated
     })
@@ -73,7 +116,7 @@ export default function NotaVentaPage() {
         <div className="page-sub">Sin notas pendientes</div>
         <div className="card" style={{ textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.3)' }}>
           <FileText size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
-          <div style={{ fontSize: 13 }}>Procesa una Invoice en "Nuevo seguimiento" para generar una nota de venta</div>
+          <div style={{ fontSize: 13 }}>Procesa una Invoice en "Nuevo seguimiento" o crea una desde el Historial</div>
         </div>
       </div>
     )
@@ -96,10 +139,10 @@ export default function NotaVentaPage() {
               <div>
                 <div className="card-title">Invoice {nota.invoiceNum}</div>
                 <div className="text-xs text-muted">
-                  {nota.codes.length} códigos · {filledCount} con cantidad
+                  {nota.codes.length} código{nota.codes.length !== 1 ? 's' : ''} · {filledCount} con cantidad
                 </div>
               </div>
-              <span className={`badge ${filledCount === nota.codes.length ? 'badge-green' : 'badge-amber'}`}>
+              <span className={`badge ${filledCount > 0 && filledCount === nota.codes.length ? 'badge-green' : 'badge-amber'}`}>
                 {filledCount}/{nota.codes.length}
               </span>
             </div>
@@ -111,6 +154,7 @@ export default function NotaVentaPage() {
                     <th style={{ padding: '8px 10px', textAlign: 'left', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Código</th>
                     <th style={{ padding: '8px 10px', textAlign: 'left', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Producto</th>
                     <th style={{ padding: '8px 10px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontWeight: 600, width: 100 }}>Cantidad</th>
+                    <th style={{ width: 36 }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -129,8 +173,34 @@ export default function NotaVentaPage() {
                           min="0"
                         />
                       </td>
+                      <td style={{ padding: '4px 4px', textAlign: 'center' }}>
+                        <button className="btn-icon" title="Quitar código"
+                          onClick={() => removeCode(nota.invoiceNum, c.modelo)}
+                          style={{ color: 'rgba(239,68,68,0.4)', padding: 2 }}>
+                          <X size={12} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
+                  <tr style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                    <td colSpan={2} style={{ padding: '6px 10px' }}>
+                      <input
+                        className="field-input"
+                        style={{ fontSize: 12, width: '100%' }}
+                        value={newCode[nota.invoiceNum] || ''}
+                        onChange={e => setNewCode(prev => ({ ...prev, [nota.invoiceNum]: e.target.value }))}
+                        onKeyDown={e => e.key === 'Enter' && addCode(nota.invoiceNum)}
+                        placeholder="Agregar código..."
+                      />
+                    </td>
+                    <td colSpan={2} style={{ padding: '4px 10px', textAlign: 'center' }}>
+                      <button className="btn-icon" title="Agregar"
+                        onClick={() => addCode(nota.invoiceNum)}
+                        style={{ color: 'rgba(165,180,252,0.6)' }}>
+                        <Plus size={14} />
+                      </button>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
