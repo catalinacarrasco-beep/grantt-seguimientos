@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList } from 'lucide-react'
+import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function Sidebar({ email, isOpen, onClose }: { email: string; isOpen: boolean; onClose: () => void }) {
@@ -40,6 +40,9 @@ export default function Sidebar({ email, isOpen, onClose }: { email: string; isO
         </NavLink>
 
         <div style={{ marginTop: 8 }}>
+          <NavLink to="/bd-maestra" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+            <Database size={15} /> BD Maestra
+          </NavLink>
           <NavLink to="/config" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
             <Settings size={15} /> Configuración
           </NavLink>
