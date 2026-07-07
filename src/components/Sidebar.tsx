@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database } from 'lucide-react'
+import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database, FileText } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function Sidebar({ email, isOpen, onClose }: { email: string; isOpen: boolean; onClose: () => void }) {
@@ -37,6 +37,9 @@ export default function Sidebar({ email, isOpen, onClose }: { email: string; isO
         </NavLink>
         <NavLink to="/historial" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
           <Clock size={15} /> Historial
+        </NavLink>
+        <NavLink to="/nota-venta" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+          <FileText size={15} /> Nota de venta
         </NavLink>
 
         <div style={{ marginTop: 8 }}>
