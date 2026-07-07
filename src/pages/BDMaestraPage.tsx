@@ -140,8 +140,11 @@ export default function BDMaestraPage() {
         </div>
 
         <div
-          className={`drop-zone${file ? ' has-file' : ''}`}
+          className={`drop-zone${file ? ' has-file' : ''}${false ? ' dragging' : ''}`}
           onClick={() => !file && inputRef.current?.click()}
+          onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('dragging') }}
+          onDragLeave={e => { e.currentTarget.classList.remove('dragging') }}
+          onDrop={e => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); if (e.dataTransfer.files[0]) parseFile(e.dataTransfer.files[0]) }}
         >
           <input ref={inputRef} type="file" accept=".xlsb,.xlsx,.xls" style={{ display: 'none' }}
             onChange={e => { if (e.target.files?.[0]) parseFile(e.target.files[0]); e.target.value = '' }} />
