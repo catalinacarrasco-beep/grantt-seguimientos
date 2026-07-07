@@ -176,6 +176,7 @@ export default function NuevoPage() {
         fecha_solicitud: todayFormatted(),
         productos_count: rows.length, estado: 'completado',
         user_email: user?.email || '',
+        productos_data: rows.map(r => ({ modelo: r.modelo, nombre: r.nombre })),
       })
       setGenStep(1, { status: 'done', detail: 'Guardado en historial' })
       setPhase('done')
