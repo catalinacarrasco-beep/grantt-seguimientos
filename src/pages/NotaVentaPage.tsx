@@ -76,7 +76,7 @@ export default function NotaVentaPage() {
     })
     if (!filled.length) return
 
-    const lines = filled.map((c, i) => `${i + 1}. ${c.modelo} — ${nota.quantities[c.modelo]} unidades`)
+    const lines = filled.map(c => `• ${c.modelo}: ${nota.quantities[c.modelo]} uds.`)
     const body = [
       'Estimada Paula,',
       '',
