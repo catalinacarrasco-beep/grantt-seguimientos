@@ -88,8 +88,8 @@ export default function NotaVentaPage() {
 
     const subject = `Nota de venta para muestras ${nota.invoiceNum}`
     window.open(
-      `mailto:catalina.carrasco@grantt.cl?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
-      '_self'
+      `https://mail.google.com/mail/?view=cm&to=catalina.carrasco@grantt.cl&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      '_blank'
     )
   }
 
