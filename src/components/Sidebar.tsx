@@ -1,8 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database, FileText, Download } from 'lucide-react'
+import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database, FileText, Download, RefreshCw } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-export default function Sidebar({ email, isOpen, onClose, installPrompt, onInstalled }: { email: string; isOpen: boolean; onClose: () => void; installPrompt?: any; onInstalled?: () => void }) {
+export default function Sidebar({ email, isOpen, onClose, installPrompt, onInstalled, updateReady }: { email: string; isOpen: boolean; onClose: () => void; installPrompt?: any; onInstalled?: () => void; updateReady?: boolean }) {
   const navigate = useNavigate()
 
   const logout = async () => {
@@ -15,6 +15,12 @@ export default function Sidebar({ email, isOpen, onClose, installPrompt, onInsta
     installPrompt.prompt()
     const { outcome } = await installPrompt.userChoice
     if (outcome === 'accepted') onInstalled?.()
+  }
+
+  const handleUpdate = () => {
+    navigator.serviceWorker?.getRegistration().then(reg => {
+      reg?.waiting?.postMessage('SKIP_WAITING')
+    })
   }
 
   const nav = (to: string) => { navigate(to); onClose() }
@@ -62,6 +68,11 @@ export default function Sidebar({ email, isOpen, onClose, installPrompt, onInsta
       </nav>
 
       <div className="sidebar-footer">
+        {updateReady && (
+          <button className="nav-item" onClick={handleUpdate} style={{ width: '100%', color: 'rgba(52,211,153,0.9)', marginBottom: 4 }}>
+            <RefreshCw size={13} /> Actualizar app
+          </button>
+        )}
         {installPrompt && !isStandalone && (
           <button className="nav-item" onClick={handleInstall} style={{ width: '100%', color: 'rgba(165,180,252,0.8)', marginBottom: 4 }}>
             <Download size={13} /> Instalar app
