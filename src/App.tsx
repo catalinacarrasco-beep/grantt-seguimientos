@@ -16,6 +16,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState<any>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -26,6 +27,15 @@ export default function App() {
       setUser(session?.user ?? null)
     })
     return () => subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setInstallPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
   if (loading) return (
@@ -39,7 +49,7 @@ export default function App() {
   return (
     <div className="layout">
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-      <Sidebar email={user.email || ''} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar email={user.email || ''} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} installPrompt={installPrompt} onInstalled={() => setInstallPrompt(null)} />
       <div className="content">
         <div className="mobile-header">
           <button className="btn-icon" onClick={() => setSidebarOpen(true)}>
