@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       if (row) {
         ws.getCell(`B${r}`).value = row.nombre
         ws.getCell(`C${r}`).value = row.proto
-        ws.getCell(`D${r}`).value = row.modelo
+        ws.getCell(`D${r}`).value = row.modeloCert || row.modelo
         ws.getCell(`E${r}`).value = Number(row.cantidad)
         ws.getCell(`G${r}`).value = row.trazabilidad
         ws.getCell(`H${r}`).value = String(row.qr)
