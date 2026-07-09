@@ -1,8 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database, FileText } from 'lucide-react'
+import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database, FileText, Download } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-export default function Sidebar({ email, isOpen, onClose }: { email: string; isOpen: boolean; onClose: () => void }) {
+export default function Sidebar({ email, isOpen, onClose, installPrompt, onInstalled }: { email: string; isOpen: boolean; onClose: () => void; installPrompt?: any; onInstalled?: () => void }) {
   const navigate = useNavigate()
 
   const logout = async () => {
@@ -10,7 +10,16 @@ export default function Sidebar({ email, isOpen, onClose }: { email: string; isO
     window.location.reload()
   }
 
+  const handleInstall = async () => {
+    if (!installPrompt) return
+    installPrompt.prompt()
+    const { outcome } = await installPrompt.userChoice
+    if (outcome === 'accepted') onInstalled?.()
+  }
+
   const nav = (to: string) => { navigate(to); onClose() }
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
 
   return (
     <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
@@ -53,6 +62,11 @@ export default function Sidebar({ email, isOpen, onClose }: { email: string; isO
       </nav>
 
       <div className="sidebar-footer">
+        {installPrompt && !isStandalone && (
+          <button className="nav-item" onClick={handleInstall} style={{ width: '100%', color: 'rgba(165,180,252,0.8)', marginBottom: 4 }}>
+            <Download size={13} /> Instalar app
+          </button>
+        )}
         <div className="sidebar-user">{email}</div>
         <button className="nav-item" onClick={logout} style={{ width: '100%', color: 'rgba(239,68,68,0.6)' }}>
           <LogOut size={13} /> Cerrar sesión
