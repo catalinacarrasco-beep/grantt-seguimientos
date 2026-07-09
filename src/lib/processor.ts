@@ -1,8 +1,10 @@
 import { lookupProduct, lookupProductByDescCode } from './products'
+import modeloCertMap from './modeloCertMap.json'
 
 export type ProductRow = {
   id: string
   modelo: string
+  modeloCert?: string
   cantidad: number
   itemDin: string
   proto: string
@@ -13,6 +15,8 @@ export type ProductRow = {
 }
 
 const MAX_PDF_SIZE = 4 * 1024 * 1024 // 4MB
+
+const CERT_MAP: Record<string, string> = modeloCertMap as Record<string, string>
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -60,8 +64,6 @@ export function todayFormatted(): string {
 async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
   const b64 = await toBase64(file)
 
-  // DINs always go through server-side text extraction (pdf-parse reads all pages
-  // deterministically; direct Claude PDF can miss items on late pages of multi-page DINs)
   if (file.size > MAX_PDF_SIZE || type === 'din') {
     const res = await fetch('/api/extract-pdf', {
       method: 'POST',
@@ -141,12 +143,10 @@ export async function parseDIN(file: File): Promise<{ dinNum: string; items: { i
   return raw
 }
 
-// Extracts meaningful words from a DIN description for product matching
 function descKeywords(description: string): string[] {
   return description.toUpperCase().split(/[\s,/]+/)
     .filter(w => w.length >= 4)
     .map(w => {
-      // Normalize Spanish plurals so "PORTALAMPARAS" matches "PORTALAMPARA", "ALARGADORES" → "ALARGADOR"
       if (w.endsWith('ES') && w.length > 6) return w.slice(0, -2)
       if (w.endsWith('S') && w.length > 5) return w.slice(0, -1)
       return w
@@ -164,7 +164,6 @@ function findSubsetSumAssignments(
   console.log('[SubsetSum] Certificables:', products.map(p => `${p.modelo}(${p.cantidad})`).join(', '))
   console.log('[SubsetSum] DIN:', dinItems.map(d => `ITEM${d.itemNum}=${Math.round(d.quantity)} "${d.description}"`).join(', '))
 
-  // Largest DIN items first — bigger groups are harder to misassign
   const sortedDin = [...dinItems].sort((a, b) => b.quantity - a.quantity)
 
   for (const din of sortedDin) {
@@ -173,7 +172,6 @@ function findSubsetSumAssignments(
     const unassigned = products.filter(p => !assignments[p.modelo])
     if (!unassigned.length) continue
 
-    // Priority 1: products whose nombre matches DIN description keywords
     const keywords = descKeywords(din.description || '')
     const byDesc = keywords.length
       ? unassigned.filter(p => keywords.some(kw => p.nombre.toUpperCase().includes(kw)))
@@ -181,11 +179,9 @@ function findSubsetSumAssignments(
 
     let found = false
 
-    // Priority 0: code embedded in DIN item name → direct product match
     if (din.supplierCode && !found) {
       const code = din.supplierCode.trim()
       if (/^\d{4,6}$/.test(code)) {
-        // Numeric code (YLK format: "NINGBO-F; 99142") → DESC_CODE_INDEX lookup
         const byCode = lookupProductByDescCode(code)
         if (byCode) {
           const match = unassigned.find(p => p.modelo === byCode.modelo)
@@ -196,7 +192,6 @@ function findSubsetSumAssignments(
           }
         }
       } else {
-        // Alphanumeric code (Feishun format: "FEISHUN-F; HX-PLP") → BD model prefix + qty check
         const upper = code.toUpperCase().replace(/\s+/g, '-')
         const match = unassigned.find(p =>
           p.modelo.toUpperCase().replace(/\s+/g, '-').startsWith(upper) && p.cantidad === target
@@ -209,7 +204,6 @@ function findSubsetSumAssignments(
       }
     }
 
-    // Try description-filtered group first, then all unassigned as fallback
     const pools = byDesc.length ? [byDesc, unassigned] : [unassigned]
     for (const pool of pools) {
       if (found) break
@@ -239,9 +233,6 @@ function getCombinations<T>(arr: T[], size: number): T[][] {
   return result
 }
 
-// Resolve an invoice product code to a BD model code.
-// Direct lookup wins; falls back to matching the code against trailing supplier
-// codes embedded in BD product descriptions (e.g. "...s/sw Blc 99142" → EK-ESX4-30-B).
 function resolveModelo(invoiceModelo: string): string | null {
   if (lookupProduct(invoiceModelo) !== null) return invoiceModelo
   const byDesc = lookupProductByDescCode(invoiceModelo)
@@ -255,7 +246,6 @@ export function crossWithBD(
 ): ProductRow[] {
   const normalizedProducts = invProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
 
-  // Resolve each invoice code → BD model code (direct or via description lookup)
   const certifiable: { modelo: string; cantidad: number }[] = []
   const notCert: string[] = []
   for (const p of normalizedProducts) {
@@ -267,16 +257,16 @@ export function crossWithBD(
   console.log(`[CrossBD] ${certifiable.length} certificables, ${notCert.length} descartados:`, notCert.join(', ') || 'ninguno')
 
   const normalizedDin = dinItems.map(d => ({ ...d, quantity: Math.round(d.quantity) }))
-
-  // Pass nombre so subset-sum can use description matching
   const certWithNames = certifiable.map(p => ({ ...p, nombre: lookupProduct(p.modelo)!.nombre }))
   const assignments = findSubsetSumAssignments(certWithNames, normalizedDin)
 
   return certifiable.map(prod => {
     const entry = lookupProduct(prod.modelo)!
+    const certCode = CERT_MAP[prod.modelo]
     return {
       id: Math.random().toString(36).slice(2),
       modelo: prod.modelo,
+      modeloCert: certCode || undefined,
       cantidad: prod.cantidad,
       itemDin: assignments[prod.modelo] || '',
       proto: entry.proto,
