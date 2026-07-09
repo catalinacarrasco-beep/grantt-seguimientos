@@ -17,6 +17,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<any>(null)
+  const [updateReady, setUpdateReady] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -38,6 +39,12 @@ export default function App() {
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
+  useEffect(() => {
+    const onUpdate = () => setUpdateReady(true)
+    window.addEventListener('sw-update-available', onUpdate)
+    return () => window.removeEventListener('sw-update-available', onUpdate)
+  }, [])
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0c0e14' }}>
       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>Cargando...</div>
@@ -49,7 +56,7 @@ export default function App() {
   return (
     <div className="layout">
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-      <Sidebar email={user.email || ''} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} installPrompt={installPrompt} onInstalled={() => setInstallPrompt(null)} />
+      <Sidebar email={user.email || ''} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} installPrompt={installPrompt} onInstalled={() => setInstallPrompt(null)} updateReady={updateReady} />
       <div className="content">
         <div className="mobile-header">
           <button className="btn-icon" onClick={() => setSidebarOpen(true)}>
