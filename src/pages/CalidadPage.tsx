@@ -57,6 +57,7 @@ export default function CalidadPage() {
   const [saving, setSaving] = useState(false)
   const [savedOk, setSavedOk] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const qrRef = useRef<HTMLInputElement>(null)
   const [pendingQr, setPendingQr] = useState<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
@@ -367,6 +368,29 @@ export default function CalidadPage() {
     img.src = url
   }
 
+
+  // ── Load existing inspection for editing ──
+  useEffect(() => {
+    const state = location.state as any
+    if (state?.editInspection && !draftLoaded) {
+      const ei = state.editInspection
+      setEditingId(ei.id)
+      setInvoiceNum(ei.invoice_num || '')
+      setDinNum(ei.din_num || '')
+      setColorLote(ei.color_lote || '')
+      setTrazabilidad(ei.trazabilidad || '')
+      setProducts((ei.productos || []).map((p: any) => ({
+        ...p,
+        qrEsperado: null,
+        envase: p.envase || { modelo: null, sello_qr: null, fecha_fab: null, placa_info: null, pais_fab: null },
+        cuerpo: p.cuerpo || { modelo: null, sello_qr: null, fecha_fab: null, pais_fab: null },
+      })))
+      setPhase('checklist')
+      setDraftLoaded(true)
+      window.history.replaceState({}, '')
+    }
+  }, [location.state])
+
   const allAnswered = products.every(p =>
     p.envase.modelo !== null && p.envase.sello_qr !== null && p.envase.fecha_fab !== null && p.envase.placa_info !== null && p.envase.pais_fab !== null &&
     p.cuerpo.modelo  !== null && p.cuerpo.sello_qr  !== null && p.cuerpo.fecha_fab  !== null && p.cuerpo.pais_fab  !== null
@@ -381,12 +405,15 @@ export default function CalidadPage() {
     setSaving(true); setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const { error } = await supabase.from('inspecciones').insert({
+      const row = {
         invoice_num: invoiceNum, din_num: dinNum, color_lote: colorLote, trazabilidad,
         fecha_inspeccion: new Date().toLocaleDateString('es-CL'),
         productos: products.map(({ modelo, nombre, cantidad, envase, cuerpo }) => ({ modelo, nombre, cantidad, envase, cuerpo })),
         cumple, user_email: user?.email || '',
-      })
+      }
+      const { error } = editingId
+        ? await supabase.from('inspecciones').update(row).eq('id', editingId)
+        : await supabase.from('inspecciones').insert(row)
       if (error) throw new Error(error.message)
       setSavedOk(true)
       localStorage.removeItem('calidad_draft')
