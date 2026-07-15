@@ -378,6 +378,17 @@ export default function CalidadPage() {
   )
 
   const save = async () => {
+    if (!allAnswered) {
+      const missing: string[] = []
+      products.forEach(p => {
+        const eFields = ['modelo','sello_qr','fecha_fab','placa_info','pais_fab'] as const
+        const cFields = ['modelo','sello_qr','fecha_fab','pais_fab'] as const
+        eFields.forEach(f => { if (p.envase[f] === null) missing.push(p.modelo + ' → Envase: ' + f) })
+        cFields.forEach(f => { if (p.cuerpo[f] === null) missing.push(p.modelo + ' → Cuerpo: ' + f) })
+      })
+      setSaveError('Faltan ' + missing.length + ' checks: ' + missing.slice(0,3).join(', ') + (missing.length > 3 ? '...' : ''))
+      return
+    }
     setSaving(true); setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -608,7 +619,7 @@ export default function CalidadPage() {
                 {cumple ? '✓ CUMPLE' : '✗ NO CUMPLE'}
               </span>
             )}
-            <button className="btn btn-secondary" disabled={saving || !allAnswered} onClick={save}>
+            <button className="btn btn-secondary" disabled={saving} onClick={save}>
               {saving && <Loader2 size={13} className="spin" />}
               {savedOk ? '✓ Guardado' : 'Guardar inspección'}
             </button>
@@ -622,7 +633,7 @@ export default function CalidadPage() {
       {/* Actions sticky (mobile) */}
       {phase === 'checklist' && (
         <div className="action-bar-sticky">
-          <button className="btn btn-secondary" disabled={saving || !allAnswered} onClick={save}>
+          <button className="btn btn-secondary" disabled={saving} onClick={save}>
             {saving ? <Loader2 size={13} className="spin" /> : null}
             {savedOk ? '✓ Guardado' : 'Guardar'}
           </button>
