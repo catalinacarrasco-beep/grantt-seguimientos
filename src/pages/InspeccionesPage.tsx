@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ClipboardList, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ClipboardList, Trash2, Pencil } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 type Inspeccion = {
@@ -16,6 +17,7 @@ type Inspeccion = {
 }
 
 export default function InspeccionesPage() {
+  const navigate = useNavigate()
   const [rows, setRows] = useState<Inspeccion[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -89,10 +91,18 @@ export default function InspeccionesPage() {
                   </td>
                   <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>{r.user_email?.split('@')[0]}</td>
                   <td>
-                    <button className="btn-icon" style={{ color: 'rgba(239,68,68,0.5)' }}
-                      title="Eliminar" onClick={() => del(r.id)}>
-                      <Trash2 size={14} />
-                    </button>
+                    <div className="flex gap-2">
+                      {!r.cumple && (
+                        <button className="btn-icon" style={{ color: 'rgba(165,180,252,0.6)' }}
+                          title="Continuar editando" onClick={() => navigate('/calidad', { state: { editInspection: { id: r.id, invoice_num: r.invoice_num, din_num: r.din_num, color_lote: r.color_lote, trazabilidad: r.trazabilidad, productos: r.productos } } })}>
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                      <button className="btn-icon" style={{ color: 'rgba(239,68,68,0.5)' }}
+                        title="Eliminar" onClick={() => del(r.id)}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
