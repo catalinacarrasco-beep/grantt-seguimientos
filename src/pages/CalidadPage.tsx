@@ -109,9 +109,31 @@ export default function CalidadPage() {
       })
   }, [sessionParam])
 
-  // ── Restore localStorage draft on mount (skipped when loading from session URL) ──
+  // ── Load existing inspection for editing (priority over draft) ──
+  useEffect(() => {
+    const state = (location.state as any)?.editInspection
+    if (!state) return
+    localStorage.removeItem('calidad_draft')
+    setEditingId(state.id)
+    setInvoiceNum(state.invoice_num || '')
+    setDinNum(state.din_num || '')
+    setColorLote(state.color_lote || '')
+    setTrazabilidad(state.trazabilidad || '')
+    setProducts((state.productos || []).map((p: any) => ({
+      ...p,
+      qrEsperado: null,
+      envase: p.envase || { modelo: null, sello_qr: null, fecha_fab: null, placa_info: null, pais_fab: null },
+      cuerpo: p.cuerpo || { modelo: null, sello_qr: null, fecha_fab: null, pais_fab: null },
+    })))
+    setPhase('checklist')
+    setDraftLoaded(true)
+    window.history.replaceState({}, '')
+  }, [])
+
+  // ── Restore localStorage draft on mount (skipped when loading from session URL or editing) ──
   useEffect(() => {
     if (sessionParam) return
+    if ((location.state as any)?.editInspection) return
     const raw = localStorage.getItem('calidad_draft')
     if (!raw) return
     try {
@@ -368,28 +390,6 @@ export default function CalidadPage() {
     img.src = url
   }
 
-
-  // ── Load existing inspection for editing ──
-  useEffect(() => {
-    const state = location.state as any
-    if (state?.editInspection && !draftLoaded) {
-      const ei = state.editInspection
-      setEditingId(ei.id)
-      setInvoiceNum(ei.invoice_num || '')
-      setDinNum(ei.din_num || '')
-      setColorLote(ei.color_lote || '')
-      setTrazabilidad(ei.trazabilidad || '')
-      setProducts((ei.productos || []).map((p: any) => ({
-        ...p,
-        qrEsperado: null,
-        envase: p.envase || { modelo: null, sello_qr: null, fecha_fab: null, placa_info: null, pais_fab: null },
-        cuerpo: p.cuerpo || { modelo: null, sello_qr: null, fecha_fab: null, pais_fab: null },
-      })))
-      setPhase('checklist')
-      setDraftLoaded(true)
-      window.history.replaceState({}, '')
-    }
-  }, [location.state])
 
   const allAnswered = products.every(p =>
     p.envase.modelo !== null && p.envase.sello_qr !== null && p.envase.fecha_fab !== null && p.envase.placa_info !== null && p.envase.pais_fab !== null &&
