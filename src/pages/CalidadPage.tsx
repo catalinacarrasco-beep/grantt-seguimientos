@@ -381,12 +381,13 @@ export default function CalidadPage() {
     setSaving(true); setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      await supabase.from('inspecciones').insert({
+      const { error } = await supabase.from('inspecciones').insert({
         invoice_num: invoiceNum, din_num: dinNum, color_lote: colorLote, trazabilidad,
         fecha_inspeccion: new Date().toLocaleDateString('es-CL'),
         productos: products.map(({ modelo, nombre, cantidad, envase, cuerpo }) => ({ modelo, nombre, cantidad, envase, cuerpo })),
         cumple, user_email: user?.email || '',
       })
+      if (error) throw new Error(error.message)
       setSavedOk(true)
       localStorage.removeItem('calidad_draft')
       if (sessionId) {
