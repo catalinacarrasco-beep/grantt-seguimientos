@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Upload, CheckCircle2, Camera, Loader2, FileSearch, X, RefreshCw, ArrowRight, Smartphone, Wifi, Zap } from 'lucide-react'
+import { Upload, CheckCircle2, Camera, Loader2, FileSearch, X, RefreshCw, ArrowRight, Smartphone, Wifi, Zap, Search } from 'lucide-react'
 import QRCode from 'qrcode'
 import jsQR from 'jsqr'
 import { parseInvoice } from '../lib/processor'
@@ -14,6 +14,7 @@ type ProdCheck = {
   modelo: string
   nombre: string
   cantidad: number
+  fechaFab?: string
   qrEsperado: string | null
   envase: { modelo: CheckVal; sello_qr: CheckVal; fecha_fab: CheckVal; placa_info: CheckVal; pais_fab: CheckVal; qrScanned?: string; qrOk?: boolean }
   cuerpo:  { modelo: CheckVal; sello_qr: CheckVal; fecha_fab: CheckVal; pais_fab: CheckVal }
@@ -58,6 +59,7 @@ export default function CalidadPage() {
   const [savedOk, setSavedOk] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const qrRef = useRef<HTMLInputElement>(null)
   const [pendingQr, setPendingQr] = useState<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
@@ -391,6 +393,17 @@ export default function CalidadPage() {
   }
 
 
+  const filteredProducts = searchTerm.trim()
+    ? products.filter(p => {
+        const q = searchTerm.toLowerCase()
+        return p.modelo.toLowerCase().includes(q) || p.nombre.toLowerCase().includes(q)
+      })
+    : products
+
+  const setFechaFab = (modelo: string, value: string) => {
+    setProducts(prev => prev.map(p => p.modelo === modelo ? { ...p, fechaFab: value } : p))
+  }
+
   const allAnswered = products.every(p =>
     p.envase.modelo !== null && p.envase.sello_qr !== null && p.envase.fecha_fab !== null && p.envase.placa_info !== null && p.envase.pais_fab !== null &&
     p.cuerpo.modelo  !== null && p.cuerpo.sello_qr  !== null && p.cuerpo.fecha_fab  !== null && p.cuerpo.pais_fab  !== null
@@ -408,7 +421,7 @@ export default function CalidadPage() {
       const row = {
         invoice_num: invoiceNum, din_num: dinNum, color_lote: colorLote, trazabilidad,
         fecha_inspeccion: new Date().toLocaleDateString('es-CL'),
-        productos: products.map(({ modelo, nombre, cantidad, envase, cuerpo }) => ({ modelo, nombre, cantidad, envase, cuerpo })),
+        productos: products.map(({ modelo, nombre, cantidad, fechaFab, envase, cuerpo }) => ({ modelo, nombre, cantidad, fechaFab, envase, cuerpo })),
         cumple, user_email: user?.email || '',
       }
       const { error } = editingId
@@ -426,7 +439,7 @@ export default function CalidadPage() {
   }
 
   const handleIrSolicitud = async () => {
-    const state = { fromCalidad: { invoiceNum, trazabilidad, products: products.map(p => ({ modelo: p.modelo, cantidad: p.cantidad })) } }
+    const state = { fromCalidad: { invoiceNum, trazabilidad, products: products.map(p => ({ modelo: p.modelo, cantidad: p.cantidad, fechaFab: p.fechaFab })) } }
     // Broadcast to the other device so both navigate simultaneously
     if (sessionId && realtimeChRef.current) {
       try {
@@ -586,8 +599,27 @@ export default function CalidadPage() {
             )}
           </div>
 
+          {/* Search bar */}
+          {products.length > 3 && (
+            <div style={{ position: 'relative', marginBottom: 12 }}>
+              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+              <input
+                className="field-input"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="Buscar por código o descripción..."
+                style={{ paddingLeft: 34, fontSize: 12, width: '100%' }}
+              />
+              {searchTerm && (
+                <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                  {filteredProducts.length}/{products.length}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Product cards */}
-          {products.map(prod => (
+          {filteredProducts.map(prod => (
             <div key={prod.modelo} className="card" style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
                 <div>
@@ -615,7 +647,18 @@ export default function CalidadPage() {
                   </div>
                 }
               />
-              <CRow label="Fecha fabricación" val={prod.envase.fecha_fab} onSI={() => upd(prod.modelo,'envase','fecha_fab','SI')} onNO={() => upd(prod.modelo,'envase','fecha_fab','NO')} />
+              <CRow label="Fecha fabricación" val={prod.envase.fecha_fab} onSI={() => upd(prod.modelo,'envase','fecha_fab','SI')} onNO={() => upd(prod.modelo,'envase','fecha_fab','NO')}
+                extra={
+                  <input
+                    className="field-input"
+                    type="text"
+                    value={prod.fechaFab || ''}
+                    onChange={e => setFechaFab(prod.modelo, e.target.value)}
+                    placeholder="MM/AAAA"
+                    style={{ width: 90, fontSize: 11, textAlign: 'center', padding: '3px 6px' }}
+                  />
+                }
+              />
               <CRow label="Placa informativa" val={prod.envase.placa_info} onSI={() => upd(prod.modelo,'envase','placa_info','SI')} onNO={() => upd(prod.modelo,'envase','placa_info','NO')} />
               <CRow label="País fabricación" val={prod.envase.pais_fab} onSI={() => upd(prod.modelo,'envase','pais_fab','SI')} onNO={() => upd(prod.modelo,'envase','pais_fab','NO')} />
 
