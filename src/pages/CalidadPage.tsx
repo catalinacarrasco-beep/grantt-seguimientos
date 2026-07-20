@@ -144,14 +144,20 @@ export default function CalidadPage() {
         setInvoiceNum(d.invoiceNum || ''); setTrazabilidad(d.trazabilidad || '')
         setDinNum(d.dinNum || ''); setColorLote(d.colorLote || '')
         setProducts(d.products); setPhase('checklist'); setDraftLoaded(true)
-        // Create session so QR appears for mobile sharing
-        supabase.from('calidad_sessions').insert({
-          invoice_num: d.invoiceNum || '',
-          trazabilidad: d.trazabilidad || '',
-          products: d.products,
-        }).select('id').single().then(({ data }) => {
+        // Reuse existing session or create new one for QR sharing
+        const restoreSession = async () => {
+          if (d.sessionId) {
+            const { data: existing } = await supabase.from('calidad_sessions').select('id').eq('id', d.sessionId).maybeSingle()
+            if (existing) { setSessionId(d.sessionId); return }
+          }
+          const { data } = await supabase.from('calidad_sessions').insert({
+            invoice_num: d.invoiceNum || '',
+            trazabilidad: d.trazabilidad || '',
+            products: d.products,
+          }).select('id').single()
           if (data?.id) setSessionId(data.id)
-        })
+        }
+        restoreSession()
       }
     } catch { /* ignore */ }
   }, [])
@@ -159,10 +165,10 @@ export default function CalidadPage() {
   // ── Save draft to localStorage (desktop/local only) ──
   useEffect(() => {
     if (phase !== 'checklist' || isRemoteSession) return
-    localStorage.setItem('calidad_draft', JSON.stringify({ invoiceNum, trazabilidad, dinNum, colorLote, products }))
-  }, [products, dinNum, colorLote, invoiceNum, trazabilidad, phase, isRemoteSession])
+    localStorage.setItem('calidad_draft', JSON.stringify({ invoiceNum, trazabilidad, dinNum, colorLote, products, sessionId }))
+  }, [products, dinNum, colorLote, invoiceNum, trazabilidad, phase, isRemoteSession, sessionId])
 
-  // ── Sync local changes → Supabase session (debounced 600ms) ──
+  // ── Sync local changes → Supabase session (debounced 600ms) + broadcast ──
   useEffect(() => {
     if (!sessionId || phase !== 'checklist') return
     const timer = setTimeout(async () => {
@@ -172,12 +178,16 @@ export default function CalidadPage() {
         products, din_num: dinNum, color_lote: colorLote,
         updated_at: new Date().toISOString(),
       }).eq('id', sessionId)
+      // Broadcast for instant sync (postgres_changes can lag or be disabled)
+      if (realtimeChRef.current) {
+        realtimeChRef.current.send({ type: 'broadcast', event: 'sync', payload: { products, din_num: dinNum, color_lote: colorLote } })
+      }
       setSessionSyncing(false)
     }, 600)
     return () => clearTimeout(timer)
   }, [products, dinNum, colorLote, sessionId, phase])
 
-  // ── Supabase Realtime: receive changes + navigate broadcasts from the other device ──
+  // ── Supabase Realtime: receive changes + broadcasts from the other device ──
   useEffect(() => {
     if (!sessionId) return
     const ch = supabase.channel(`calidad-${sessionId}`)
@@ -192,6 +202,17 @@ export default function CalidadPage() {
           setColorLote((row.color_lote as string) || '')
         }
       )
+      .on('broadcast', { event: 'sync' }, ({ payload }) => {
+        if (Date.now() - lastLocalTs.current < 2000) return
+        const p = payload as { products: ProdCheck[]; din_num: string; color_lote: string }
+        setProducts(p.products)
+        setDinNum(p.din_num || '')
+        setColorLote(p.color_lote || '')
+      })
+      .on('broadcast', { event: 'inspection-saved' }, () => {
+        localStorage.removeItem('calidad_draft')
+        setSavedOk(true)
+      })
       .on('broadcast', { event: 'navigate' }, ({ payload }) => {
         const p = payload as { to: string; state: unknown }
         navigate(p.to, { state: p.state })
@@ -431,6 +452,10 @@ export default function CalidadPage() {
       setSavedOk(true)
       localStorage.removeItem('calidad_draft')
       if (sessionId) {
+        // Notify the other device before deleting the session
+        if (realtimeChRef.current) {
+          await realtimeChRef.current.send({ type: 'broadcast', event: 'inspection-saved', payload: {} })
+        }
         await supabase.from('calidad_sessions').delete().eq('id', sessionId)
         setSessionId(null)
       }
