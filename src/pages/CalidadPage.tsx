@@ -434,7 +434,7 @@ export default function CalidadPage() {
         await supabase.from('calidad_sessions').delete().eq('id', sessionId)
         setSessionId(null)
       }
-    } catch { setSaveError('Error al guardar. Intenta de nuevo.') }
+    } catch (err: any) { setSaveError(err?.message || 'Error al guardar. Intenta de nuevo.') }
     setSaving(false)
   }
 
