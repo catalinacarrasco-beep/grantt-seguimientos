@@ -1,4 +1,4 @@
-import productsRaw from './productsDB.json'
+﻿import productsRaw from './productsDB.json'
 import noCertRaw from './noChertCodes.json'
 
 export type ProductEntry = {
@@ -29,17 +29,24 @@ for (const [k, v] of Object.entries(PRODUCTS_DB)) {
 // field in two formats: plain trailing ("...Blc 99142") or parenthesized ("...(99152)").
 // Maps each found 4-6 digit code → { entry, modelo (the real BD model code) }
 const DESC_CODE_INDEX: Record<string, { entry: ProductEntry; modelo: string }> = {}
+const ALPHA_CODE_INDEX: Record<string, { entry: ProductEntry; modelo: string }> = {}
 for (const [k, v] of Object.entries(PRODUCTS_DB)) {
   const codes = new Set<string>()
-  // Format 1: code in parentheses anywhere in nombre — e.g. "(99152)"
-  for (const m of v.nombre.matchAll(/\((\d{4,6})\)/g)) codes.add(m[1])
+  // Format 1: code in parentheses — allows optional spaces: "(99152)" or "( 99175 )"
+  for (const m of v.nombre.matchAll(/\(\s*(\d{4,6})\s*\)/g)) codes.add(m[1])
   // Format 2: plain trailing code — e.g. "...Blc 99142"
   const trail = v.nombre.match(/\b(\d{4,6})\s*$/)
   if (trail) codes.add(trail[1])
   for (const c of codes) {
-    // Normalize leading zeros so "09431" and "9431" resolve to the same key
     const key = String(parseInt(c, 10))
     if (!DESC_CODE_INDEX[key]) DESC_CODE_INDEX[key] = { entry: v, modelo: k }
+  }
+  // Format 3: alphanumeric codes in nombre (e.g. "YLK-H3" in "...Blanco YLK-H3 (3227065)")
+  for (const m of v.nombre.matchAll(/\b([A-Z][A-Z0-9]*-[A-Z0-9-]+)\b/gi)) {
+    const alphaKey = m[1].toUpperCase()
+    if (alphaKey !== k.toUpperCase() && !ALPHA_CODE_INDEX[alphaKey]) {
+      ALPHA_CODE_INDEX[alphaKey] = { entry: v, modelo: k }
+    }
   }
 }
 
@@ -56,10 +63,15 @@ export function lookupProduct(codigo: string): ProductEntry | null {
 // Returns { entry, modelo } where modelo is the real BD code (e.g. "EK-ESX4-30-B").
 export function lookupProductByDescCode(code: string): { entry: ProductEntry; modelo: string } | null {
   const trimmed = code.trim()
-  if (!/^\d{4,6}$/.test(trimmed)) return null
-  const key = String(parseInt(trimmed, 10))  // normalize leading zeros: "09431" → "9431"
-  if (NO_CERT_CODES.has(key) || NO_CERT_CODES.has(trimmed.toUpperCase())) return null
-  return DESC_CODE_INDEX[key] || null
+  if (/^\d{4,6}$/.test(trimmed)) {
+    const key = String(parseInt(trimmed, 10))
+    if (NO_CERT_CODES.has(key) || NO_CERT_CODES.has(trimmed.toUpperCase())) return null
+    return DESC_CODE_INDEX[key] || null
+  }
+  // Alphanumeric codes like "YLK-H3"
+  const upper = trimmed.toUpperCase()
+  if (NO_CERT_CODES.has(upper)) return null
+  return ALPHA_CODE_INDEX[upper] || null
 }
 
 export function getCertifiableCount(): number {
@@ -69,3 +81,4 @@ export function getCertifiableCount(): number {
 export function getNoCertCount(): number {
   return NO_CERT_CODES.size
 }
+
