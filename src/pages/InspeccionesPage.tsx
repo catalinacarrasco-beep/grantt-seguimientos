@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ClipboardList, Trash2, Pencil } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -36,8 +36,20 @@ export default function InspeccionesPage() {
 
   const del = async (id: string) => {
     if (!confirm('¿Eliminar este registro de inspección?')) return
-    await supabase.from('inspecciones').delete().eq('id', id)
-    setRows(prev => prev.filter(r => r.id !== id))
+    try {
+      const res = await fetch('/api/delete-inspeccion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Error al eliminar')
+      }
+      setRows(prev => prev.filter(r => r.id !== id))
+    } catch (err: any) {
+      alert(err?.message || 'Error al eliminar')
+    }
   }
 
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString('es-CL', {
@@ -113,3 +125,4 @@ export default function InspeccionesPage() {
     </div>
   )
 }
+
