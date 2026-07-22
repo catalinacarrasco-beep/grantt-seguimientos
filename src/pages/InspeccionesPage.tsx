@@ -36,20 +36,9 @@ export default function InspeccionesPage() {
 
   const del = async (id: string) => {
     if (!confirm('¿Eliminar este registro de inspección?')) return
-    try {
-      const res = await fetch('/api/delete-inspeccion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Error al eliminar')
-      }
-      setRows(prev => prev.filter(r => r.id !== id))
-    } catch (err: any) {
-      alert(err?.message || 'Error al eliminar')
-    }
+    const { error } = await supabase.from('inspecciones').delete().eq('id', id)
+    if (error) { alert(`Error al eliminar: ${error.message}`); return }
+    setRows(prev => prev.filter(r => r.id !== id))
   }
 
   const formatDate = (iso: string) => new Date(iso).toLocaleDateString('es-CL', {
