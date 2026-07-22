@@ -1,1108 +1,1108 @@
-{
-  "5231": {
-    "nombre": "Linea Primmus MODULO Interruptor simple blanco",
-    "qr": "218389",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "5245": {
-    "nombre": "Linea Primmus MODULO Tomacorriente 10A blanco",
-    "qr": "496666",
-    "cert": "E-013-01-157820",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "5248": {
-    "nombre": "Linea Primmus MODULO Tomacorriente 10/16A blanco",
-    "qr": "496666",
-    "cert": "E-013-01-157820",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "5249": {
-    "nombre": "Teclastar Toma Corriente Schuco bipolar 16A-250V",
-    "qr": "540090",
-    "cert": "E-013-01-171806",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "5531": {
-    "nombre": "Linea Primmus, MODULO Inter. escala 9/24, color blanco",
-    "qr": "218389",
-    "cert": "E-013-01-73445",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9236": {
-    "nombre": "Linea Primmus Conjunto Interrup. 9/12 + tomacorr.10A blanco",
-    "qr": "218389 / 496666",
-    "cert": "E-013-01-73445 / E-013-01-157820",
-    "proto": "PE 3/01 18.06.2010 / PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9245": {
-    "nombre": "Linea Primmus, Conjunto tomacorriente simple 10A, color blan",
-    "qr": "496666",
-    "cert": "E-013-01-157820",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9246": {
-    "nombre": "Linea Primmus Conjunto tomacorriente doble 10A color blanc",
-    "qr": "496666",
-    "cert": "E-013-01-157820",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9247": {
-    "nombre": "Linea Primmus Conjunto tomacorriente triple 10A color blan",
-    "qr": "496666",
-    "cert": "E-013-01-157820",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9248": {
-    "nombre": "Linea Primmus, Conjunto tomacorriente simple 10/16A, color b",
-    "qr": "594105",
-    "cert": "E-013-01-187327",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9249": {
-    "nombre": "Teclastar TomaCorriente Schuco Bipolar 16A-250v",
-    "qr": "540090",
-    "cert": "E-013-01-171806",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9257": {
-    "nombre": "Línea Primmus armado tomacorriente doble monoblock",
-    "qr": "553660",
-    "cert": "E-013-01-178147",
-    "proto": "PE 8/10 07.12.2020",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9258": {
-    "nombre": "Línea Primmus armado tomacorriente triple monoblock",
-    "qr": "553660",
-    "cert": "E-013-01-178147",
-    "proto": "PE 8/10 07.12.2020",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9290": {
-    "nombre": "Linea Primmus, Conjunto Dimmer 300W, color blanco",
-    "qr": "PEND",
-    "cert": "PEND",
-    "proto": "PEND",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9431": {
-    "nombre": "Linea Primmus Conjunto Interruptor simple 9/12 color blanc",
-    "qr": "218389",
-    "cert": "E-013-01-73445",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9432": {
-    "nombre": "Linea Primmus, Conjunto Interruptor doble 9/15, color blanco",
-    "qr": "218389",
-    "cert": "E-013-01-73445",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9433": {
-    "nombre": "Linea Primmus, Conjunto interruptor triple 9/32, color blanc",
-    "qr": "218389",
-    "cert": "E-013-01-73445",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9452": {
-    "nombre": "Linea Primmus, Conjunto pulsador de timbre blanco",
-    "qr": "218389",
-    "cert": "E-013-01-73445",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "9631": {
-    "nombre": "Linea Primmus, Conjunto Interruptor escala 9/24, color blanc",
-    "qr": "218389",
-    "cert": "E-013-01-73445",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "95231": {
-    "nombre": "Linea Clio MODULO Interruptor simple blanco",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "95245": {
-    "nombre": "Linea Clio MODULO tomacorriente simple 10A  blanco",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "95248": {
-    "nombre": "Linea Clio MODULO tomacorriente simple 10/16A  blanco",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "95251": {
-    "nombre": "MODULO PULSADOR CLIO BLANCO",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "95531": {
-    "nombre": "Linea Clio MODULO  9/24 comnutable blanco",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99136": {
-    "nombre": "Linea Clio Conjunto  Toma10A + USB (2) color blanco",
-    "qr": "474816",
-    "cert": "",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99231": {
-    "nombre": "Linea Clio Conjunto Interruptor simple 9/12 color blanco",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99232": {
-    "nombre": "Linea Clio Conjunto Interruptor doble 9/15 color blanco",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99233": {
-    "nombre": "Linea Clio Conjunto Interruptor triple 9/32 color blanco",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99236": {
-    "nombre": "Linea Clio Conjunto Interrup. 9/12 + tomacorriente10A blanco",
-    "qr": "235121/474816",
-    "cert": "E-013-01-77625 / E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99242": {
-    "nombre": "Clio tomacorriente Schuko + 10A blanco",
-    "qr": "561036/474816",
-    "cert": "",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99243": {
-    "nombre": "Clio tomacorriente doble 10/16A blanco",
-    "qr": "591334",
-    "cert": "E-013-01-186552",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99244": {
-    "nombre": "Clio tomacorriente triple 10/16A blanco",
-    "qr": "591334",
-    "cert": "E-013-01-186552",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99245": {
-    "nombre": "Linea Clio Conjunto Tomacorriente simple 10A color blanco",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99246": {
-    "nombre": "Linea Clio Conjunto Tomacorriente doble 10A color blanco",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99247": {
-    "nombre": "Linea Clio Conjunto Tomacorriente triple 10A color blanco",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99248": {
-    "nombre": "Linea Clio Conjunto Tomacorriente 10/16A simple color blanco",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99251": {
-    "nombre": "Linea Clio Conjunto Pulsador Timbre  color blanco",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "99531": {
-    "nombre": "Linea Clio Conjunto Int. escala 9/24 color blanco",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110231": {
-    "nombre": "Linea Clio Conjunto Interruptor simple 9/12 color plata",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110232": {
-    "nombre": "Linea Clio Conjunto Interruptor doble 9/15 color plata",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110233": {
-    "nombre": "Linea Clio Conjunto Interruptor triple 9/32 color plata",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110236": {
-    "nombre": "Linea Clio Conjunto Interrup. 9/12 + tomacorriente10A plata",
-    "qr": "235121/474816",
-    "cert": "E-013-01-77625 / E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110245": {
-    "nombre": "Linea Clio Conjunto Tomacorriente simple 10A color plata",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110246": {
-    "nombre": "Linea Clio Conjunto Tomacorriente doble 10A color plata",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110247": {
-    "nombre": "Linea Clio Conjunto Tomacorriente  triple 10A color plata",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110248": {
-    "nombre": "Linea Clio Conjunto Tomacorriente 10/16A simple color plata",
-    "qr": "474816",
-    "cert": "E-013-01-151156",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110251": {
-    "nombre": "Linea Clio Conjunto Pulsador Timbre color plata",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "110531": {
-    "nombre": "Linea Clio Conjunto Int. escala 9/24 color plata",
-    "qr": "235121",
-    "cert": "E-013-01-77625",
-    "proto": "PE 3/01 18.06.2010",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ATS10A-B": {
-    "nombre": "Triple salvaespacio blanco (99013)",
-    "qr": "482289",
-    "cert": "E-013-01-153429",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ATS10A-N": {
-    "nombre": "Triple salvaespacio negro (99014)",
-    "qr": "482289",
-    "cert": "E-013-01-153429",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-AT10A-B": {
-    "nombre": "Triple estandar blanco (99011)",
-    "qr": "482283",
-    "cert": "E-013-01-153425",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-AT10A-N": {
-    "nombre": "Triple estandar negro (3006972) 99012",
-    "qr": "482283",
-    "cert": "E-013-01-153425",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MV2P10A-N": {
-    "nombre": "Electraline Macho volante 2P gris (99102)",
-    "qr": "474147",
-    "cert": "E-013-01-150906",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MV2PT10A-N": {
-    "nombre": "Electraline Macho volante 2P+T gris (99104)",
-    "qr": "474147",
-    "cert": "E-013-01-150906",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MV2P10A-B": {
-    "nombre": "Macho volante 2P blanco (99001) (3007022)",
-    "qr": "474147",
-    "cert": "E-013-01-150906",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MV2P10A-N": {
-    "nombre": "Macho volante 2P negro (99002) (3007030)",
-    "qr": "474147",
-    "cert": "E-013-01-150906",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MV2PT10A-B": {
-    "nombre": "Macho volante 2P+T blanco (99003) (3007049)",
-    "qr": "474147",
-    "cert": "E-013-01-150906",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MV2PT10A-N": {
-    "nombre": "Macho volante 2P+T negro (99004) (3007057)",
-    "qr": "474147",
-    "cert": "E-013-01-150906",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-HV2PT10A-B": {
-    "nombre": "Hembra volante 2P+T blanco (3007065)",
-    "qr": "482288",
-    "cert": "E-013-01-153284",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-HV2PT10A-N": {
-    "nombre": "Hembra volante 2P+T negro (99006) (3007073)",
-    "qr": "482288",
-    "cert": "E-013-01-153284",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-AA10A-B": {
-    "nombre": "Volante adaptador americano/Patas planas/blanco(99180)",
-    "qr": "485043",
-    "cert": "E-013-01-154453",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-AA10A-N": {
-    "nombre": "Volante adaptador americano/Patas planas/ Neg (99181)",
-    "qr": "485043",
-    "cert": "E-013-01-154453",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MVC2P10A-B": {
-    "nombre": "Halux Macho volante convertible 2P blanco",
-    "qr": "464360",
-    "cert": "E-013-01-147291",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MVC2P10A-N": {
-    "nombre": "Halux Macho volante convertible 2P gris",
-    "qr": "464360",
-    "cert": "E-013-01-147291",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MVC2PT10A-N": {
-    "nombre": "Halux Macho volante convertible 2P+T gris",
-    "qr": "464411",
-    "cert": "E-013-01-147300",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ES4USB2AC-3N": {
-    "nombre": "Halux Zapatilla 4 pos. con USBA+USBC gris",
-    "qr": "482278",
-    "cert": "E-013-01-153422",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESX4-15-N": {
-    "nombre": "Electrali alargador multiple 4p s/switch 1,5 mts gri (99141)",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-EP16A-10": {
-    "nombre": "Electraline Extension 10 mts G1,50 (99109) (9989)",
-    "qr": "482286",
-    "cert": "E-013-01-153427",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-AM10A-B": {
-    "nombre": "Addaptador Multinorma 10A Blanco YLK-H3 (3227065)",
-    "qr": "488844",
-    "cert": "E-013-01-155545",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE27P-B": {
-    "nombre": "Halux Portalampara E27 plastico presion blanco (3949168)",
-    "qr": "375483",
-    "cert": "E-013-01-118361",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE27P-N": {
-    "nombre": "Halux Portalampara E27 plastico presion negro (3949176)",
-    "qr": "375483",
-    "cert": "E-013-01-118361",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE27B-B": {
-    "nombre": "Halux Portalampara E27 plastico bornera blanco (3951081)",
-    "qr": "375470",
-    "cert": "E-013-01-118359",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE27B-N": {
-    "nombre": "Halux Portalampara E27 plastico bornera negro (395109X)",
-    "qr": "375470",
-    "cert": "E-013-01-118359",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "BO-PLPE27C-B": {
-    "nombre": "Bolt Portalampara E27 plastico base recta blanco",
-    "qr": "375480",
-    "cert": "E-013-01-118360",
-    "proto": "PE 5/04 08.01.2008",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE27C-B": {
-    "nombre": "PortalamparaS plastico base recta blco E27cielo(394915X)",
-    "qr": "375480",
-    "cert": "E-013-01-118360",
-    "proto": "PE 5/04 08.01.2008",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLCE27-B": {
-    "nombre": "Halux Portalampara E27 ceramico bornera blanco (3951073)",
-    "qr": "375468",
-    "cert": "E-013-01-118357",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 016"
-  },
-  "HX-PLCE27C-B": {
-    "nombre": "Halux Portalampara E27 ceramico base recta blanco (3951065)",
-    "qr": "375469",
-    "cert": "E-013-01-118358",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 017"
-  },
-  "EK-EP16A-20": {
-    "nombre": "Electraline Extension 20 mts G1,50 (99116)",
-    "qr": "482286",
-    "cert": "E-013-01-153427",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-EP16A-30": {
-    "nombre": "Electraline Extension 30 mts G1,50 (99117) (9991)",
-    "qr": "482286",
-    "cert": "E-013-01-153427",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MV2PT10A-B": {
-    "nombre": "Electraline Macho volante 2P+T blanco (99103)",
-    "qr": "474147",
-    "cert": "E-013-01-150906",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ES4USB-3B": {
-    "nombre": "Halux Alargador zap. gummy 4 pos+2USB, 3m, blanco (99081)",
-    "qr": "482278",
-    "cert": "E-013-01-153422",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-IV6A-B": {
-    "nombre": "Interruptor volante blanco (99007) (3007006)",
-    "qr": "507904",
-    "cert": "E-013-01-161228",
-    "proto": "PE 3/20:2022 28.10.2022",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-IV6A-N": {
-    "nombre": "Interruptor volante negro (99008) (3007014)",
-    "qr": "507904",
-    "cert": "E-013-01-161228",
-    "proto": "PE 3/20:2022 28.10.2022",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE14B-B": {
-    "nombre": "Halux Portalampara E14 plastico bornera blanco(6553478)",
-    "qr": "377868",
-    "cert": "E-013-01-118985",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MVC2PT10A-B": {
-    "nombre": "Halux Macho volante convertible 2P+T blanco",
-    "qr": "464411",
-    "cert": "E-013-01-147300",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-AA10A-N": {
-    "nombre": "Volante Adaptador Americano/Patas planas/Gris.",
-    "qr": "485043",
-    "cert": "E-013-01-154453",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-AM10A-B": {
-    "nombre": "Electraline Multinorma 10A Blanco (99120)",
-    "qr": "488844",
-    "cert": "E-013-01-155545",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESX4-15": {
-    "nombre": "Alargador Multiple , 4tomas1.5mts bco (99140)",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESX4-30-B": {
-    "nombre": "Alargador multiple 2P+T 10A 250V,4 tomas3 mts s/sw Blc 99142",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ESSA4USB3-2": {
-    "nombre": "Zapatilla de escritorio 4 tomas 3 USB / 2 mts ( 99176 )",
-    "qr": "486286",
-    "cert": "E-013-01-154652",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ES4USB-3B": {
-    "nombre": "Electraline alargador mutiple 4x3 mt + 2USB gummy 99119",
-    "qr": "482278",
-    "cert": "E-013-01-153422",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-IVP-N": {
-    "nombre": "Interruptor manual de piso, color Negro 99019 (3358178)",
-    "qr": "507906",
-    "cert": "E-013-01-161229",
-    "proto": "PE 3/20:2022 28.10.2022",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ASPT10A-B": {
-    "nombre": "Halux Adaptador Schuko con protección térmica(714457)",
-    "qr": "464466",
-    "cert": "E-013-01-147306",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE14B-N": {
-    "nombre": "Halux Portalampara E14 plastico bornera negro(6553486)",
-    "qr": "377868",
-    "cert": "E-013-01-118985",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-USBX2-B": {
-    "nombre": "Cargador USB 2 puertos, 2.1A, color blanco 99024 (3358151)",
-    "qr": "259022",
-    "cert": "E-013-01-83867",
-    "proto": "PE 8/08 26.12.2016",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ESS4-NA": {
-    "nombre": "Zapatilla 4 pos 10A/16A/Schuko sin cable (99184) (3949222)",
-    "qr": "482279",
-    "cert": "E-013-01-153423",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESS6-50-N": {
-    "nombre": "Electraline alargador multiple 6p c/switch,5mts,gris (99153)",
-    "qr": "482282",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ES4USB-3N": {
-    "nombre": "Electraline alargador mutiple 4x3 mt + 2USB Gum Neg 99119",
-    "qr": "482278",
-    "cert": "E-013-01-153422",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ESSA6PS-2": {
-    "nombre": "Zapatilla prof. 6 tomas schuko 10/16A / 2mts ( 99175 )",
-    "qr": "486290",
-    "cert": "E-013-01-154653",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-EP-20": {
-    "nombre": "Electraline Extension profesional 20 mts (99172)",
-    "qr": "482285",
-    "cert": "E-013-01-153426",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-UFO4USB-5": {
-    "nombre": "Halux Alargador UFO 4 pos+2 USB, 5m, gris (99080) (3523632)",
-    "qr": "466183",
-    "cert": "E-013-01-151640",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "BO-PLCE27C-B": {
-    "nombre": "Portalampara BOLT CERAMICO BASE RECTA",
-    "qr": "375469",
-    "cert": "E-013-01-118358",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 017"
-  },
-  "BO-PLPE27P-B": {
-    "nombre": "Portalampara BOL plastico presion blanco (3949168)",
-    "qr": "375483",
-    "cert": "E-013-01-118361",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "BO-PLPE27B-B": {
-    "nombre": "Portalampara BOLT plastico bornera blanco",
-    "qr": "375470",
-    "cert": "E-013-01-118359",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "BO-ASPT10A-B": {
-    "nombre": "Electraline Adaptador Schuko blanco con proteccion fusible 9",
-    "qr": "499230",
-    "cert": "E-013-01-158305",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ASPF10A-B": {
-    "nombre": "Halux Adaptador Schuko blanco con proteccion fusible (99134)",
-    "qr": "499230",
-    "cert": "E-013-01-158305",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-IV2A-N": {
-    "nombre": "Interruptor volante Negro 99179",
-    "qr": "507904",
-    "cert": "E-013-01-161228",
-    "proto": "PE 3/20:2022 28.10.2022",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MVC2PT10A-B": {
-    "nombre": "Electraline Macho volante convertible 2P+T blanco 99138",
-    "qr": "464411",
-    "cert": "E-013-01-147300",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MVC2PT10A-N": {
-    "nombre": "Electraline Macho volante convertible 2P+T gris 99139",
-    "qr": "464411",
-    "cert": "E-013-01-147300",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ATS10A-B": {
-    "nombre": "Electraline Triple salvaespacio blanco (99113)",
-    "qr": "482289",
-    "cert": "E-013-01-153429",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ATS10A-N": {
-    "nombre": "Electraline Triple salvaespacio gris (99114)",
-    "qr": "482289",
-    "cert": "E-013-01-153429",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MVC2P10A-B": {
-    "nombre": "Electraline Macho volante convertible 2P blanco 99136",
-    "qr": "464360",
-    "cert": "E-013-01-147291",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MVC2P10A-N": {
-    "nombre": "Electraline Macho volante convertible 2P gris 99137",
-    "qr": "464360",
-    "cert": "E-013-01-147291",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ESSA10-2": {
-    "nombre": "Zapatilla prof. 10 tomas schuko 10/16A / 2mts (99174)",
-    "qr": "486290",
-    "cert": "E-013-01-154653",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ESSA2USB-2": {
-    "nombre": "Zapatilla de escritorio 2 tomas 2 USB / 2 mts ( 99177 )",
-    "qr": "486286",
-    "cert": "E-013-01-154652",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESS6-30-B": {
-    "nombre": "Electraline alargador multiple 6p c/switch, 3mts,bco (99150)",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESS6-30-G": {
-    "nombre": "Alargador 6 tomas 10A 3 metros, con swit gris(99151)",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESX4-30-N": {
-    "nombre": "Alargador multiple 2PT10A 250V4 tomas3 mts s/swit Negr 99143",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-HV2PT10A-N": {
-    "nombre": "Electraline Hembra volante 2P+T gris (99106)",
-    "qr": "482288",
-    "cert": "E-013-01-153284",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "LED E27-10W-6.5K": {
-    "nombre": "BOLT ampolleta LED E27 10W luz dia (186951)",
-    "qr": "562016",
-    "cert": "E-013-01-178257",
-    "proto": "PE 5/17 18/11/2020",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "LED E27-15W-6.5K": {
-    "nombre": "BOLT ampolleta LED E27 15W luz dia (186953)",
-    "qr": "562016",
-    "cert": "E-013-01-178257",
-    "proto": "PE 5/17 18/11/2020",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "LED E27-18W-6.5K": {
-    "nombre": "BOLT ampolleta LED E27 18W luz dia",
-    "qr": "RECERTIFICACION",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "BO-PLPE27B-N": {
-    "nombre": "Portalampara BOLT plastico bornera Negro",
-    "qr": "375470",
-    "cert": "E-013-01-118359",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MVSCH90-B": {
-    "nombre": "Enchufe macho volante schuko 90° 16A 2P+T blanco",
-    "qr": "483048",
-    "cert": "E-013-01-153742",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MVSCH90-N": {
-    "nombre": "Enchufe macho volante schuko 90° 16A 2P+T negro",
-    "qr": "483048",
-    "cert": "E-013-01-153742",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-EP-30": {
-    "nombre": "Alargador profesional 2P+T 10A 250V, 30 Mts 99173",
-    "qr": "482285",
-    "cert": "E-013-01-153426",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-HV2PT1016A-B": {
-    "nombre": "Enchufe hembra volante 10A/16A 2P+T blanco 99158",
-    "qr": "483049",
-    "cert": "E-013-01-153743",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-HV2PT1016A-N": {
-    "nombre": "Enchufe hembra volante 10A/16A 2P+T negro 99159",
-    "qr": "483049",
-    "cert": "E-013-01-153743",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MV2PT16A-B": {
-    "nombre": "Enchufe macho volante 16A 2P+T blanco 99156",
-    "qr": "483050",
-    "cert": "E-013-01-153744",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-MV2PT16A-N": {
-    "nombre": "Enchufe macho volante 16A 2P+T negro 99157",
-    "qr": "483050",
-    "cert": "E-013-01-153744",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ES4USBC-3B": {
-    "nombre": "Halux alargador mutiple 6x3 mt + 2USBA+C blanco(99186)",
-    "qr": "482278",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "LED E27-10W-3K": {
-    "nombre": "BOLT ampolleta LED E27 10W luz calida (186950)",
-    "qr": "",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "LED E27-15W-3K": {
-    "nombre": "BOLT ampolleta LED E27 15W luz calida",
-    "qr": "",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-IV2A": {
-    "nombre": "Interruptor Volante blanco (99182)",
-    "qr": "507904",
-    "cert": "E-013-01-161228",
-    "proto": "PE 3/20:2022 28.10.2022",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESS6-50-B": {
-    "nombre": "Electraline alargador multiple 6p c/switch, 5mts,bco (99152)",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-EP-5": {
-    "nombre": "Electraline Extension profesional 5 mts (99170)",
-    "qr": "482285",
-    "cert": "E-013-01-153426",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-AA10A-B": {
-    "nombre": "Volante Adaptador Americano/Patas planas/Blanco",
-    "qr": "485043",
-    "cert": "E-013-01-154453",
-    "proto": "PE 3/10 25.10.2018",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-AT10A-B": {
-    "nombre": "Electraline Triple blanco (99111)",
-    "qr": "482283",
-    "cert": "E-013-01-153425",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-HV2PT10A-B": {
-    "nombre": "Electraline Hembra volante 2P+T blanco (99105)",
-    "qr": "482288",
-    "cert": "E-013-01-153284",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "DR-CUSBAC-25W": {
-    "nombre": "Dairu Cargador USB-A (QC3.0 18W max) + USB-C (PD 25W max)",
-    "qr": "561660",
-    "cert": "E-013-01-178147",
-    "proto": "PE 8/10 07.12.2020",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-AT10A-N": {
-    "nombre": "Electraline Triple gris (99112)",
-    "qr": "482283",
-    "cert": "E-013-01-153425",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-AT10A-B-PROMO": {
-    "nombre": "Halux Triple blanco promo canasto",
-    "qr": "482283",
-    "cert": "E-013-01-153425",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-AT10A-N-PROMO": {
-    "nombre": "Halux Triple gris promo canasto",
-    "qr": "482283",
-    "cert": "E-013-01-153425",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-PLPE27A-B": {
-    "nombre": "Halux Portalampara E27 plastico anillo blanco",
-    "qr": "571672",
-    "cert": "E-013-01-180144",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 015"
-  },
-  "HX-PLPE27A-N": {
-    "nombre": "Halux Portalampara E27 plastico anillo negro",
-    "qr": "571672",
-    "cert": "E-013-01-180144",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 015"
-  },
-  "DR-CUSBAx2-12W": {
-    "nombre": "Dairu Cargador USB-A 2 puertos (12W max.)",
-    "qr": "561655",
-    "cert": "E-013-01-178144",
-    "proto": "PE 8/10 07.12.2020",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "BO-PLPE14B-B": {
-    "nombre": "Bolt Portalampara E14 plastico bornera blanco",
-    "qr": "377868",
-    "cert": "E-013-01-118985",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-HV2PT1016A-B": {
-    "nombre": "Enchufe hembra volante 10A/16A 2P+T blanco",
-    "qr": "483049",
-    "cert": "E-013-01-153743",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-HV2PT1016A-N": {
-    "nombre": "Enchufe hembra volante 10A/16A 2P+T negro",
-    "qr": "483049",
-    "cert": "E-013-01-153743",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MV2PT16A-B": {
-    "nombre": "Enchufe macho volante 16A 2P+T blanco",
-    "qr": "483050",
-    "cert": "E-013-01-153744",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-MV2PT16A-N": {
-    "nombre": "Enchufe macho volante 16A 2P+T negro",
-    "qr": "483050",
-    "cert": "E-013-01-153744",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-EP-10": {
-    "nombre": "Electraline Extension profesional 10 mts (99171)",
-    "qr": "482285",
-    "cert": "E-013-01-153426",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "EK-ESS5-30-B": {
-    "nombre": "Alargador multiple2PT10A 250V5tom 3 metros, c/swit blc 99200",
-    "qr": "482282",
-    "cert": "E-013-01-153424",
-    "proto": "PE 3/04 24.11.2021",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "BO-PLPE27P-N": {
-    "nombre": "Portalampara BOLT plastico presion negro",
-    "qr": "375483",
-    "cert": "E-013-01-118361",
-    "proto": "PE 5/04 08.01.2007",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-EP16A-10": {
-    "nombre": "Extension PRO 10m 16A Shuko (99089) (6113192",
-    "qr": "482286",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-IVP-B": {
-    "nombre": "INTURRUPTOR MANUAL PIS LAMP BC",
-    "qr": "507906",
-    "cert": "E-013-01-161229",
-    "proto": "PE 3/20:2022 28.10.2022",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ISM2-B": {
-    "nombre": "SMART INTERR INTELIG EMB 2POS",
-    "qr": "",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  },
-  "HX-ISM3-B": {
-    "nombre": "INTERRUPTOR SMART EMB 3 POS",
-    "qr": "",
-    "cert": "",
-    "proto": "",
-    "sistema": "Sistema 1, codigo 013"
-  }
+﻿{
+    "5231":  {
+                 "nombre":  "Linea Primmus MODULO Interruptor simple blanco",
+                 "qr":  "218389",
+                 "cert":  "E-013-01-77625",
+                 "proto":  "PE 3/01 18.06.2010",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "5245":  {
+                 "nombre":  "Linea Primmus MODULO Tomacorriente 10A blanco",
+                 "qr":  "496666",
+                 "cert":  "E-013-01-157820",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "5248":  {
+                 "nombre":  "Linea Primmus MODULO Tomacorriente 10/16A blanco",
+                 "qr":  "496666",
+                 "cert":  "E-013-01-157820",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "5249":  {
+                 "nombre":  "Teclastar Toma Corriente Schuco bipolar 16A-250V",
+                 "qr":  "540090",
+                 "cert":  "E-013-01-171806",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "5531":  {
+                 "nombre":  "Linea Primmus, MODULO Inter. escala 9/24, color blanco",
+                 "qr":  "218389",
+                 "cert":  "E-013-01-73445",
+                 "proto":  "PE 3/01 18.06.2010",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9236":  {
+                 "nombre":  "Linea Primmus Conjunto Interrup. 9/12 + tomacorr.10A blanco",
+                 "qr":  "218389 / 496666",
+                 "cert":  "E-013-01-73445 / E-013-01-157820",
+                 "proto":  "PE 3/01 18.06.2010 / PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9245":  {
+                 "nombre":  "Linea Primmus, Conjunto tomacorriente simple 10A, color blan",
+                 "qr":  "496666",
+                 "cert":  "E-013-01-157820",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9246":  {
+                 "nombre":  "Linea Primmus Conjunto tomacorriente doble 10A color blanc",
+                 "qr":  "496666",
+                 "cert":  "E-013-01-157820",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9247":  {
+                 "nombre":  "Linea Primmus Conjunto tomacorriente triple 10A color blan",
+                 "qr":  "496666",
+                 "cert":  "E-013-01-157820",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9248":  {
+                 "nombre":  "Linea Primmus, Conjunto tomacorriente simple 10/16A, color b",
+                 "qr":  "594105",
+                 "cert":  "E-013-01-187327",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9249":  {
+                 "nombre":  "Teclastar TomaCorriente Schuco Bipolar 16A-250v",
+                 "qr":  "540090",
+                 "cert":  "E-013-01-171806",
+                 "proto":  "PE 3/04 24.11.2021",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9257":  {
+                 "nombre":  "Línea Primmus armado tomacorriente doble monoblock",
+                 "qr":  "553660",
+                 "cert":  "E-013-01-178147",
+                 "proto":  "PE 8/10 07.12.2020",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9258":  {
+                 "nombre":  "Línea Primmus armado tomacorriente triple monoblock",
+                 "qr":  "553660",
+                 "cert":  "E-013-01-178147",
+                 "proto":  "PE 8/10 07.12.2020",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9290":  {
+                 "nombre":  "Linea Primmus, Conjunto Dimmer 300W, color blanco",
+                 "qr":  "PEND",
+                 "cert":  "PEND",
+                 "proto":  "PEND",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9431":  {
+                 "nombre":  "Linea Primmus Conjunto Interruptor simple 9/12 color blanc",
+                 "qr":  "218389",
+                 "cert":  "E-013-01-73445",
+                 "proto":  "PE 3/01 18.06.2010",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9432":  {
+                 "nombre":  "Linea Primmus, Conjunto Interruptor doble 9/15, color blanco",
+                 "qr":  "218389",
+                 "cert":  "E-013-01-73445",
+                 "proto":  "PE 3/01 18.06.2010",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9433":  {
+                 "nombre":  "Linea Primmus, Conjunto interruptor triple 9/32, color blanc",
+                 "qr":  "218389",
+                 "cert":  "E-013-01-73445",
+                 "proto":  "PE 3/01 18.06.2010",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9452":  {
+                 "nombre":  "Linea Primmus, Conjunto pulsador de timbre blanco",
+                 "qr":  "218389",
+                 "cert":  "E-013-01-73445",
+                 "proto":  "PE 3/01 18.06.2010",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "9631":  {
+                 "nombre":  "Linea Primmus, Conjunto Interruptor escala 9/24, color blanc",
+                 "qr":  "218389",
+                 "cert":  "E-013-01-73445",
+                 "proto":  "PE 3/01 18.06.2010",
+                 "sistema":  "Sistema 1, codigo 013"
+             },
+    "95231":  {
+                  "nombre":  "Linea Clio MODULO Interruptor simple blanco",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "95245":  {
+                  "nombre":  "Linea Clio MODULO tomacorriente simple 10A  blanco",
+                  "qr":  "474816",
+                  "cert":  "E-013-01-151156",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "95248":  {
+                  "nombre":  "Linea Clio MODULO tomacorriente simple 10/16A  blanco",
+                  "qr":  "474816",
+                  "cert":  "E-013-01-151156",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "95251":  {
+                  "nombre":  "MODULO PULSADOR CLIO BLANCO",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "95531":  {
+                  "nombre":  "Linea Clio MODULO  9/24 comnutable blanco",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99136":  {
+                  "nombre":  "Linea Clio Conjunto  Toma10A + USB (2) color blanco",
+                  "qr":  "474816",
+                  "cert":  "",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99231":  {
+                  "nombre":  "Linea Clio Conjunto Interruptor simple 9/12 color blanco",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99232":  {
+                  "nombre":  "Linea Clio Conjunto Interruptor doble 9/15 color blanco",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99233":  {
+                  "nombre":  "Linea Clio Conjunto Interruptor triple 9/32 color blanco",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99236":  {
+                  "nombre":  "Linea Clio Conjunto Interrup. 9/12 + tomacorriente10A blanco",
+                  "qr":  "235121/474816",
+                  "cert":  "E-013-01-77625 / E-013-01-151156",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99242":  {
+                  "nombre":  "Clio tomacorriente Schuko + 10A blanco",
+                  "qr":  "561036/474816",
+                  "cert":  "",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99243":  {
+                  "nombre":  "Clio tomacorriente doble 10/16A blanco",
+                  "qr":  "591334",
+                  "cert":  "E-013-01-186552",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99244":  {
+                  "nombre":  "Clio tomacorriente triple 10/16A blanco",
+                  "qr":  "591334",
+                  "cert":  "E-013-01-186552",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99245":  {
+                  "nombre":  "Linea Clio Conjunto Tomacorriente simple 10A color blanco",
+                  "qr":  "474816",
+                  "cert":  "E-013-01-151156",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99246":  {
+                  "nombre":  "Linea Clio Conjunto Tomacorriente doble 10A color blanco",
+                  "qr":  "474816",
+                  "cert":  "E-013-01-151156",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99247":  {
+                  "nombre":  "Linea Clio Conjunto Tomacorriente triple 10A color blanco",
+                  "qr":  "474816",
+                  "cert":  "E-013-01-151156",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99248":  {
+                  "nombre":  "Linea Clio Conjunto Tomacorriente 10/16A simple color blanco",
+                  "qr":  "474816",
+                  "cert":  "E-013-01-151156",
+                  "proto":  "PE 3/04 24.11.2021",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99251":  {
+                  "nombre":  "Linea Clio Conjunto Pulsador Timbre  color blanco",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "99531":  {
+                  "nombre":  "Linea Clio Conjunto Int. escala 9/24 color blanco",
+                  "qr":  "235121",
+                  "cert":  "E-013-01-77625",
+                  "proto":  "PE 3/01 18.06.2010",
+                  "sistema":  "Sistema 1, codigo 013"
+              },
+    "110231":  {
+                   "nombre":  "Linea Clio Conjunto Interruptor simple 9/12 color plata",
+                   "qr":  "235121",
+                   "cert":  "E-013-01-77625",
+                   "proto":  "PE 3/01 18.06.2010",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110232":  {
+                   "nombre":  "Linea Clio Conjunto Interruptor doble 9/15 color plata",
+                   "qr":  "235121",
+                   "cert":  "E-013-01-77625",
+                   "proto":  "PE 3/01 18.06.2010",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110233":  {
+                   "nombre":  "Linea Clio Conjunto Interruptor triple 9/32 color plata",
+                   "qr":  "235121",
+                   "cert":  "E-013-01-77625",
+                   "proto":  "PE 3/01 18.06.2010",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110236":  {
+                   "nombre":  "Linea Clio Conjunto Interrup. 9/12 + tomacorriente10A plata",
+                   "qr":  "235121/474816",
+                   "cert":  "E-013-01-77625 / E-013-01-151156",
+                   "proto":  "PE 3/04 24.11.2021",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110245":  {
+                   "nombre":  "Linea Clio Conjunto Tomacorriente simple 10A color plata",
+                   "qr":  "474816",
+                   "cert":  "E-013-01-151156",
+                   "proto":  "PE 3/04 24.11.2021",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110246":  {
+                   "nombre":  "Linea Clio Conjunto Tomacorriente doble 10A color plata",
+                   "qr":  "474816",
+                   "cert":  "E-013-01-151156",
+                   "proto":  "PE 3/04 24.11.2021",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110247":  {
+                   "nombre":  "Linea Clio Conjunto Tomacorriente  triple 10A color plata",
+                   "qr":  "474816",
+                   "cert":  "E-013-01-151156",
+                   "proto":  "PE 3/04 24.11.2021",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110248":  {
+                   "nombre":  "Linea Clio Conjunto Tomacorriente 10/16A simple color plata",
+                   "qr":  "474816",
+                   "cert":  "E-013-01-151156",
+                   "proto":  "PE 3/04 24.11.2021",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110251":  {
+                   "nombre":  "Linea Clio Conjunto Pulsador Timbre color plata",
+                   "qr":  "235121",
+                   "cert":  "E-013-01-77625",
+                   "proto":  "PE 3/01 18.06.2010",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "110531":  {
+                   "nombre":  "Linea Clio Conjunto Int. escala 9/24 color plata",
+                   "qr":  "235121",
+                   "cert":  "E-013-01-77625",
+                   "proto":  "PE 3/01 18.06.2010",
+                   "sistema":  "Sistema 1, codigo 013"
+               },
+    "HX-ATS10A-B":  {
+                        "nombre":  "Triple salvaespacio blanco (99013)",
+                        "qr":  "482289",
+                        "cert":  "E-013-01-153429",
+                        "proto":  "PE 3/04 24.11.2021",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "HX-ATS10A-N":  {
+                        "nombre":  "Triple salvaespacio negro (99014)",
+                        "qr":  "482289",
+                        "cert":  "E-013-01-153429",
+                        "proto":  "PE 3/04 24.11.2021",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "HX-AT10A-B":  {
+                       "nombre":  "Triple estandar blanco (99011)",
+                       "qr":  "482283",
+                       "cert":  "E-013-01-153425",
+                       "proto":  "PE 3/04 24.11.2021",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "HX-AT10A-N":  {
+                       "nombre":  "Triple estandar negro (3006972) 99012",
+                       "qr":  "482283",
+                       "cert":  "E-013-01-153425",
+                       "proto":  "PE 3/04 24.11.2021",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "EK-MV2P10A-N":  {
+                         "nombre":  "Electraline Macho volante 2P gris (99102)",
+                         "qr":  "474147",
+                         "cert":  "E-013-01-150906",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-MV2PT10A-N":  {
+                          "nombre":  "Electraline Macho volante 2P+T gris (99104)",
+                          "qr":  "474147",
+                          "cert":  "E-013-01-150906",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-MV2P10A-B":  {
+                         "nombre":  "Macho volante 2P blanco (99001) (3007022)",
+                         "qr":  "474147",
+                         "cert":  "E-013-01-150906",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-MV2P10A-N":  {
+                         "nombre":  "Macho volante 2P negro (99002) (3007030)",
+                         "qr":  "474147",
+                         "cert":  "E-013-01-150906",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-MV2PT10A-B":  {
+                          "nombre":  "Macho volante 2P+T blanco (99003) (3007049)",
+                          "qr":  "474147",
+                          "cert":  "E-013-01-150906",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-MV2PT10A-N":  {
+                          "nombre":  "Macho volante 2P+T negro (99004) (3007057)",
+                          "qr":  "474147",
+                          "cert":  "E-013-01-150906",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-HV2PT10A-B":  {
+                          "nombre":  "Hembra volante 2P+T blanco (3007065)",
+                          "qr":  "482288",
+                          "cert":  "E-013-01-153284",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-HV2PT10A-N":  {
+                          "nombre":  "Hembra volante 2P+T negro (99006) (3007073)",
+                          "qr":  "482288",
+                          "cert":  "E-013-01-153284",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-AA10A-B":  {
+                       "nombre":  "Volante adaptador americano/Patas planas/blanco(99180)",
+                       "qr":  "485043",
+                       "cert":  "E-013-01-154453",
+                       "proto":  "PE 3/10 25.10.2018",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "HX-AA10A-N":  {
+                       "nombre":  "Volante adaptador americano/Patas planas/ Neg (99181)",
+                       "qr":  "485043",
+                       "cert":  "E-013-01-154453",
+                       "proto":  "PE 3/10 25.10.2018",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "HX-MVC2P10A-B":  {
+                          "nombre":  "Halux Macho volante convertible 2P blanco",
+                          "qr":  "464360",
+                          "cert":  "E-013-01-147291",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-MVC2P10A-N":  {
+                          "nombre":  "Halux Macho volante convertible 2P gris",
+                          "qr":  "464360",
+                          "cert":  "E-013-01-147291",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-MVC2PT10A-N":  {
+                           "nombre":  "Halux Macho volante convertible 2P+T gris 99147",
+                           "qr":  "464411",
+                           "cert":  "E-013-01-147300",
+                           "proto":  "PE 3/04 24.11.2021",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "HX-ES4USB2AC-3N":  {
+                            "nombre":  "Halux Zapatilla 4 pos. con USBA+USBC gris",
+                            "qr":  "482278",
+                            "cert":  "E-013-01-153422",
+                            "proto":  "PE 3/04 24.11.2021",
+                            "sistema":  "Sistema 1, codigo 013"
+                        },
+    "EK-ESX4-15-N":  {
+                         "nombre":  "Electrali alargador multiple 4p s/switch 1,5 mts gri (99141)",
+                         "qr":  "482282",
+                         "cert":  "E-013-01-153424",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-EP16A-10":  {
+                        "nombre":  "Electraline Extension 10 mts G1,50 (99109) (9989)",
+                        "qr":  "482286",
+                        "cert":  "E-013-01-153427",
+                        "proto":  "PE 3/04 24.11.2021",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "HX-AM10A-B":  {
+                       "nombre":  "Addaptador Multinorma 10A Blanco YLK-H3 (3227065)",
+                       "qr":  "488844",
+                       "cert":  "E-013-01-155545",
+                       "proto":  "PE 3/10 25.10.2018",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "HX-PLPE27P-B":  {
+                         "nombre":  "Halux Portalampara E27 plastico presion blanco (3949168)",
+                         "qr":  "375483",
+                         "cert":  "E-013-01-118361",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-PLPE27P-N":  {
+                         "nombre":  "Halux Portalampara E27 plastico presion negro (3949176)",
+                         "qr":  "375483",
+                         "cert":  "E-013-01-118361",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-PLPE27B-B":  {
+                         "nombre":  "Halux Portalampara E27 plastico bornera blanco (3951081)",
+                         "qr":  "375470",
+                         "cert":  "E-013-01-118359",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-PLPE27B-N":  {
+                         "nombre":  "Halux Portalampara E27 plastico bornera negro (395109X)",
+                         "qr":  "375470",
+                         "cert":  "E-013-01-118359",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "BO-PLPE27C-B":  {
+                         "nombre":  "Bolt Portalampara E27 plastico base recta blanco",
+                         "qr":  "375480",
+                         "cert":  "E-013-01-118360",
+                         "proto":  "PE 5/04 08.01.2008",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-PLPE27C-B":  {
+                         "nombre":  "PortalamparaS plastico base recta blco E27cielo(394915X)",
+                         "qr":  "375480",
+                         "cert":  "E-013-01-118360",
+                         "proto":  "PE 5/04 08.01.2008",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-PLCE27-B":  {
+                        "nombre":  "Halux Portalampara E27 ceramico bornera blanco (3951073)",
+                        "qr":  "375468",
+                        "cert":  "E-013-01-118357",
+                        "proto":  "PE 5/04 08.01.2007",
+                        "sistema":  "Sistema 1, codigo 016"
+                    },
+    "HX-PLCE27C-B":  {
+                         "nombre":  "Halux Portalampara E27 ceramico base recta blanco (3951065)",
+                         "qr":  "375469",
+                         "cert":  "E-013-01-118358",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 017"
+                     },
+    "EK-EP16A-20":  {
+                        "nombre":  "Electraline Extension 20 mts G1,50 (99116)",
+                        "qr":  "482286",
+                        "cert":  "E-013-01-153427",
+                        "proto":  "PE 3/04 24.11.2021",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "EK-EP16A-30":  {
+                        "nombre":  "Electraline Extension 30 mts G1,50 (99117) (9991)",
+                        "qr":  "482286",
+                        "cert":  "E-013-01-153427",
+                        "proto":  "PE 3/04 24.11.2021",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "EK-MV2PT10A-B":  {
+                          "nombre":  "Electraline Macho volante 2P+T blanco (99103)",
+                          "qr":  "474147",
+                          "cert":  "E-013-01-150906",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-ES4USB-3B":  {
+                         "nombre":  "Halux Alargador zap. gummy 4 pos+2USB, 3m, blanco (99081)",
+                         "qr":  "482278",
+                         "cert":  "E-013-01-153422",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-IV6A-B":  {
+                      "nombre":  "Interruptor volante blanco (99007) (3007006)",
+                      "qr":  "507904",
+                      "cert":  "E-013-01-161228",
+                      "proto":  "PE 3/20:2022 28.10.2022",
+                      "sistema":  "Sistema 1, codigo 013"
+                  },
+    "HX-IV6A-N":  {
+                      "nombre":  "Interruptor volante negro (99008) (3007014)",
+                      "qr":  "507904",
+                      "cert":  "E-013-01-161228",
+                      "proto":  "PE 3/20:2022 28.10.2022",
+                      "sistema":  "Sistema 1, codigo 013"
+                  },
+    "HX-PLPE14B-B":  {
+                         "nombre":  "Halux Portalampara E14 plastico bornera blanco(6553478)",
+                         "qr":  "377868",
+                         "cert":  "E-013-01-118985",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-MVC2PT10A-B":  {
+                           "nombre":  "Halux Macho volante convertible 2P+T blanco 99146",
+                           "qr":  "464411",
+                           "cert":  "E-013-01-147300",
+                           "proto":  "PE 3/04 24.11.2021",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "EK-AA10A-N":  {
+                       "nombre":  "Volante Adaptador Americano/Patas planas/Gris.",
+                       "qr":  "485043",
+                       "cert":  "E-013-01-154453",
+                       "proto":  "PE 3/10 25.10.2018",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "EK-AM10A-B":  {
+                       "nombre":  "Electraline Multinorma 10A Blanco (99120)",
+                       "qr":  "488844",
+                       "cert":  "E-013-01-155545",
+                       "proto":  "PE 3/10 25.10.2018",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "EK-ESX4-15":  {
+                       "nombre":  "Alargador Multiple , 4tomas1.5mts bco (99140)",
+                       "qr":  "482282",
+                       "cert":  "E-013-01-153424",
+                       "proto":  "PE 3/04 24.11.2021",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "EK-ESX4-30-B":  {
+                         "nombre":  "Alargador multiple 2P+T 10A 250V,4 tomas3 mts s/sw Blc 99142",
+                         "qr":  "482282",
+                         "cert":  "E-013-01-153424",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-ESSA4USB3-2":  {
+                           "nombre":  "Zapatilla de escritorio 4 tomas 3 USB / 2 mts ( 99176 )",
+                           "qr":  "486286",
+                           "cert":  "E-013-01-154652",
+                           "proto":  "PE 3/10 25.10.2018",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "EK-ES4USB-3B":  {
+                         "nombre":  "Electraline alargador mutiple 4x3 mt + 2USB gummy 99119",
+                         "qr":  "482278",
+                         "cert":  "E-013-01-153422",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-IVP-N":  {
+                     "nombre":  "Interruptor manual de piso, color Negro 99019 (3358178)",
+                     "qr":  "507906",
+                     "cert":  "E-013-01-161229",
+                     "proto":  "PE 3/20:2022 28.10.2022",
+                     "sistema":  "Sistema 1, codigo 013"
+                 },
+    "HX-ASPT10A-B":  {
+                         "nombre":  "Halux Adaptador Schuko con protección térmica(714457)",
+                         "qr":  "464466",
+                         "cert":  "E-013-01-147306",
+                         "proto":  "PE 3/10 25.10.2018",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-PLPE14B-N":  {
+                         "nombre":  "Halux Portalampara E14 plastico bornera negro(6553486)",
+                         "qr":  "377868",
+                         "cert":  "E-013-01-118985",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-USBX2-B":  {
+                       "nombre":  "Cargador USB 2 puertos, 2.1A, color blanco 99024 (3358151)",
+                       "qr":  "259022",
+                       "cert":  "E-013-01-83867",
+                       "proto":  "PE 8/08 26.12.2016",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "HX-ESS4-NA":  {
+                       "nombre":  "Zapatilla 4 pos 10A/16A/Schuko sin cable (99184) (3949222)",
+                       "qr":  "482279",
+                       "cert":  "E-013-01-153423",
+                       "proto":  "PE 3/04 24.11.2021",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "EK-ESS6-50-N":  {
+                         "nombre":  "Electraline alargador multiple 6p c/switch,5mts,gris (99153)",
+                         "qr":  "482282",
+                         "cert":  "",
+                         "proto":  "",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-ES4USB-3N":  {
+                         "nombre":  "Electraline alargador mutiple 4x3 mt + 2USB Gum Neg 99119",
+                         "qr":  "482278",
+                         "cert":  "E-013-01-153422",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-ESSA6PS-2":  {
+                         "nombre":  "Zapatilla prof. 6 tomas schuko 10/16A / 2mts ( 99175 )",
+                         "qr":  "486290",
+                         "cert":  "E-013-01-154653",
+                         "proto":  "PE 3/10 25.10.2018",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-EP-20":  {
+                     "nombre":  "Electraline Extension profesional 20 mts (99172)",
+                     "qr":  "482285",
+                     "cert":  "E-013-01-153426",
+                     "proto":  "PE 3/04 24.11.2021",
+                     "sistema":  "Sistema 1, codigo 013"
+                 },
+    "HX-UFO4USB-5":  {
+                         "nombre":  "Halux Alargador UFO 4 pos+2 USB, 5m, gris (99080) (3523632)",
+                         "qr":  "466183",
+                         "cert":  "E-013-01-151640",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "BO-PLCE27C-B":  {
+                         "nombre":  "Portalampara BOLT CERAMICO BASE RECTA",
+                         "qr":  "375469",
+                         "cert":  "E-013-01-118358",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 017"
+                     },
+    "BO-PLPE27P-B":  {
+                         "nombre":  "Portalampara BOL plastico presion blanco (3949168)",
+                         "qr":  "375483",
+                         "cert":  "E-013-01-118361",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "BO-PLPE27B-B":  {
+                         "nombre":  "Portalampara BOLT plastico bornera blanco",
+                         "qr":  "375470",
+                         "cert":  "E-013-01-118359",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "BO-ASPT10A-B":  {
+                         "nombre":  "Electraline Adaptador Schuko blanco con proteccion fusible 9",
+                         "qr":  "499230",
+                         "cert":  "E-013-01-158305",
+                         "proto":  "PE 3/10 25.10.2018",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-ASPF10A-B":  {
+                         "nombre":  "Halux Adaptador Schuko blanco con proteccion fusible (99134)",
+                         "qr":  "499230",
+                         "cert":  "E-013-01-158305",
+                         "proto":  "PE 3/10 25.10.2018",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-IV2A-N":  {
+                      "nombre":  "Interruptor volante Negro 99179",
+                      "qr":  "507904",
+                      "cert":  "E-013-01-161228",
+                      "proto":  "PE 3/20:2022 28.10.2022",
+                      "sistema":  "Sistema 1, codigo 013"
+                  },
+    "EK-MVC2PT10A-B":  {
+                           "nombre":  "Electraline Macho volante convertible 2P+T blanco 99138",
+                           "qr":  "464411",
+                           "cert":  "E-013-01-147300",
+                           "proto":  "PE 3/04 24.11.2021",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "EK-MVC2PT10A-N":  {
+                           "nombre":  "Electraline Macho volante convertible 2P+T gris 99139",
+                           "qr":  "464411",
+                           "cert":  "E-013-01-147300",
+                           "proto":  "PE 3/04 24.11.2021",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "EK-ATS10A-B":  {
+                        "nombre":  "Electraline Triple salvaespacio blanco (99113)",
+                        "qr":  "482289",
+                        "cert":  "E-013-01-153429",
+                        "proto":  "PE 3/04 24.11.2021",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "EK-ATS10A-N":  {
+                        "nombre":  "Electraline Triple salvaespacio gris (99114)",
+                        "qr":  "482289",
+                        "cert":  "E-013-01-153429",
+                        "proto":  "PE 3/04 24.11.2021",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "EK-MVC2P10A-B":  {
+                          "nombre":  "Electraline Macho volante convertible 2P blanco 99136",
+                          "qr":  "464360",
+                          "cert":  "E-013-01-147291",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "EK-MVC2P10A-N":  {
+                          "nombre":  "Electraline Macho volante convertible 2P gris 99137",
+                          "qr":  "464360",
+                          "cert":  "E-013-01-147291",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-ESSA10-2":  {
+                        "nombre":  "Zapatilla prof. 10 tomas schuko 10/16A / 2mts (99174)",
+                        "qr":  "486290",
+                        "cert":  "E-013-01-154653",
+                        "proto":  "PE 3/10 25.10.2018",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "HX-ESSA2USB-2":  {
+                          "nombre":  "Zapatilla de escritorio 2 tomas 2 USB / 2 mts ( 99177 )",
+                          "qr":  "486286",
+                          "cert":  "E-013-01-154652",
+                          "proto":  "PE 3/10 25.10.2018",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "EK-ESS6-30-B":  {
+                         "nombre":  "Electraline alargador multiple 6p c/switch, 3mts,bco (99150)",
+                         "qr":  "482282",
+                         "cert":  "E-013-01-153424",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-ESS6-30-G":  {
+                         "nombre":  "Alargador 6 tomas 10A 3 metros, con swit gris(99151)",
+                         "qr":  "482282",
+                         "cert":  "E-013-01-153424",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-ESX4-30-N":  {
+                         "nombre":  "Alargador multiple 2PT10A 250V4 tomas3 mts s/swit Negr 99143",
+                         "qr":  "482282",
+                         "cert":  "E-013-01-153424",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-HV2PT10A-N":  {
+                          "nombre":  "Electraline Hembra volante 2P+T gris (99106)",
+                          "qr":  "482288",
+                          "cert":  "E-013-01-153284",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "LED E27-10W-6.5K":  {
+                             "nombre":  "BOLT ampolleta LED E27 10W luz dia (186951)",
+                             "qr":  "562016",
+                             "cert":  "E-013-01-178257",
+                             "proto":  "PE 5/17 18/11/2020",
+                             "sistema":  "Sistema 1, codigo 013"
+                         },
+    "LED E27-15W-6.5K":  {
+                             "nombre":  "BOLT ampolleta LED E27 15W luz dia (186953)",
+                             "qr":  "562016",
+                             "cert":  "E-013-01-178257",
+                             "proto":  "PE 5/17 18/11/2020",
+                             "sistema":  "Sistema 1, codigo 013"
+                         },
+    "LED E27-18W-6.5K":  {
+                             "nombre":  "BOLT ampolleta LED E27 18W luz dia",
+                             "qr":  "RECERTIFICACION",
+                             "cert":  "",
+                             "proto":  "",
+                             "sistema":  "Sistema 1, codigo 013"
+                         },
+    "BO-PLPE27B-N":  {
+                         "nombre":  "Portalampara BOLT plastico bornera Negro",
+                         "qr":  "375470",
+                         "cert":  "E-013-01-118359",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-MVSCH90-B":  {
+                         "nombre":  "Enchufe macho volante schuko 90° 16A 2P+T blanco",
+                         "qr":  "483048",
+                         "cert":  "E-013-01-153742",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-MVSCH90-N":  {
+                         "nombre":  "Enchufe macho volante schuko 90° 16A 2P+T negro",
+                         "qr":  "483048",
+                         "cert":  "E-013-01-153742",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-EP-30":  {
+                     "nombre":  "Alargador profesional 2P+T 10A 250V, 30 Mts 99173",
+                     "qr":  "482285",
+                     "cert":  "E-013-01-153426",
+                     "proto":  "PE 3/04 24.11.2021",
+                     "sistema":  "Sistema 1, codigo 013"
+                 },
+    "HX-HV2PT1016A-B":  {
+                            "nombre":  "Enchufe hembra volante 10A/16A 2P+T blanco 99158",
+                            "qr":  "483049",
+                            "cert":  "E-013-01-153743",
+                            "proto":  "PE 3/04 24.11.2021",
+                            "sistema":  "Sistema 1, codigo 013"
+                        },
+    "HX-HV2PT1016A-N":  {
+                            "nombre":  "Enchufe hembra volante 10A/16A 2P+T negro 99159",
+                            "qr":  "483049",
+                            "cert":  "E-013-01-153743",
+                            "proto":  "PE 3/04 24.11.2021",
+                            "sistema":  "Sistema 1, codigo 013"
+                        },
+    "HX-MV2PT16A-B":  {
+                          "nombre":  "Enchufe macho volante 16A 2P+T blanco 99156",
+                          "qr":  "483050",
+                          "cert":  "E-013-01-153744",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-MV2PT16A-N":  {
+                          "nombre":  "Enchufe macho volante 16A 2P+T negro 99157",
+                          "qr":  "483050",
+                          "cert":  "E-013-01-153744",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "HX-ES4USBC-3B":  {
+                          "nombre":  "Halux alargador mutiple 6x3 mt + 2USBA+C blanco(99186)",
+                          "qr":  "482278",
+                          "cert":  "",
+                          "proto":  "",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "LED E27-10W-3K":  {
+                           "nombre":  "BOLT ampolleta LED E27 10W luz calida (186950)",
+                           "qr":  "",
+                           "cert":  "",
+                           "proto":  "",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "LED E27-15W-3K":  {
+                           "nombre":  "BOLT ampolleta LED E27 15W luz calida",
+                           "qr":  "",
+                           "cert":  "",
+                           "proto":  "",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "EK-IV2A":  {
+                    "nombre":  "Interruptor Volante blanco (99182)",
+                    "qr":  "507904",
+                    "cert":  "E-013-01-161228",
+                    "proto":  "PE 3/20:2022 28.10.2022",
+                    "sistema":  "Sistema 1, codigo 013"
+                },
+    "EK-ESS6-50-B":  {
+                         "nombre":  "Electraline alargador multiple 6p c/switch, 5mts,bco (99152)",
+                         "qr":  "482282",
+                         "cert":  "E-013-01-153424",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-EP-5":  {
+                    "nombre":  "Electraline Extension profesional 5 mts (99170)",
+                    "qr":  "482285",
+                    "cert":  "E-013-01-153426",
+                    "proto":  "PE 3/04 24.11.2021",
+                    "sistema":  "Sistema 1, codigo 013"
+                },
+    "EK-AA10A-B":  {
+                       "nombre":  "Volante Adaptador Americano/Patas planas/Blanco",
+                       "qr":  "485043",
+                       "cert":  "E-013-01-154453",
+                       "proto":  "PE 3/10 25.10.2018",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "EK-AT10A-B":  {
+                       "nombre":  "Electraline Triple blanco (99111)",
+                       "qr":  "482283",
+                       "cert":  "E-013-01-153425",
+                       "proto":  "PE 3/04 24.11.2021",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "EK-HV2PT10A-B":  {
+                          "nombre":  "Electraline Hembra volante 2P+T blanco (99105)",
+                          "qr":  "482288",
+                          "cert":  "E-013-01-153284",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "DR-CUSBAC-25W":  {
+                          "nombre":  "Dairu Cargador USB-A (QC3.0 18W max) + USB-C (PD 25W max)",
+                          "qr":  "561660",
+                          "cert":  "E-013-01-178147",
+                          "proto":  "PE 8/10 07.12.2020",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "EK-AT10A-N":  {
+                       "nombre":  "Electraline Triple gris (99112)",
+                       "qr":  "482283",
+                       "cert":  "E-013-01-153425",
+                       "proto":  "PE 3/04 24.11.2021",
+                       "sistema":  "Sistema 1, codigo 013"
+                   },
+    "HX-AT10A-B-PROMO":  {
+                             "nombre":  "Halux Triple blanco promo canasto",
+                             "qr":  "482283",
+                             "cert":  "E-013-01-153425",
+                             "proto":  "PE 3/04 24.11.2021",
+                             "sistema":  "Sistema 1, codigo 013"
+                         },
+    "HX-AT10A-N-PROMO":  {
+                             "nombre":  "Halux Triple gris promo canasto",
+                             "qr":  "482283",
+                             "cert":  "E-013-01-153425",
+                             "proto":  "PE 3/04 24.11.2021",
+                             "sistema":  "Sistema 1, codigo 013"
+                         },
+    "HX-PLPE27A-B":  {
+                         "nombre":  "Halux Portalampara E27 plastico anillo blanco",
+                         "qr":  "571672",
+                         "cert":  "E-013-01-180144",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 015"
+                     },
+    "HX-PLPE27A-N":  {
+                         "nombre":  "Halux Portalampara E27 plastico anillo negro",
+                         "qr":  "571672",
+                         "cert":  "E-013-01-180144",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 015"
+                     },
+    "DR-CUSBAx2-12W":  {
+                           "nombre":  "Dairu Cargador USB-A 2 puertos (12W max.)",
+                           "qr":  "561655",
+                           "cert":  "E-013-01-178144",
+                           "proto":  "PE 8/10 07.12.2020",
+                           "sistema":  "Sistema 1, codigo 013"
+                       },
+    "BO-PLPE14B-B":  {
+                         "nombre":  "Bolt Portalampara E14 plastico bornera blanco",
+                         "qr":  "377868",
+                         "cert":  "E-013-01-118985",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "EK-HV2PT1016A-B":  {
+                            "nombre":  "Enchufe hembra volante 10A/16A 2P+T blanco",
+                            "qr":  "483049",
+                            "cert":  "E-013-01-153743",
+                            "proto":  "PE 3/04 24.11.2021",
+                            "sistema":  "Sistema 1, codigo 013"
+                        },
+    "EK-HV2PT1016A-N":  {
+                            "nombre":  "Enchufe hembra volante 10A/16A 2P+T negro",
+                            "qr":  "483049",
+                            "cert":  "E-013-01-153743",
+                            "proto":  "PE 3/04 24.11.2021",
+                            "sistema":  "Sistema 1, codigo 013"
+                        },
+    "EK-MV2PT16A-B":  {
+                          "nombre":  "Enchufe macho volante 16A 2P+T blanco",
+                          "qr":  "483050",
+                          "cert":  "E-013-01-153744",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "EK-MV2PT16A-N":  {
+                          "nombre":  "Enchufe macho volante 16A 2P+T negro",
+                          "qr":  "483050",
+                          "cert":  "E-013-01-153744",
+                          "proto":  "PE 3/04 24.11.2021",
+                          "sistema":  "Sistema 1, codigo 013"
+                      },
+    "EK-EP-10":  {
+                     "nombre":  "Electraline Extension profesional 10 mts (99171)",
+                     "qr":  "482285",
+                     "cert":  "E-013-01-153426",
+                     "proto":  "PE 3/04 24.11.2021",
+                     "sistema":  "Sistema 1, codigo 013"
+                 },
+    "EK-ESS5-30-B":  {
+                         "nombre":  "Alargador multiple2PT10A 250V5tom 3 metros, c/swit blc 99200",
+                         "qr":  "482282",
+                         "cert":  "E-013-01-153424",
+                         "proto":  "PE 3/04 24.11.2021",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "BO-PLPE27P-N":  {
+                         "nombre":  "Portalampara BOLT plastico presion negro",
+                         "qr":  "375483",
+                         "cert":  "E-013-01-118361",
+                         "proto":  "PE 5/04 08.01.2007",
+                         "sistema":  "Sistema 1, codigo 013"
+                     },
+    "HX-EP16A-10":  {
+                        "nombre":  "Extension PRO 10m 16A Shuko (99089) (6113192",
+                        "qr":  "482286",
+                        "cert":  "",
+                        "proto":  "",
+                        "sistema":  "Sistema 1, codigo 013"
+                    },
+    "HX-IVP-B":  {
+                     "nombre":  "INTURRUPTOR MANUAL PIS LAMP BC",
+                     "qr":  "507906",
+                     "cert":  "E-013-01-161229",
+                     "proto":  "PE 3/20:2022 28.10.2022",
+                     "sistema":  "Sistema 1, codigo 013"
+                 },
+    "HX-ISM2-B":  {
+                      "nombre":  "SMART INTERR INTELIG EMB 2POS",
+                      "qr":  "",
+                      "cert":  "",
+                      "proto":  "",
+                      "sistema":  "Sistema 1, codigo 013"
+                  },
+    "HX-ISM3-B":  {
+                      "nombre":  "INTERRUPTOR SMART EMB 3 POS",
+                      "qr":  "",
+                      "cert":  "",
+                      "proto":  "",
+                      "sistema":  "Sistema 1, codigo 013"
+                  }
 }
