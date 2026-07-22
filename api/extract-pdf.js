@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(base64, 'base64')
     const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default
     const pdfData = await pdfParse(buffer)
-    const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 15000)
+    const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 50000)
 
     // DINs: deterministic regex extraction (no Claude dependency).
     // Claude stops reading at page-break signatures and misses late-page items.
@@ -91,7 +91,7 @@ ${text}`
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
+        max_tokens: 8000,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
