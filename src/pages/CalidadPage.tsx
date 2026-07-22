@@ -342,6 +342,10 @@ export default function CalidadPage() {
   // ── Read invoice and create shared session ──
   const readInvoice = async () => {
     if (!invoiceFile) return
+    if (invoiceFile.size < 100) {
+      setReadError(`El archivo "${invoiceFile.name}" está vacío o dañado (${(invoiceFile.size / 1024).toFixed(1)} KB). Sube el PDF original de la factura, no un acceso directo.`)
+      return
+    }
     cancelledRef.current = false
     setReading(true); setReadError(''); setPhase('reading')
     try {
