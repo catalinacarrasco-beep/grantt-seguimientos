@@ -1,4 +1,4 @@
-import { lookupProduct, lookupProductByDescCode } from './products'
+﻿import { lookupProduct, lookupProductByDescCode } from './products'
 import modeloCertMap from './modeloCertMap.json'
 
 export type ProductRow = {
@@ -77,10 +77,11 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
   const prompt = type === 'invoice'
     ? `Extract from this commercial invoice.
 Return ONLY valid JSON, no markdown, no extra text.
-Format: {"invoiceNum":"26FS-0301-3","trazabilidad":"04/2026","products":[{"modelo":"09431","cantidad":10416}]}
+Format: {"invoiceNum":"26FS-0301-3","trazabilidad":"04/2026","products":[{"modelo":"09431","altCode":"HX-MVC2PT10A-N","cantidad":10416}]}
 - invoiceNum: invoice reference number
 - trazabilidad: invoice date as MM/YYYY
-- modelo: if TWO code columns exist, use ONLY the shorter numeric code (like "09431"), NOT the supplier code with dashes (like "09431-Z-BOLT")
+- modelo: the shorter numeric code (like "09431"), NOT the long supplier code with extra dashes (like "09431-Z-BOLT")
+- altCode: if a SECOND code column exists, include the other code here (e.g. the alphanumeric model like "HX-MVC2PT10A-N"). Omit if only one code column.
 - cantidad: integer PCS quantity only`
     : `Extract from this Chilean DIN (Declaracion de Ingreso de Aduanas).
 Return ONLY valid JSON, no markdown, no extra text.
@@ -110,10 +111,10 @@ function safeParseJSON(txt: string): Record<string, unknown> {
   }
 }
 
-export async function parseInvoice(file: File): Promise<{ invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }> {
+export async function parseInvoice(file: File): Promise<{ invoiceNum: string; trazabilidad: string; products: { modelo: string; altCode?: string; cantidad: number }[] }> {
   const data = await parsePDF(file, 'invoice')
   const txt = getText(data)
-  return safeParseJSON(txt) as { invoiceNum: string; trazabilidad: string; products: { modelo: string; cantidad: number }[] }
+  return safeParseJSON(txt) as { invoiceNum: string; trazabilidad: string; products: { modelo: string; altCode?: string; cantidad: number }[] }
 }
 
 const EXCLUDED_DIN_KEYWORDS = ['CANALETA', 'CANALETAS', 'TRUNKING', 'DUCTO', 'DUCTOS', 'CONDUIT', 'CARRETE', 'CARRETES']
@@ -240,7 +241,7 @@ function resolveModelo(invoiceModelo: string): string | null {
 }
 
 export function crossWithBD(
-  invProducts: { modelo: string; cantidad: number }[],
+  invProducts: { modelo: string; altCode?: string; cantidad: number }[],
   dinItems: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[],
   trazabilidad: string
 ): ProductRow[] {
@@ -249,7 +250,7 @@ export function crossWithBD(
   const certifiable: { modelo: string; cantidad: number }[] = []
   const notCert: string[] = []
   for (const p of normalizedProducts) {
-    const resolved = resolveModelo(p.modelo)
+    const resolved = resolveModelo(p.modelo) || (p.altCode ? resolveModelo(p.altCode) : null)
     if (resolved) certifiable.push({ modelo: resolved, cantidad: p.cantidad })
     else notCert.push(p.modelo)
   }
@@ -304,3 +305,4 @@ export async function uploadFileToDrive(b64: string, fileName: string, mimeType:
 export async function uploadToDrive(b64: string, fileName: string, folderId?: string): Promise<string> {
   return uploadFileToDrive(b64, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', folderId || '')
 }
+
