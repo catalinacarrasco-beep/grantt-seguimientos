@@ -21,7 +21,7 @@ export default async function handler(req, res) {
           items.push({ itemNum: m[1], quantity: parseInt(m[2], 10), description: '' })
       }
 
-      // Item 1: header is "ITEM Nombre" (no number) — isolate its text block
+      // Item 1: header is "ITEM Nombre" (no number) �?" isolate its text block
       const firstItem = text.indexOf('ITEM')
       const item2pos = text.indexOf('ITEM  2')
       if (firstItem >= 0 && item2pos > firstItem && !items.find(i => i.itemNum === '1')) {
@@ -62,10 +62,11 @@ export default async function handler(req, res) {
     const prompt = type === 'invoice'
       ? `Extract from this commercial invoice text.
 Return ONLY valid JSON, no markdown, no extra text.
-Format: {"invoiceNum":"26FS-0301-3","trazabilidad":"04/2026","products":[{"modelo":"09431","cantidad":10416}]}
+Format: {"invoiceNum":"26FS-0301-3","trazabilidad":"04/2026","products":[{"modelo":"09431","altCode":"HX-MVC2PT10A-N","cantidad":10416}]}
 - invoiceNum: invoice reference number
 - trazabilidad: invoice date as MM/YYYY
-- modelo: if TWO code columns exist, use ONLY the shorter numeric code (like "09431"), NOT the supplier code with dashes (like "09431-Z-BOLT")
+- modelo: the shorter numeric code (like "09431"), NOT the long supplier code with extra dashes (like "09431-Z-BOLT")
+- altCode: if a SECOND code column exists, include the other code here (e.g. the alphanumeric model like "HX-MVC2PT10A-N"). Omit if only one code column.
 - cantidad: integer PCS quantity only
 
 TEXT:
@@ -101,3 +102,4 @@ ${text}`
     return res.status(500).json({ error: error.message })
   }
 }
+
