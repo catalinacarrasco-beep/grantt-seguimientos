@@ -359,6 +359,12 @@ export default function CalidadPage() {
         if (direct) return { modelo: p.modelo, cantidad: p.cantidad, entry: direct }
         const byDesc = lookupProductByDescCode(p.modelo)
         if (byDesc) return { modelo: byDesc.modelo, cantidad: p.cantidad, entry: byDesc.entry }
+        if (p.altCode) {
+          const altDirect = lookupProduct(p.altCode)
+          if (altDirect) return { modelo: p.altCode, cantidad: p.cantidad, entry: altDirect }
+          const altDesc = lookupProductByDescCode(p.altCode)
+          if (altDesc) return { modelo: altDesc.modelo, cantidad: p.cantidad, entry: altDesc.entry }
+        }
         return null
       }).filter(Boolean) as { modelo: string; cantidad: number; entry: NonNullable<ReturnType<typeof lookupProduct>> }[]
 
@@ -721,6 +727,7 @@ export default function CalidadPage() {
       {/* Actions sticky (mobile) */}
       {phase === 'checklist' && (
         <div className="action-bar-sticky">
+          {saveError && <div style={{ color: '#f87171', fontSize: 11, width: '100%', textAlign: 'center', marginBottom: 6 }}>{saveError}</div>}
           <button className="btn btn-secondary" disabled={saving} onClick={save}>
             {saving ? <Loader2 size={13} className="spin" /> : null}
             {savedOk ? '✓ Guardado' : 'Guardar'}
