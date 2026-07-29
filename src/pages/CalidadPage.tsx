@@ -59,6 +59,8 @@ export default function CalidadPage() {
   const [savedOk, setSavedOk] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [autoSaved, setAutoSaved] = useState(false)
+  const autoSaveIdRef = useRef<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const qrRef = useRef<HTMLInputElement>(null)
@@ -83,6 +85,8 @@ export default function CalidadPage() {
   const realtimeChRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [torchOn, setTorchOn] = useState(false)
   const scanTargetRef = useRef<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
+
+  useEffect(() => { autoSaveIdRef.current = editingId }, [editingId])
 
   // ── Load session from URL param (mobile opens shared link) ──
   useEffect(() => {
@@ -144,6 +148,7 @@ export default function CalidadPage() {
         setInvoiceNum(d.invoiceNum || ''); setTrazabilidad(d.trazabilidad || '')
         setDinNum(d.dinNum || ''); setColorLote(d.colorLote || '')
         setProducts(d.products); setPhase('checklist'); setDraftLoaded(true)
+        if (d.editingId) { setEditingId(d.editingId); autoSaveIdRef.current = d.editingId }
         // Reuse existing session or create new one for QR sharing
         const restoreSession = async () => {
           if (d.sessionId) {
@@ -165,8 +170,8 @@ export default function CalidadPage() {
   // ── Save draft to localStorage (desktop/local only) ──
   useEffect(() => {
     if (phase !== 'checklist' || isRemoteSession) return
-    localStorage.setItem('calidad_draft', JSON.stringify({ invoiceNum, trazabilidad, dinNum, colorLote, products, sessionId }))
-  }, [products, dinNum, colorLote, invoiceNum, trazabilidad, phase, isRemoteSession, sessionId])
+    localStorage.setItem('calidad_draft', JSON.stringify({ invoiceNum, trazabilidad, dinNum, colorLote, products, sessionId, editingId }))
+  }, [products, dinNum, colorLote, invoiceNum, trazabilidad, phase, isRemoteSession, sessionId, editingId])
 
   // ── Sync local changes → Supabase session (debounced 600ms) + broadcast ──
   useEffect(() => {
@@ -186,6 +191,31 @@ export default function CalidadPage() {
     }, 600)
     return () => clearTimeout(timer)
   }, [products, dinNum, colorLote, sessionId, phase])
+
+  // ── Auto-save to inspecciones (debounced 1.5s) ──
+  useEffect(() => {
+    if (phase !== 'checklist' || !products.length || isRemoteSession) return
+    const timer = setTimeout(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        const row = {
+          invoice_num: invoiceNum, din_num: dinNum, color_lote: colorLote, trazabilidad,
+          fecha_inspeccion: new Date().toLocaleDateString('es-CL'),
+          productos: products.map(({ modelo, nombre, cantidad, fechaFab, envase, cuerpo }) => ({ modelo, nombre, cantidad, fechaFab, envase, cuerpo })),
+          cumple, user_email: user?.email || '',
+        }
+        if (autoSaveIdRef.current) {
+          await supabase.from('inspecciones').update(row).eq('id', autoSaveIdRef.current)
+        } else {
+          const { data } = await supabase.from('inspecciones').insert(row).select('id').single()
+          if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id) }
+        }
+        setAutoSaved(true)
+        setTimeout(() => setAutoSaved(false), 2000)
+      } catch {}
+    }, 1500)
+    return () => clearTimeout(timer)
+  }, [products, dinNum, colorLote, phase])
 
   // ── Supabase Realtime: receive changes + broadcasts from the other device ──
   useEffect(() => {
@@ -503,7 +533,7 @@ export default function CalidadPage() {
           <div className="page-sub" style={{ marginBottom: 0 }}>
             {phase === 'upload' && 'Inspección de marcado de productos'}
             {phase === 'reading' && (sessionParam ? 'Cargando sesión compartida...' : 'Leyendo invoice...')}
-            {phase === 'checklist' && `${products.length} productos certificables · ${invoiceNum}`}
+            {phase === 'checklist' && <>{products.length} productos certificables · {invoiceNum}{autoSaved && <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.4)', marginLeft: 6 }}> · guardado</span>}</>}
           </div>
         </div>
         {phase !== 'upload' && (
