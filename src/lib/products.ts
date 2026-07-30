@@ -50,6 +50,16 @@ for (const [k, v] of Object.entries(PRODUCTS_DB)) {
   }
 }
 
+// ponytail: base code index — invoices often omit -N/-B color suffix
+const BASE_CODE_INDEX: Record<string, { entry: ProductEntry; modelo: string }> = {}
+for (const [k, v] of Object.entries(PRODUCTS_DB)) {
+  const n = norm(k)
+  if (/-(N|B)$/.test(n)) {
+    const base = n.replace(/-(N|B)$/, '')
+    if (!BASE_CODE_INDEX[base]) BASE_CODE_INDEX[base] = { entry: v, modelo: k }
+  }
+}
+
 export function lookupProduct(codigo: string): ProductEntry | null {
   const normalised = norm(codigo)
   // Check blacklist first — fast skip
@@ -71,7 +81,7 @@ export function lookupProductByDescCode(code: string): { entry: ProductEntry; mo
   // Alphanumeric codes like "YLK-H3"
   const upper = trimmed.toUpperCase()
   if (NO_CERT_CODES.has(upper)) return null
-  return ALPHA_CODE_INDEX[upper] || null
+  return ALPHA_CODE_INDEX[upper] || BASE_CODE_INDEX[upper] || null
 }
 
 export function getCertifiableCount(): number {
