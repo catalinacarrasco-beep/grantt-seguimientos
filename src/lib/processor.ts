@@ -75,7 +75,7 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
         signal: ctrl.signal,
       })
       if (!res.ok) throw new Error('Error al leer el documento — intenta de nuevo')
-      return res.json()
+      return await res.json()
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError')
         throw new Error('El documento tardó demasiado — intenta de nuevo')
