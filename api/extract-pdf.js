@@ -51,16 +51,16 @@ export default async function handler(req, res) {
 
       const dinMatch = text.match(/\b(\d{10}-\d)\b/)
 
-      if (items.length > 0) {
-        items.sort((a, b) => parseInt(a.itemNum) - parseInt(b.itemNum))
-        const result = { dinNum: dinMatch ? dinMatch[1] : '', items }
-        return res.status(200).json({
-          content: [{ type: 'text', text: JSON.stringify(result) }]
-        })
-      }
+      // Always return regex result for DINs (even if 0 items — user assigns manually).
+      // ponytail: no Claude fallback here — the slow path was hanging the UI when regex missed items.
+      items.sort((a, b) => parseInt(a.itemNum) - parseInt(b.itemNum))
+      const result = { dinNum: dinMatch ? dinMatch[1] : '', items }
+      return res.status(200).json({
+        content: [{ type: 'text', text: JSON.stringify(result) }]
+      })
     }
 
-    // Invoices (or DINs where regex found nothing): use Claude
+    // Invoices only: use Claude
     const prompt = type === 'invoice'
       ? `Extract from this commercial invoice text.
 Return ONLY valid JSON, no markdown, no extra text.
