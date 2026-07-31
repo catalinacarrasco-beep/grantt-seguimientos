@@ -1,9 +1,8 @@
-self.addEventListener('install', () => {})
-self.addEventListener('activate', e => e.waitUntil(clients.claim()))
-self.addEventListener('message', e => {
-  if (e.data === 'SKIP_WAITING') self.skipWaiting()
-})
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)))
-})
+// ponytail: no-op SW — sin fetch handler el browser maneja todo nativamente
+// Existe solo para satisfacer manifest PWA sin interferir con requests
+self.addEventListener('install', () => self.skipWaiting())
+self.addEventListener('activate', e => e.waitUntil((async () => {
+  const keys = await caches.keys()
+  await Promise.all(keys.map(k => caches.delete(k)))
+  await self.clients.claim()
+})()))
