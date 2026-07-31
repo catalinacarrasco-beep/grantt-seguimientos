@@ -3,6 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Kill-switch: desregistra SW viejos y limpia caches antes de cargar la app.
+      // Corre inline (no bloqueado por un SW roto). Recarga una sola vez.
+      (function () {
+        if (!('serviceWorker' in navigator)) return
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          if (!regs.length) return
+          Promise.all(regs.map(function (r) { return r.unregister() }))
+            .then(function () {
+              if ('caches' in window) return caches.keys().then(function (ks) {
+                return Promise.all(ks.map(function (k) { return caches.delete(k) }))
+              })
+            })
+            .then(function () {
+              if (!sessionStorage.getItem('sw-cleared')) {
+                sessionStorage.setItem('sw-cleared', '1')
+                location.reload()
+              }
+            })
+        })
+      })()
+    </script>
     <title>AutoSeguimiento — Grantt</title>
     <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%236366f1%22/><path d=%22M10 17l4 4 8-8%22 stroke=%22%23fff%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 fill=%22none%22/></svg>">
