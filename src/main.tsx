@@ -4,12 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
-// ponytail: registrar SW pero sin auto-reload en controllerchange (causaba loops de cache)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
-  })
-}
+// ponytail: SW eliminado — el kill-switch en index.html limpia registros viejos.
+// Un no-op SW no daba beneficio offline y causaba hangs por cache.
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
