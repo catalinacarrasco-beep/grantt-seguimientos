@@ -65,22 +65,21 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
   const b64 = await toBase64(file)
 
   if (file.size > MAX_PDF_SIZE || type === 'din') {
+    // ponytail: hard-timeout via Promise.race — AbortController alone can leak if the browser tab is throttled
     const ctrl = new AbortController()
-    const timer = setTimeout(() => ctrl.abort(), 30000)
-    try {
-      const res = await fetch('/api/extract-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64: b64, type }),
-        signal: ctrl.signal,
-      })
-      if (!res.ok) throw new Error('Error al leer el documento — intenta de nuevo')
-      return await res.json()
-    } catch (e) {
-      if (e instanceof DOMException && e.name === 'AbortError')
-        throw new Error('El documento tardó demasiado — intenta de nuevo')
-      throw e
-    } finally { clearTimeout(timer) }
+    const fetchP = fetch('/api/extract-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64: b64, type }),
+      signal: ctrl.signal,
+    }).then(async r => {
+      if (!r.ok) throw new Error('Error al leer el documento — intenta de nuevo')
+      return await r.json()
+    })
+    const timeoutP = new Promise((_, rej) =>
+      setTimeout(() => { ctrl.abort(); rej(new Error('El documento tardó demasiado — intenta de nuevo')) }, 20000)
+    )
+    return Promise.race([fetchP, timeoutP])
   }
 
   const prompt = type === 'invoice'
