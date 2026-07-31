@@ -4,23 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
+// ponytail: registrar SW pero sin auto-reload en controllerchange (causaba loops de cache)
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    const reg = await navigator.serviceWorker.register('/sw.js')
-
-    const notifyUpdate = () => window.dispatchEvent(new Event('sw-update-available'))
-
-    if (reg.waiting) notifyUpdate()
-
-    reg.addEventListener('updatefound', () => {
-      const newSW = reg.installing
-      if (!newSW) return
-      newSW.addEventListener('statechange', () => {
-        if (newSW.state === 'installed' && navigator.serviceWorker.controller) notifyUpdate()
-      })
-    })
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload())
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
   })
 }
 
