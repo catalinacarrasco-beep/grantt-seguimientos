@@ -177,6 +177,8 @@ function descKeywords(description: string): string[] {
     })
 }
 
+const MAX_COMBO_SIZE = 4
+
 function findSubsetSumAssignments(
   certProducts: { modelo: string; cantidad: number; nombre: string }[],
   dinItems: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[]
@@ -228,10 +230,14 @@ function findSubsetSumAssignments(
       }
     }
 
+    // ponytail: cap combo size at 4 — un ítem DIN rara vez mapea a >4 productos.
+    // Sin tope, size hasta pool.length = 2^n combinaciones (2^31 con 31 productos)
+    // congelaba el hilo principal para siempre. Match de 5+ productos → asignación manual.
     const pools = byDesc.length ? [byDesc, unassigned] : [unassigned]
     for (const pool of pools) {
       if (found) break
-      for (let size = 1; size <= pool.length && !found; size++) {
+      const maxSize = Math.min(pool.length, MAX_COMBO_SIZE)
+      for (let size = 1; size <= maxSize && !found; size++) {
         for (const combo of getCombinations(pool, size)) {
           if (combo.reduce((s, p) => s + p.cantidad, 0) === target) {
             console.log(`[SubsetSum] ${itemLabel} qty-match → ${combo.map(p => p.modelo).join('+')}`)
