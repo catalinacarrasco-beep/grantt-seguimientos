@@ -22,22 +22,31 @@ export default async function handler(req, res) {
     // ── Row 3: Fecha Solicitud ────────────────────────────────────────────────
     ws.getCell('D3').value = fechaSolicitud
 
-    // ── Rows 13-24: Products (template has 12 empty rows) ────────────────────
-    for (let i = 0; i < 12; i++) {
-      const r = 13 + i
-      const row = rows[i]
-      if (row) {
-        ws.getCell(`B${r}`).value = row.nombre
-        ws.getCell(`C${r}`).value = row.proto
-        ws.getCell(`D${r}`).value = row.modeloCert || row.modelo
-        ws.getCell(`E${r}`).value = Number(row.cantidad)
-        ws.getCell(`G${r}`).value = row.trazabilidad
-        ws.getCell(`H${r}`).value = String(row.qr)
-        ws.getCell(`I${r}`).value = row.sistema
-        ws.getCell(`K${r}`).value = dinNum
-        ws.getCell(`L${r}`).value = row.itemDin
-        ws.getCell(`M${r}`).value = invoiceNum
-      }
+    // ── Products (template has 12 empty rows 13-24) ──────────────────────────
+    // ponytail: el template trae solo 12 filas; si hay más productos hay que
+    // insertar filas extra o se pierden en silencio. Duplico la fila 13 (normal)
+    // N-12 veces: las nuevas quedan normales, la fila 24 (negrita, borde de cierre)
+    // baja y queda última, y el footer (IMPORTANTE/Observaciones) se corre solo.
+    const FIRST = 13
+    const SLOTS = 12
+    const list = Array.isArray(rows) ? rows : []
+    if (list.length > SLOTS) {
+      ws.duplicateRow(FIRST, list.length - SLOTS, true)
+    }
+    for (let i = 0; i < list.length; i++) {
+      const r = FIRST + i
+      const row = list[i]
+      if (!row) continue
+      ws.getCell(`B${r}`).value = row.nombre
+      ws.getCell(`C${r}`).value = row.proto
+      ws.getCell(`D${r}`).value = row.modeloCert || row.modelo
+      ws.getCell(`E${r}`).value = Number(row.cantidad)
+      ws.getCell(`G${r}`).value = row.trazabilidad
+      ws.getCell(`H${r}`).value = String(row.qr)
+      ws.getCell(`I${r}`).value = row.sistema
+      ws.getCell(`K${r}`).value = dinNum
+      ws.getCell(`L${r}`).value = row.itemDin
+      ws.getCell(`M${r}`).value = invoiceNum
     }
 
     const buffer = await wb.xlsx.writeBuffer()
