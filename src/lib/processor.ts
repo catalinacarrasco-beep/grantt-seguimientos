@@ -65,10 +65,13 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
   const b64 = await toBase64(file)
 
   if (file.size > MAX_PDF_SIZE || type === 'din') {
-    // ponytail: hard-timeout via Promise.race — AbortController alone can leak if the browser tab is throttled
+    // ponytail: on timeout, resolve with EMPTY result so UI never hangs — user assigns items manually
     console.log('[parsePDF] fetching /api/extract-pdf', { type, size: file.size })
     const t0 = Date.now()
     const ctrl = new AbortController()
+    const emptyResult = type === 'din'
+      ? { content: [{ type: 'text', text: JSON.stringify({ dinNum: '', items: [] }) }] }
+      : { content: [{ type: 'text', text: JSON.stringify({ invoiceNum: '', trazabilidad: '', products: [] }) }] }
     const fetchP = fetch('/api/extract-pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -76,13 +79,20 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
       signal: ctrl.signal,
     }).then(async r => {
       console.log('[parsePDF] response', r.status, 'in', Date.now() - t0, 'ms')
-      if (!r.ok) throw new Error('Error al leer el documento — intenta de nuevo')
+      if (!r.ok) { console.warn('[parsePDF] server error, returning empty'); return emptyResult }
       const j = await r.json()
       console.log('[parsePDF] body parsed in', Date.now() - t0, 'ms')
       return j
+    }).catch(e => {
+      console.warn('[parsePDF] fetch failed, returning empty:', e.message)
+      return emptyResult
     })
-    const timeoutP = new Promise((_, rej) =>
-      setTimeout(() => { ctrl.abort(); rej(new Error('El documento tardó demasiado — intenta de nuevo')) }, 12000)
+    const timeoutP = new Promise(resolve =>
+      setTimeout(() => {
+        console.warn('[parsePDF] timeout 10s — aborting fetch, returning empty')
+        ctrl.abort()
+        resolve(emptyResult)
+      }, 10000)
     )
     return Promise.race([fetchP, timeoutP])
   }
