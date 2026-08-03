@@ -66,6 +66,8 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
 
   if (file.size > MAX_PDF_SIZE || type === 'din') {
     // ponytail: hard-timeout via Promise.race — AbortController alone can leak if the browser tab is throttled
+    console.log('[parsePDF] fetching /api/extract-pdf', { type, size: file.size })
+    const t0 = Date.now()
     const ctrl = new AbortController()
     const fetchP = fetch('/api/extract-pdf', {
       method: 'POST',
@@ -73,11 +75,14 @@ async function parsePDF(file: File, type: 'invoice' | 'din'): Promise<unknown> {
       body: JSON.stringify({ base64: b64, type }),
       signal: ctrl.signal,
     }).then(async r => {
+      console.log('[parsePDF] response', r.status, 'in', Date.now() - t0, 'ms')
       if (!r.ok) throw new Error('Error al leer el documento — intenta de nuevo')
-      return await r.json()
+      const j = await r.json()
+      console.log('[parsePDF] body parsed in', Date.now() - t0, 'ms')
+      return j
     })
     const timeoutP = new Promise((_, rej) =>
-      setTimeout(() => { ctrl.abort(); rej(new Error('El documento tardó demasiado — intenta de nuevo')) }, 20000)
+      setTimeout(() => { ctrl.abort(); rej(new Error('El documento tardó demasiado — intenta de nuevo')) }, 12000)
     )
     return Promise.race([fetchP, timeoutP])
   }
