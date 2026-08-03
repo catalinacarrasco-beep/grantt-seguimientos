@@ -82,10 +82,18 @@ export default function NuevoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, reading, invoiceFile, dinFile])
 
+  // ponytail: wraps a promise with a hard timeout — belt-and-suspenders on top of processor timeouts
+  const withHardTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+    Promise.race([
+      p,
+      new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`${label} tardó demasiado (${ms/1000}s) — reintenta`)), ms))
+    ])
+
   const readDocs = async () => {
     if ((!invoiceFile && !fromCalidad) || !dinFile) return
     setReading(true)
     setPhase('reading')
+    console.log('[readDocs] START', { fromCalidad: !!fromCalidad, dinFile: dinFile?.name, size: dinFile?.size })
 
     const initialSteps: StepState[] = fromCalidad
       ? [
@@ -112,26 +120,32 @@ export default function NuevoPage() {
         setInvoiceNum(parsedInvNum)
       } else {
         setReadStep(0, { status: 'running' })
-        const invData = await parseInvoice(invoiceFile!)
+        console.log('[readDocs] parseInvoice starting...')
+        const invData = await withHardTimeout(parseInvoice(invoiceFile!), 45000, 'Lectura de Invoice')
+        console.log('[readDocs] parseInvoice done', invData)
         parsedInvNum = invData.invoiceNum || ''
         parsedTraz = invData.trazabilidad || ''
-        invProducts = invData.products
+        invProducts = invData.products || []
         setInvoiceNum(parsedInvNum)
         setReadStep(0, { status: 'done', detail: `Invoice ${parsedInvNum} · ${invProducts.length} productos` })
       }
 
       setReadStep(1, { status: 'running' })
-      const dinData = await parseDIN(dinFile)
+      console.log('[readDocs] parseDIN starting...')
+      const t0 = Date.now()
+      const dinData = await withHardTimeout(parseDIN(dinFile), 15000, 'Lectura de DIN')
+      console.log('[readDocs] parseDIN done in', Date.now() - t0, 'ms', dinData)
       const parsedDinNum = dinData.dinNum || ''
+      const dinItems = Array.isArray(dinData.items) ? dinData.items : []
       setDinNum(parsedDinNum)
-      setDinItemOptions(['', ...dinData.items.map(i => `ITEM ${i.itemNum}`)])
-      const dinDetail = dinData.items.length
-        ? `DIN ${parsedDinNum} · ${dinData.items.length} ítems: ${dinData.items.map(i => `ITEM ${i.itemNum}=${i.quantity}`).join(', ')}`
-        : `DIN ${parsedDinNum} · 0 ítems extraídos`
+      setDinItemOptions(['', ...dinItems.map(i => `ITEM ${i.itemNum}`)])
+      const dinDetail = dinItems.length
+        ? `DIN ${parsedDinNum} · ${dinItems.length} ítems: ${dinItems.map(i => `ITEM ${i.itemNum}=${i.quantity}`).join(', ')}`
+        : `DIN ${parsedDinNum || '(sin número)'} · 0 ítems (asignar manualmente)`
       setReadStep(1, { status: 'done', detail: dinDetail })
 
       setReadStep(2, { status: 'running' })
-      const newRows = crossWithBD(invProducts, dinData.items, parsedTraz)
+      const newRows = crossWithBD(invProducts, dinItems, parsedTraz)
       setRows(newRows)
       const missing = newRows.filter(r => !r.itemDin).length
       setReadStep(2, { status: 'done', detail: `${newRows.length} certificables de ${invProducts.length} totales${missing ? ` · ${missing} sin ítem DIN` : ''}` })
@@ -148,8 +162,10 @@ export default function NuevoPage() {
       setPhase('review')
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido'
+      console.error('[readDocs] ERROR:', msg, e)
       setReadSteps(prev => prev.map(s => s.status === 'running' ? { ...s, status: 'error', detail: msg } : s))
     } finally {
+      console.log('[readDocs] finally — setReading(false)')
       setReading(false)
     }
   }
