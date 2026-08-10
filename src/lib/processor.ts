@@ -284,7 +284,7 @@ export function crossWithBD(
     else notCert.push(p.modelo)
   }
 
-  console.log(`[CrossBD] ${certifiable.length} certificables, ${notCert.length} descartados:`, notCert.join(', ') || 'ninguno')
+  console.log(`[CrossBD] ${certifiable.length} certificables, ${notCert.length} descartados:`, notCert.join(', ') || 'ninguno')//nosemgrep: javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring
 
   const normalizedDin = dinItems.map(d => ({ ...d, quantity: Math.round(d.quantity) }))
   const certWithNames = certifiable.map(p => ({ ...p, nombre: lookupProduct(p.modelo)!.nombre }))
