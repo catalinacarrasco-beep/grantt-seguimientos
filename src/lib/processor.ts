@@ -179,6 +179,16 @@ function descKeywords(description: string): string[] {
 
 const MAX_COMBO_SIZE = 4
 
+// ¿aparece el código del producto como token en el texto de la DIN?
+// Tolera ceros a la izquierda ("5231" ↔ "05231") y bordes no-alfanuméricos
+// (ej: "05231" dentro de "05231-Z-BOLT"), sin matchear dentro de números mayores.
+function codeInDesc(modelo: string, desc: string): boolean {
+  const stripped = String(modelo).toUpperCase().trim().replace(/^0+/, '')
+  if (stripped.length < 3) return false
+  const esc = stripped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp('(?:^|[^0-9A-Z])0*' + esc + '(?:[^0-9A-Z]|$)').test(desc.toUpperCase())
+}
+
 function findSubsetSumAssignments(
   certProducts: { modelo: string; cantidad: number; nombre: string }[],
   dinItems: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[]
@@ -189,6 +199,36 @@ function findSubsetSumAssignments(
 
   console.log('[SubsetSum] Certificables:', products.map(p => `${p.modelo}(${p.cantidad})`).join(', '))
   console.log('[SubsetSum] DIN:', dinItems.map(d => `ITEM${d.itemNum}=${Math.round(d.quantity)} "${d.description}"`).join(', '))
+
+  // ── Pass 1: match directo por código del producto en la descripción del ítem DIN ──
+  // Robusto cuando los códigos de la factura aparecen en el texto (ej: "05531 ; PLACA",
+  // "05231-Z-BOLT"), aunque las cantidades no sumen exacto. Un ítem puede recibir varios productos.
+  for (const din of dinItems) {
+    if (!din.description) continue
+    const itemLabel = `ITEM ${din.itemNum}`
+    for (const p of products) {
+      if (assignments[p.modelo]) continue
+      if (codeInDesc(p.modelo, din.description)) {
+        console.log(`[SubsetSum] ${itemLabel} código ${p.modelo} en descripción → ${p.modelo}`)
+        assignments[p.modelo] = itemLabel
+      }
+    }
+  }
+
+  // ── Pass 2: códigos numéricos en la descripción → producto vía BD (ej. "ART 99244") ──
+  for (const din of dinItems) {
+    if (!din.description) continue
+    const itemLabel = `ITEM ${din.itemNum}`
+    for (const n of din.description.match(/\b\d{4,6}\b/g) || []) {
+      const byCode = lookupProductByDescCode(n)
+      if (!byCode) continue
+      const match = products.find(p => p.modelo === byCode.modelo && !assignments[p.modelo])
+      if (match) {
+        console.log(`[SubsetSum] ${itemLabel} códigoBD ${n} → ${match.modelo}`)
+        assignments[match.modelo] = itemLabel
+      }
+    }
+  }
 
   const sortedDin = [...dinItems].sort((a, b) => b.quantity - a.quantity)
 
