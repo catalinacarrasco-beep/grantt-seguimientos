@@ -310,17 +310,18 @@ function resolveModelo(invoiceModelo: string): string | null {
 }
 
 export function crossWithBD(
-  invProducts: { modelo: string; altCode?: string; cantidad: number }[],
+  invProducts: { modelo: string; altCode?: string; cantidad: number; fechaFab?: string }[],
   dinItems: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[],
   trazabilidad: string
 ): ProductRow[] {
   const normalizedProducts = invProducts.map(p => ({ ...p, cantidad: Math.round(p.cantidad) }))
 
-  const certifiable: { modelo: string; cantidad: number }[] = []
+  // ponytail: conservar fechaFab (lo que el usuario escribió en la inspección) por producto
+  const certifiable: { modelo: string; cantidad: number; fechaFab?: string }[] = []
   const notCert: string[] = []
   for (const p of normalizedProducts) {
     const resolved = resolveModelo(p.modelo) || (p.altCode ? resolveModelo(p.altCode) : null)
-    if (resolved) certifiable.push({ modelo: resolved, cantidad: p.cantidad })
+    if (resolved) certifiable.push({ modelo: resolved, cantidad: p.cantidad, fechaFab: p.fechaFab })
     else notCert.push(p.modelo)
   }
 
@@ -343,7 +344,9 @@ export function crossWithBD(
       nombre: entry.nombre,
       qr: String(entry.qr),
       sistema: entry.sistema,
-      trazabilidad,
+      // trazabilidad = fecha de fabricación que el usuario escribió en la inspección (verbatim);
+      // si está vacía, cae a la trazabilidad de la factura.
+      trazabilidad: (prod.fechaFab && prod.fechaFab.trim()) ? prod.fechaFab.trim() : trazabilidad,
     }
   })
 }
