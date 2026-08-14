@@ -10,49 +10,33 @@ export default async function handler(req, res) {
     const pdfData = await pdfParse(buffer)
     const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 50000)
 
-    // DINs: deterministic regex extraction (no Claude dependency).
-    // Claude stops reading at page-break signatures and misses late-page items.
+    // DINs (formato Pollmann): parseo por BLOQUES. Cada ítem empieza en un header
+    // "ITEM [N] Nombre Codigo Arancel". El bloque va hasta el siguiente header.
+    // Robusto: cualquier cantidad de ítems, unidad PCS o UNIDADES, y captura la
+    // descripción (con los códigos) para que la asignación matchee por código.
     if (type === 'din') {
       const items = []
-      let m
+      const headerRe = /ITEM\s+(?:(\d+)\s+)?Nombre\s+Codigo\s+Arancel/gi
+      const heads = []
+      let hm
+      while ((hm = headerRe.exec(text)) !== null) heads.push({ num: hm[1] || null, start: hm.index })
 
-      // Items 2+: "ITEM  N Nombre ... qty.000000 PCS"
-      const qRe = /ITEM\s+(\d+)\s+Nombre[\s\S]{1,1000}?0*(\d+)\.000000\s*PCS/gi
-      while ((m = qRe.exec(text)) !== null) {
-        if (!items.find(i => i.itemNum === m[1]))
-          items.push({ itemNum: m[1], quantity: parseInt(m[2], 10), description: '' })
-      }
-
-      // Item 1: header is "ITEM Nombre" (no number) �?" isolate its text block
-      const firstItem = text.indexOf('ITEM')
-      const item2pos = text.indexOf('ITEM  2')
-      if (firstItem >= 0 && item2pos > firstItem && !items.find(i => i.itemNum === '1')) {
-        const block = text.substring(firstItem, item2pos)
-        const qm = block.match(/0*(\d+)\.000000\s*PCS/i)
-        if (qm) items.unshift({ itemNum: '1', quantity: parseInt(qm[1], 10), description: '' })
-      }
-
-      // Supplier codes for items 2+: "-F; CODE"
-      const cRe = /ITEM\s+(\d+)\s+Nombre[\s\S]{1,600}?(?:NINGBO(?:\s+YLK)?-F|BO-F|FEISHUN-F);\s*([A-Z0-9][A-Z0-9-]{0,9})/gi
-      while ((m = cRe.exec(text)) !== null) {
-        const it = items.find(i => i.itemNum === m[1])
-        if (it && !it.supplierCode) it.supplierCode = m[2].trim()
-      }
-
-      // Item 1 supplier code: text wraps "YLK-\n.F; CODE;" so match ".F; DIGITS"
-      if (firstItem >= 0 && item2pos > firstItem) {
-        const block = text.substring(firstItem, item2pos)
-        const cm = block.match(/[.\s]F;\s*(\d{4,6})\b/)
-        if (cm) {
-          const item1 = items.find(i => i.itemNum === '1')
-          if (item1 && !item1.supplierCode) item1.supplierCode = cm[1]
-        }
+      for (let i = 0; i < heads.length; i++) {
+        const start = heads[i].start
+        const end = i + 1 < heads.length ? heads[i + 1].start : text.length
+        const block = text.slice(start, end)
+        const itemNum = heads[i].num || String(i + 1)
+        // Cantidad: "0000NNNNN.000000 UNIDAD" (acepta PCS, UNIDADES, etc. — cualquier palabra de unidad).
+        // Requiere ≥2 letras tras el ".000000" para no confundir con el Ad Valorem ("19.000000 178").
+        const qm = block.match(/0*(\d+)\.000000\s+[A-Z]{2,}/)
+        const quantity = qm ? parseInt(qm[1], 10) : 0
+        // Descripción: del header hasta la cantidad (evita el footer de página).
+        const cut = qm ? block.indexOf(qm[0]) + qm[0].length : Math.min(block.length, 600)
+        const description = block.slice(0, cut).replace(/\s+/g, ' ').trim().slice(0, 600)
+        if (!items.find(x => x.itemNum === itemNum)) items.push({ itemNum, quantity, description })
       }
 
       const dinMatch = text.match(/\b(\d{10}-\d)\b/)
-
-      // Always return regex result for DINs (even if 0 items — user assigns manually).
-      // ponytail: no Claude fallback here — the slow path was hanging the UI when regex missed items.
       items.sort((a, b) => parseInt(a.itemNum) - parseInt(b.itemNum))
       const result = { dinNum: dinMatch ? dinMatch[1] : '', items }
       return res.status(200).json({
