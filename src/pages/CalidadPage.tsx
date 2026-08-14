@@ -205,7 +205,12 @@ export default function CalidadPage() {
           cumple, user_email: user?.email || '',
         }
         if (autoSaveIdRef.current) {
-          await supabase.from('inspecciones').update(row).eq('id', autoSaveIdRef.current)
+          // ponytail: UPDATE por id; si el id es fantasma (fila borrada), matchea 0 filas → INSERT
+          const { data: upd } = await supabase.from('inspecciones').update(row).eq('id', autoSaveIdRef.current).select('id')
+          if (!upd || upd.length === 0) {
+            const { data } = await supabase.from('inspecciones').insert(row).select('id').single()
+            if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id) }
+          }
         } else {
           const { data } = await supabase.from('inspecciones').insert(row).select('id').single()
           if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id) }
@@ -485,9 +490,22 @@ export default function CalidadPage() {
         productos: products.map(({ modelo, nombre, cantidad, fechaFab, envase, cuerpo }) => ({ modelo, nombre, cantidad, fechaFab, envase, cuerpo })),
         cumple, user_email: user?.email || '',
       }
-      const { error } = editingId
-        ? await supabase.from('inspecciones').update(row).eq('id', editingId)
-        : await supabase.from('inspecciones').insert(row)
+      // ponytail: UPDATE por id; si el id es fantasma (fila borrada) matchea 0 filas → INSERT.
+      // Un UPDATE de 0 filas NO devuelve error, por eso antes decía "guardado" sin guardar nada.
+      let error = null
+      if (editingId) {
+        const upd = await supabase.from('inspecciones').update(row).eq('id', editingId).select('id')
+        error = upd.error
+        if (!error && (!upd.data || upd.data.length === 0)) {
+          const ins = await supabase.from('inspecciones').insert(row).select('id').single()
+          error = ins.error
+          if (ins.data?.id) setEditingId(ins.data.id)
+        }
+      } else {
+        const ins = await supabase.from('inspecciones').insert(row).select('id').single()
+        error = ins.error
+        if (ins.data?.id) setEditingId(ins.data.id)
+      }
       if (error) throw new Error(error.message)
       setSavedOk(true)
       localStorage.removeItem('calidad_draft')
