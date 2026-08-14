@@ -6,7 +6,7 @@
     <script>
       // Kill-switch: desregistra SW viejos y limpia TODAS las caches antes de cargar la app.
       // Corre inline (no bloqueado por un SW roto). Recarga una sola vez si limpió algo.
-      window.__BUILD__ = 'b2026-08-03-9'
+      window.__BUILD__ = 'b2026-08-03-10'
       console.log('[grantt] build', window.__BUILD__)
       ;(function () {
         var didClean = false
@@ -32,7 +32,7 @@
         Promise.all(jobs).then(maybeReload)
       })()
     </script>
-    <title>AutoSeguimiento — Grantt</title>
+    <title>AutoSeguimiento ��� Grantt</title>
     <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%236366f1%22/><path d=%22M10 17l4 4 8-8%22 stroke=%22%23fff%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 fill=%22none%22/></svg>">
     <link rel="manifest" href="/manifest.json">
@@ -46,7 +46,7 @@
   </head>
   <body>
     <div id="root"></div>
-    <div style="position:fixed;right:5px;bottom:4px;font:10px monospace;color:rgba(255,255,255,.4);z-index:99999;pointer-events:none">b2026-08-03-9</div>
+    <div style="position:fixed;right:5px;bottom:4px;font:10px monospace;color:rgba(255,255,255,.4);z-index:99999;pointer-events:none">b2026-08-03-10</div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
