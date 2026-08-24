@@ -78,7 +78,7 @@ export default function AuthPage() {
         <div className="auth-logo">
           <div className="brand-icon"><Zap size={16} /></div>
           <div>
-            <div className="brand-name">Control de Calidad</div>
+            <div className="brand-name">Calidad Grantt</div>
             <div className="brand-sub">Representaciones Grantt</div>
           </div>
         </div>
