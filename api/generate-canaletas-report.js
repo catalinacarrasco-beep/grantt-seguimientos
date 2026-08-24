@@ -76,15 +76,9 @@ export default async function handler(req, res) {
       const eh = ws.addRow(['Espesor'])
       eh.getCell(1).font = { bold: true, color: { argb: 'FF4338CA' } }
       const e = p.espesor || {}
-      const tolStr = e.tipoTol === 'pct' ? `${e.tolerancia}%` : `${e.tolerancia} ${e.unidad || 'mm'}`
-      ws.addRow(['Declarado', `${e.declarado ?? '—'} ${e.unidad || ''}`, 'Tolerancia', tolStr, 'Veredicto', String(e.veredicto || '').toUpperCase()])
+      ws.addRow(['Declarado', `${e.declarado ?? '—'} ${e.unidad || ''}`, 'Muestras', e.count ?? (e.mediciones?.length ?? 0), '', ''])
       ws.addRow(['Mediciones', (e.mediciones || []).join(', '), '', '', '', ''])
       ws.addRow(['Promedio', e.avg?.toFixed?.(3) ?? '—', 'Mínimo', e.min?.toFixed?.(3) ?? '—', 'Máximo', e.max?.toFixed?.(3) ?? '—'])
-      const vColor = e.veredicto === 'cumple' ? 'FF16A34A' : e.veredicto === 'no_cumple' ? 'FFDC2626' : 'FF64748B'
-      const espHeaderRow = eh.number + 1
-      ws.getCell(`F${espHeaderRow}`).font = { bold: true, color: { argb: 'FFFFFFFF' } }
-      ws.getCell(`F${espHeaderRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: vColor } }
-      ws.getCell(`F${espHeaderRow}`).alignment = { horizontal: 'center' }
 
       // Resistencia
       const rh = ws.addRow(['Resistencia'])
