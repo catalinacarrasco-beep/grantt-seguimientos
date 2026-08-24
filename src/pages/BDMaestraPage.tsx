@@ -1,7 +1,23 @@
-import { useState, useRef } from 'react'
-import { CheckCircle2, AlertCircle, Loader2, Database, RefreshCw, X } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { CheckCircle2, AlertCircle, Loader2, Database, RefreshCw, X, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { getCertifiableCount, getNoCertCount } from '../lib/products'
+
+// ── Historial de actualizaciones (viene de los commits de GitHub) ─────
+type UpdateEntry = { date: string; message: string; author: string; sha: string; count: number | null }
+const parseCount = (msg: string): number | null => {
+  const m = msg.match(/\((\d+)\s*productos?\)/i)
+  return m ? parseInt(m[1], 10) : null
+}
+function relativeTime(iso: string): string {
+  const diff = Date.now() - Date.parse(iso)
+  const d = Math.floor(diff / 86400000)
+  if (d === 0) return 'hoy'
+  if (d === 1) return 'ayer'
+  if (d < 30) return `hace ${d} días`
+  const mo = Math.floor(d / 30)
+  return mo === 1 ? 'hace 1 mes' : `hace ${mo} meses`
+}
 
 const SISTEMA_LOOKUP: Record<string, string> = {
   'E-013-01-118357': 'Sistema 1, codigo 016',
@@ -30,6 +46,27 @@ export default function BDMaestraPage() {
   const [pushing, setPushing] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const [history, setHistory] = useState<UpdateEntry[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
+  const [historyOpen, setHistoryOpen] = useState(false)
+
+  const loadHistory = async () => {
+    setHistoryLoading(true)
+    try {
+      // GitHub commits que tocaron productsDB.json (público, 60 req/h por IP)
+      const r = await fetch('https://api.github.com/repos/catalinacarrasco-beep/grantt-seguimientos/commits?path=src/lib/productsDB.json&per_page=15')
+      if (!r.ok) throw new Error()
+      const data = await r.json() as any[]
+      setHistory(data.map(c => ({
+        date: c.commit.author.date, message: c.commit.message.split('\n')[0],
+        author: c.commit.author.name, sha: c.sha.slice(0, 7),
+        count: parseCount(c.commit.message),
+      })))
+    } catch { setHistory([]) }
+    finally { setHistoryLoading(false) }
+  }
+  useEffect(() => { loadHistory() }, [])
 
   const parseFile = (f: File) => {
     setFile(f)
@@ -121,6 +158,8 @@ export default function BDMaestraPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al actualizar')
       setResult({ ok: true, msg: `BD actualizada: ${data.count} productos certificables. Se aplicará en ~1 min (redeploy automático).` })
+      // Refresh history after successful push
+      setTimeout(loadHistory, 3000)
     } catch (err) {
       setResult({ ok: false, msg: err instanceof Error ? err.message : 'Error desconocido' })
     } finally {
@@ -134,10 +173,67 @@ export default function BDMaestraPage() {
       <div className="page-sub">Actualiza la base de datos de productos certificables</div>
 
       <div className="card">
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
           <div className="summary-card"><div className="summary-label">Certificables</div><div className="summary-val">{getCertifiableCount()}</div></div>
           <div className="summary-card"><div className="summary-label">Lista negra</div><div className="summary-val">{getNoCertCount()}</div></div>
+          <div className="summary-card" style={{ flex: 1, minWidth: 200 }}>
+            <div className="summary-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Clock size={11} /> Última actualización
+            </div>
+            {historyLoading ? (
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Cargando...</div>
+            ) : history.length === 0 ? (
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Sin registro</div>
+            ) : (
+              <>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0', marginTop: 2 }}>
+                  {new Date(history[0].date).toLocaleDateString('es-CL')}
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                  {relativeTime(history[0].date)}
+                  {history[0].count !== null && ` · ${history[0].count} productos`}
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
+        {history.length > 0 && (
+          <div style={{ marginBottom: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8 }}>
+            <button
+              onClick={() => setHistoryOpen(o => !o)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={12} /> Historial de actualizaciones ({history.length})</span>
+              {historyOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+            {historyOpen && (
+              <div style={{ padding: '4px 14px 12px', maxHeight: 300, overflowY: 'auto' }}>
+                <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      <th style={{ textAlign: 'left', padding: '4px 6px', fontWeight: 500 }}>Fecha</th>
+                      <th style={{ textAlign: 'left', padding: '4px 6px', fontWeight: 500 }}>Productos</th>
+                      <th style={{ textAlign: 'left', padding: '4px 6px', fontWeight: 500 }}>Autor</th>
+                      <th style={{ textAlign: 'left', padding: '4px 6px', fontWeight: 500 }}>Cambio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map(h => (
+                      <tr key={h.sha} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td style={{ padding: '5px 6px', color: '#e2e8f0', whiteSpace: 'nowrap' }}>
+                          {new Date(h.date).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td style={{ padding: '5px 6px', color: '#a5b4fc', fontFamily: 'monospace' }}>{h.count ?? '—'}</td>
+                        <td style={{ padding: '5px 6px', color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap' }}>{h.author}</td>
+                        <td style={{ padding: '5px 6px', color: 'rgba(255,255,255,0.5)', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.message}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         <div
           className={`drop-zone${file ? ' has-file' : ''}${false ? ' dragging' : ''}`}
