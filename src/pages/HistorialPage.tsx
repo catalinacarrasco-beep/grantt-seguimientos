@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ExternalLink, FileText, Trash2, Plus } from 'lucide-react'
 import { supabase, type Seguimiento } from '../lib/supabase'
+import { EmptyState, TableSkeleton } from '../components/Empty'
 
 export default function HistorialPage() {
   const [rows, setRows] = useState<Seguimiento[]>([])
@@ -63,14 +64,15 @@ export default function HistorialPage() {
       </div>
 
       {loading ? (
-        <div className="card"><div className="text-muted text-sm">Cargando...</div></div>
+        <TableSkeleton cols={7} rows={6} />
       ) : rows.length === 0 ? (
         <div className="card">
-          <div className="empty">
-            <FileText size={40} className="empty-icon" />
-            <div className="empty-title">Sin seguimientos aún</div>
-            <div className="empty-sub">Procesa tu primer lote para verlo aquí</div>
-          </div>
+          <EmptyState
+            kind="stack"
+            title="Sin seguimientos aún"
+            sub="Procesá tu primer lote de Invoice + DIN para ver el registro acá."
+            action={<button className="btn btn-primary btn-sm" onClick={() => navigate('/nuevo')}><Plus size={13} /> Nuevo seguimiento</button>}
+          />
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
