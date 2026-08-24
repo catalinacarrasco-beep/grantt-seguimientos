@@ -383,12 +383,12 @@ export default function CanaletasPage() {
     <div className="page">
       <div className="flex items-center justify-between" style={{ marginBottom: 24 }}>
         <div>
-          <div className="page-title">Control de calidad — Canaletas</div>
+          <div className="page-title">Control de calidad — Lote de canaletas</div>
           <div className="page-sub" style={{ marginBottom: 0 }}>
             {phase === 'upload' && 'Sube la Invoice para identificar el lote'}
             {phase === 'reading' && 'Leyendo Invoice...'}
-            {phase === 'seleccion' && 'Marcá los códigos que vas a controlar'}
-            {phase === 'control' && 'Registrá las mediciones por producto'}
+            {phase === 'seleccion' && 'Marcá los modelos de canaleta del lote que vas a controlar'}
+            {phase === 'control' && 'Registrá el muestreo aleatorio por modelo del lote'}
             {phase === 'veredicto' && 'Confirmá el veredicto del lote'}
             {phase === 'done' && '¡Control registrado!'}
           </div>
@@ -459,7 +459,7 @@ export default function CanaletasPage() {
       {phase === 'seleccion' && (
         <div className="card">
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>
-            {candidatos.length} productos no certificables encontrados. Los <strong style={{ color: '#a5b4fc' }}>pre-marcados</strong> parecen canaletas por descripción. Ajustá si querés.
+            {candidatos.length} modelos no-certificables en el lote. Los <strong style={{ color: '#a5b4fc' }}>pre-marcados</strong> parecen canaletas por descripción. Ajustá si querés.
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {candidatos.map(c => {
@@ -474,7 +474,7 @@ export default function CanaletasPage() {
                   <input type="checkbox" checked={sel} onChange={() => toggleCandidato(c.modelo)} style={{ accentColor: '#818cf8' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 13, color: '#e2e8f0' }}>{c.modelo}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{c.nombre || '(sin descripción)'} · {c.cantidad} PCS</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{c.nombre || '(sin descripción)'} · Cantidad en lote: {c.cantidad} PCS</div>
                   </div>
                   {c.probablemente && <span className="badge badge-blue" style={{ fontSize: 10 }}>canaleta</span>}
                 </div>
@@ -482,14 +482,28 @@ export default function CanaletasPage() {
             })}
           </div>
           <button className="btn btn-primary btn-full" style={{ marginTop: 14 }} disabled={!seleccionados.size} onClick={irAControl}>
-            <Ruler size={14} /> Registrar control · {seleccionados.size} productos
+            <Ruler size={14} /> Registrar control · {seleccionados.size} modelo{seleccionados.size !== 1 ? 's' : ''} del lote
           </button>
         </div>
       )}
 
-      {/* ── FASE 2: Control por producto ── */}
+      {/* ── FASE 2: Control por modelo del lote ── */}
       {phase === 'control' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Card resumen del lote — siempre visible */}
+          <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '10px 14px' }}>
+            <div style={{ fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: '#a5b4fc', fontWeight: 700, marginBottom: 4 }}>Lote</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', marginBottom: 4 }}>
+              Invoice {invoiceNum || '(sin número)'}
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              {proveedor && <span>Proveedor: <strong style={{ color: '#e2e8f0' }}>{proveedor}</strong></span>}
+              {dinNum && <span>DIN: <strong style={{ color: '#e2e8f0' }}>{dinNum}</strong></span>}
+              {fechaLlegada && <span>Llegada: <strong style={{ color: '#e2e8f0' }}>{fechaLlegada}</strong></span>}
+              <span>{productos.length} modelo{productos.length !== 1 ? 's' : ''} · {productos.reduce((s, p) => s + (p.muestras || 0), 0)} muestras totales</span>
+            </div>
+          </div>
+
           {productos.map((p, idx) => {
             const r = espesorResult(p)
             return (
@@ -497,12 +511,13 @@ export default function CanaletasPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 15, color: '#e2e8f0' }}>{p.modelo}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{p.nombre || '(sin descripción)'} · {p.cantidad} PCS</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{p.nombre || '(sin descripción)'} · Cantidad en lote: {p.cantidad} PCS</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Muestras:</label>
+                    <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="Cantidad de unidades tomadas aleatoriamente del lote para medir">Muestras al azar:</label>
                     <input className="input" style={{ width: 60, textAlign: 'center' }} type="number" min={1} value={p.muestras}
-                      onChange={e => updateProducto(idx, { muestras: parseInt(e.target.value) || 1 })} />
+                      onChange={e => updateProducto(idx, { muestras: parseInt(e.target.value) || 1 })}
+                      title="Unidades del lote tomadas al azar para muestreo" />
                   </div>
                 </div>
 
