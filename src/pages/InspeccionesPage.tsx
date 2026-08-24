@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ClipboardList, Trash2, Pencil } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { EmptyState, TableSkeleton } from '../components/Empty'
 
 type Inspeccion = {
   id: string
@@ -53,14 +54,15 @@ export default function InspeccionesPage() {
       </div>
 
       {loading ? (
-        <div className="card"><div className="text-muted text-sm">Cargando...</div></div>
+        <TableSkeleton cols={8} rows={6} />
       ) : rows.length === 0 ? (
         <div className="card">
-          <div className="empty">
-            <ClipboardList size={40} className="empty-icon" />
-            <div className="empty-title">Sin inspecciones aún</div>
-            <div className="empty-sub">Completá y guardá una inspección para verla aquí</div>
-          </div>
+          <EmptyState
+            kind="stack"
+            title="Sin inspecciones aún"
+            sub="Completá y guardá una inspección de marcado para que aparezca en esta tabla."
+            action={<button className="btn btn-primary btn-sm" onClick={() => navigate('/calidad')}>Ir a inspección</button>}
+          />
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
