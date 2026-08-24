@@ -43,7 +43,7 @@ export default function Sidebar({ email, isOpen, onClose, installPrompt, onInsta
       </div>
 
       <nav className="sidebar-nav">
-        <div className="nav-section-label">Control de calidad</div>
+        <div className="nav-section-label">Inspección SEC</div>
         <NavLink to="/calidad" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
           <ClipboardCheck size={15} /> Inspección marcado
         </NavLink>
