@@ -14,20 +14,84 @@ import CanaletasHistorialPage from './pages/CanaletasHistorialPage'
 import Sidebar from './components/Sidebar'
 import type { User } from '@supabase/supabase-js'
 
+// ponytail: pantalla inline de nueva contraseña — solo se muestra en modo PASSWORD_RECOVERY
+function ResetPasswordScreen({ onDone }: { onDone: () => void }) {
+  const [pw1, setPw1] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const [ok, setOk] = useState(false)
+
+  const submit = async () => {
+    setErr('')
+    if (pw1.length < 6) { setErr('Mínimo 6 caracteres'); return }
+    if (pw1 !== pw2) { setErr('Las contraseñas no coinciden'); return }
+    setBusy(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw1 })
+      if (error) throw error
+      setOk(true)
+      // cerrar sesión de recovery y volver al login limpio
+      setTimeout(async () => {
+        await supabase.auth.signOut()
+        onDone()
+      }, 1500)
+    } catch (e: any) {
+      setErr(e?.message || 'Error')
+    } finally { setBusy(false) }
+  }
+
+  if (ok) return (
+    <div className="auth-wrap">
+      <div className="auth-card" style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>✅</div>
+        <div className="auth-title">Contraseña actualizada</div>
+        <p className="auth-sub">Ya podés iniciar sesión con la nueva.</p>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <div className="auth-title">Nueva contraseña</div>
+        <div className="auth-sub">Definí una nueva contraseña para tu cuenta.</div>
+        {err && <div className="auth-error">{err}</div>}
+        <div className="field">
+          <label className="field-label">Nueva contraseña</label>
+          <input className="field-input" type="password" placeholder="••••••••"
+            value={pw1} onChange={e => setPw1(e.target.value)} />
+        </div>
+        <div className="field">
+          <label className="field-label">Repetí la contraseña</label>
+          <input className="field-input" type="password" placeholder="••••••••"
+            value={pw2} onChange={e => setPw2(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && submit()} />
+        </div>
+        <button className="btn btn-primary btn-full" onClick={submit} disabled={busy || !pw1 || !pw2}>
+          {busy ? 'Guardando...' : 'Guardar contraseña'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<any>(null)
   const [updateReady, setUpdateReady] = useState(false)
+  const [recoveryMode, setRecoveryMode] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -53,6 +117,7 @@ export default function App() {
     </div>
   )
 
+  if (recoveryMode) return <ResetPasswordScreen onDone={() => setRecoveryMode(false)} />
   if (!user) return <AuthPage />
 
   return (
