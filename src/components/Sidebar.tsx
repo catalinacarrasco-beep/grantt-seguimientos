@@ -37,7 +37,7 @@ export default function Sidebar({ email, isOpen, onClose, installPrompt, onInsta
       <div className="sidebar-brand">
         <div className="brand-icon"><ClipboardCheck size={16} /></div>
         <div>
-          <div className="brand-name">Control de Calidad</div>
+          <div className="brand-name">Calidad Grantt</div>
           <div className="brand-sub">Grantt</div>
         </div>
       </div>
