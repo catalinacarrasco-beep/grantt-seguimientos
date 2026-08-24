@@ -95,8 +95,8 @@ export default function CanaletasHistorialPage() {
   return (
     <div className="page">
       <div style={{ marginBottom: 24 }}>
-        <div className="page-title">Control canaletas — Historial</div>
-        <div className="page-sub" style={{ marginBottom: 0 }}>Todos los controles registrados con filtros por proveedor, código y resultado</div>
+        <div className="page-title">Control canaletas — Historial de lotes</div>
+        <div className="page-sub" style={{ marginBottom: 0 }}>Un lote por invoice, con muestreo aleatorio por modelo. Filtrable por proveedor, código y resultado.</div>
       </div>
 
       <div className="card" style={{ marginBottom: 16 }}>
@@ -136,8 +136,8 @@ export default function CanaletasHistorialPage() {
       ) : filtered.length === 0 ? (
         <div className="card"><div className="empty">
           <Ruler size={40} className="empty-icon" />
-          <div className="empty-title">Sin controles</div>
-          <div className="empty-sub">Registrá un control desde "Nuevo control"</div>
+          <div className="empty-title">Sin lotes controlados</div>
+          <div className="empty-sub">Registrá un lote desde "Nuevo control"</div>
         </div></div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -145,7 +145,7 @@ export default function CanaletasHistorialPage() {
             <thead>
               <tr>
                 <th>Fecha</th>
-                <th>Invoice</th>
+                <th>Lote · Invoice</th>
                 <th>Proveedor</th>
                 <th>Códigos</th>
                 <th>Resultado</th>
@@ -189,7 +189,8 @@ export default function CanaletasHistorialPage() {
           <div onClick={e => e.stopPropagation()} style={{ width: 'min(720px, 100vw)', height: '100vh', overflowY: 'auto', background: '#0f1421', borderLeft: '1px solid rgba(255,255,255,0.08)', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0' }}>{selected.invoice_num}</div>
+                <div style={{ fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: '#a5b4fc', fontWeight: 700 }}>Lote</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0' }}>Invoice {selected.invoice_num}</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
                   {selected.proveedor || '(sin proveedor)'} · {new Date(selected.created_at).toLocaleString('es-CL')}
                 </div>
