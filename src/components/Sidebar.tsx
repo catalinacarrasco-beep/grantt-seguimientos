@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database, FileText, Download, RefreshCw } from 'lucide-react'
+import { Plus, Clock, Settings, LogOut, ClipboardCheck, ClipboardList, Database, FileText, Download, RefreshCw, Ruler, History } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function Sidebar({ email, isOpen, onClose, installPrompt, onInstalled, updateReady }: { email: string; isOpen: boolean; onClose: () => void; installPrompt?: any; onInstalled?: () => void; updateReady?: boolean }) {
@@ -60,6 +60,14 @@ export default function Sidebar({ email, isOpen, onClose, installPrompt, onInsta
         </NavLink>
         <NavLink to="/nota-venta" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
           <FileText size={15} /> Nota de venta
+        </NavLink>
+
+        <div className="nav-section-label" style={{ marginTop: 8 }}>Control canaletas</div>
+        <NavLink to="/canaletas" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+          <Ruler size={15} /> Nuevo control
+        </NavLink>
+        <NavLink to="/canaletas/historial" onClick={onClose} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+          <History size={15} /> Historial canaletas
         </NavLink>
 
         <div style={{ marginTop: 8 }}>
