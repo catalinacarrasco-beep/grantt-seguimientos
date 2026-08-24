@@ -48,37 +48,22 @@ export function findCanaletaCandidates(invoiceProducts: InvoiceProduct[]): Canal
   return out
 }
 
-// ── Veredicto de espesor: binario cumple/no_cumple ────────────────────────
-// tipoTol='mm'  → rango [declarado - tol, declarado + tol]
-// tipoTol='pct' → rango [declarado*(1-tol/100), declarado*(1+tol/100)]
+// ── Espesor: solo stats (avg/min/max). Sin veredicto automático ────────────
 export type EspesorInput = {
   declarado: number
-  tolerancia: number
-  tipoTol: 'mm' | 'pct'
   mediciones: number[]
 }
 export type EspesorResult = {
   avg: number; min: number; max: number
-  veredicto: 'cumple' | 'no_cumple' | 'pendiente'
-  rango: { inf: number; sup: number }
+  count: number
+  veredicto: 'pendiente' | 'ok'  // 'ok' cuando hay mediciones; 'pendiente' si no hay
 }
 
 export function evaluarEspesor(e: EspesorInput): EspesorResult {
   const meds = (e.mediciones || []).filter(m => Number.isFinite(m))
-  if (!meds.length || !Number.isFinite(e.declarado) || !Number.isFinite(e.tolerancia)) {
-    return { avg: 0, min: 0, max: 0, veredicto: 'pendiente', rango: { inf: 0, sup: 0 } }
-  }
-  const inf = e.tipoTol === 'pct'
-    ? e.declarado * (1 - e.tolerancia / 100)
-    : e.declarado - e.tolerancia
-  const sup = e.tipoTol === 'pct'
-    ? e.declarado * (1 + e.tolerancia / 100)
-    : e.declarado + e.tolerancia
+  if (!meds.length) return { avg: 0, min: 0, max: 0, count: 0, veredicto: 'pendiente' }
   const avg = meds.reduce((s, x) => s + x, 0) / meds.length
-  const min = Math.min(...meds)
-  const max = Math.max(...meds)
-  const veredicto = (min >= inf && max <= sup) ? 'cumple' : 'no_cumple'
-  return { avg, min, max, veredicto, rango: { inf, sup } }
+  return { avg, min: Math.min(...meds), max: Math.max(...meds), count: meds.length, veredicto: 'ok' }
 }
 
 // Checklist default de "otras verificaciones" — el usuario puede agregar items custom por control.
@@ -96,17 +81,17 @@ export const CHECKLIST_DEFAULT = [
 // Cualquier "otras" con item marcado no ok o descripción de observación → observaciones
 export type ProductoControl = {
   modelo: string; nombre: string
-  espesor: EspesorResult & { declarado?: number; tolerancia?: number }
+  espesor: EspesorResult & { declarado?: number }
   resistencia: { resultado: 'cumple' | 'no_cumple' | 'pendiente' }
   otras: { checklist: { item: string; ok: boolean | null; nota?: string }[]; libre: string }
   observaciones?: string
 }
 
+// ponytail: sin veredicto binario de espesor. El fallo del lote lo determina
+// resistencia + checklist manual. Las mediciones de espesor quedan como registro.
 export function veredictoSugerido(productos: ProductoControl[]): 'aprobado' | 'observaciones' | 'rechazado' {
   if (!productos.length) return 'aprobado'
-  const alguienFalla = productos.some(p =>
-    p.espesor.veredicto === 'no_cumple' || p.resistencia.resultado === 'no_cumple'
-  )
+  const alguienFalla = productos.some(p => p.resistencia.resultado === 'no_cumple')
   if (alguienFalla) return 'rechazado'
   const alguienObserva = productos.some(p =>
     p.otras.checklist.some(c => c.ok === false) ||
@@ -116,14 +101,12 @@ export function veredictoSugerido(productos: ProductoControl[]): 'aprobado' | 'o
   return alguienObserva ? 'observaciones' : 'aprobado'
 }
 
-// ── Self-check inline (correlo con `node canaletas.mjs` tras un tsc rápido) ─
-// ponytail: mínimo test embebido para la lógica no trivial.
+// ponytail: self-test mínimo — solo stats, sin veredicto binario.
 if (typeof process !== 'undefined' && process.env && process.env.CANALETAS_SELFTEST === '1') {
-  const cumple = evaluarEspesor({ declarado: 1.5, tolerancia: 0.1, tipoTol: 'mm', mediciones: [1.48, 1.52, 1.49, 1.50, 1.47] })
-  if (cumple.veredicto !== 'cumple') throw new Error('espesor cumple: esperado cumple')
-  const noCumple = evaluarEspesor({ declarado: 1.5, tolerancia: 0.1, tipoTol: 'mm', mediciones: [1.30, 1.52] })
-  if (noCumple.veredicto !== 'no_cumple') throw new Error('espesor no_cumple: esperado no_cumple')
-  const pct = evaluarEspesor({ declarado: 2.0, tolerancia: 5, tipoTol: 'pct', mediciones: [1.95, 2.05, 2.00] })
-  if (pct.veredicto !== 'cumple') throw new Error('espesor pct: esperado cumple')
+  const r = evaluarEspesor({ declarado: 1.7, mediciones: [1.68, 1.72, 1.69, 1.70, 1.67] })
+  if (r.count !== 5 || Math.abs(r.avg - 1.692) > 0.01) throw new Error('avg calc failed')
+  if (r.min !== 1.67 || r.max !== 1.72) throw new Error('min/max failed')
+  const empty = evaluarEspesor({ declarado: 1.7, mediciones: [] })
+  if (empty.veredicto !== 'pendiente') throw new Error('pendiente failed')
   console.log('canaletas self-test OK')
 }
