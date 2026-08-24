@@ -9,6 +9,8 @@ import ConfigPage from './pages/ConfigPage'
 import CalidadPage from './pages/CalidadPage'
 import BDMaestraPage from './pages/BDMaestraPage'
 import NotaVentaPage from './pages/NotaVentaPage'
+import CanaletasPage from './pages/CanaletasPage'
+import CanaletasHistorialPage from './pages/CanaletasHistorialPage'
 import Sidebar from './components/Sidebar'
 import type { User } from '@supabase/supabase-js'
 
@@ -71,6 +73,8 @@ export default function App() {
           <Route path="/nuevo" element={<NuevoPage />} />
           <Route path="/historial" element={<HistorialPage />} />
           <Route path="/nota-venta" element={<NotaVentaPage />} />
+          <Route path="/canaletas" element={<CanaletasPage />} />
+          <Route path="/canaletas/historial" element={<CanaletasHistorialPage />} />
           <Route path="/bd-maestra" element={<BDMaestraPage />} />
           <Route path="/config" element={<ConfigPage />} />
         </Routes>
