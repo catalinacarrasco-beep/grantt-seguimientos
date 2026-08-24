@@ -286,7 +286,7 @@ export default function NuevoPage() {
 
       {/* FASE 1: Upload */}
       {(phase === 'upload' || phase === 'reading') && (
-        <div className="card">
+        <div key="upload" className="card fade-in">
           {/* Banner when coming from Calidad */}
           {fromCalidad && (
             <div style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#4ade80', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -327,7 +327,7 @@ export default function NuevoPage() {
 
       {/* FASE 2: Review */}
       {(phase === 'review' || phase === 'generating' || phase === 'done') && (
-        <div className="card">
+        <div key="review" className="card fade-in">
           <div className="card-header">
             <div>
               <div className="card-title">{rows.length} producto{rows.length !== 1 ? 's' : ''} certificables</div>
