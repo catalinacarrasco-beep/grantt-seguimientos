@@ -411,7 +411,7 @@ export default function CanaletasPage() {
 
       {/* ── FASE 1: Upload ── */}
       {(phase === 'upload' || phase === 'reading') && (
-        <div className="card">
+        <div key="upload" className="card fade-in">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>N° Invoice</label>
@@ -457,7 +457,7 @@ export default function CanaletasPage() {
 
       {/* ── FASE selección ── */}
       {phase === 'seleccion' && (
-        <div className="card">
+        <div key="seleccion" className="card fade-in">
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>
             {candidatos.length} modelos no-certificables en el lote. Los <strong style={{ color: '#a5b4fc' }}>pre-marcados</strong> parecen canaletas por descripción. Ajustá si querés.
           </div>
@@ -489,7 +489,7 @@ export default function CanaletasPage() {
 
       {/* ── FASE 2: Control por modelo del lote ── */}
       {phase === 'control' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div key="control" className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Card resumen del lote — siempre visible */}
           <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '10px 14px' }}>
             <div style={{ fontSize: 10, letterSpacing: 0.5, textTransform: 'uppercase', color: '#a5b4fc', fontWeight: 700, marginBottom: 4 }}>Lote</div>
@@ -693,7 +693,7 @@ export default function CanaletasPage() {
 
       {/* ── FASE 3: Veredicto ── */}
       {phase === 'veredicto' && (
-        <div className="card">
+        <div key="veredicto" className="card fade-in">
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>Elegí el veredicto del lote:</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
             {(['aprobado', 'observaciones', 'rechazado'] as const).map(v => (
@@ -723,7 +723,7 @@ export default function CanaletasPage() {
 
       {/* ── FASE done ── */}
       {phase === 'done' && (
-        <div className="card">
+        <div key="done" className="card fade-in">
           <div className="empty">
             <CheckCircle2 size={40} color="#4ade80" style={{ marginBottom: 12 }} />
             <div className="empty-title">Control registrado</div>
