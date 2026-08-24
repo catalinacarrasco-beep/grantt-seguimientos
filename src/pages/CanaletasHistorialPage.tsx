@@ -7,7 +7,7 @@ import { EmptyState, TableSkeleton } from '../components/Empty'
 type Foto = { driveId: string; name: string; webViewLink?: string }
 type ProductoDB = {
   modelo: string; nombre: string; cantidad: number; muestras: number
-  espesor: { declarado: number | null; tolerancia: number | null; tipoTol: 'mm' | 'pct'; unidad: string; mediciones: number[]; avg: number; min: number; max: number; veredicto: string }
+  espesor: { declarado: number | null; unidad: string; mediciones: number[]; avg: number; min: number; max: number; count?: number }
   resistencia: { deformacion: boolean; descripcion: string; resultado: string }
   otras: { checklist: { item: string; ok: boolean | null; nota: string }[]; libre: string }
   observaciones: string
@@ -261,8 +261,8 @@ export default function CanaletasHistorialPage() {
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>{p.nombre} · {p.cantidad} PCS · {p.muestras} muestras</div>
                 <div style={{ fontSize: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                   <div>
-                    <div style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>Espesor {veredictoBadge(p.espesor.veredicto)}</div>
-                    <div>Declarado: {p.espesor.declarado} {p.espesor.unidad} ± {p.espesor.tolerancia}{p.espesor.tipoTol === 'pct' ? '%' : ` ${p.espesor.unidad}`}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>Espesor</div>
+                    <div>Declarado: {p.espesor.declarado ?? '—'} {p.espesor.unidad}</div>
                     <div>Mediciones: {(p.espesor.mediciones || []).join(', ') || '—'}</div>
                     <div>avg {p.espesor.avg?.toFixed(3)} · min {p.espesor.min?.toFixed(3)} · max {p.espesor.max?.toFixed(3)}</div>
                   </div>
