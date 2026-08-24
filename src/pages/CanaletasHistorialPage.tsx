@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Ruler, ExternalLink, AlertTriangle, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { EmptyState, TableSkeleton } from '../components/Empty'
 
 type Foto = { driveId: string; name: string; webViewLink?: string }
 type ProductoDB = {
@@ -34,7 +36,35 @@ const veredictoBadge = (v: string) => {
   return <span className="badge">—</span>
 }
 
+// Mini sparkline: rechazos+observaciones por mes en los últimos 6 meses.
+function RecurrentSparkline({ rows, proveedor }: { rows: Control[]; proveedor: string }) {
+  const now = new Date()
+  const bins: number[] = Array.from({ length: 6 }, () => 0)
+  for (const r of rows) {
+    if (r.proveedor !== proveedor) continue
+    if (r.veredicto === 'aprobado') continue
+    const d = new Date(r.created_at)
+    const mDiff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth())
+    if (mDiff >= 0 && mDiff < 6) bins[5 - mDiff]++
+  }
+  const max = Math.max(1, ...bins)
+  const total = bins.reduce((s, x) => s + x, 0)
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      <svg width="72" height="20" viewBox="0 0 72 20" style={{ verticalAlign: 'middle' }}>
+        {bins.map((v, i) => {
+          const h = v === 0 ? 2 : Math.max(3, (v / max) * 18)
+          return <rect key={i} x={i * 12 + 1} y={20 - h} width={10} height={h} rx="1.5"
+            fill={v === 0 ? 'rgba(255,255,255,0.10)' : 'var(--warn)'} opacity={v === 0 ? 0.6 : 0.85} />
+        })}
+      </svg>
+      <span style={{ fontSize: 10, color: 'var(--ink-4)', fontVariantNumeric: 'tabular-nums' }}>{total} en 6m</span>
+    </div>
+  )
+}
+
 export default function CanaletasHistorialPage() {
+  const navigate = useNavigate()
   const [rows, setRows] = useState<Control[]>([])
   const [loading, setLoading] = useState(true)
   const [filterProv, setFilterProv] = useState('')
@@ -124,21 +154,34 @@ export default function CanaletasHistorialPage() {
           <button className="btn btn-secondary btn-sm" onClick={() => { setFilterProv(''); setFilterCode(''); setFilterVered('') }}>Limpiar</button>
         </div>
         {proveedoresRecurrentes.size > 0 && (
-          <div style={{ marginTop: 12, padding: '8px 12px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: 6, fontSize: 12, color: '#fbbf24', display: 'flex', gap: 8, alignItems: 'center' }}>
-            <AlertTriangle size={14} />
-            Proveedores con fallos recurrentes en los últimos 12 meses: <strong>{[...proveedoresRecurrentes].join(', ')}</strong>
+          <div style={{ marginTop: 14, padding: 14, background: 'var(--warn-soft)', border: '1px solid var(--warn-line)', borderRadius: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--warn)', fontWeight: 600, marginBottom: 10 }}>
+              <AlertTriangle size={14} />
+              Proveedores con fallos recurrentes (últimos 12 meses)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[...proveedoresRecurrentes].map(prov => (
+                <div key={prov} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '6px 10px', background: 'rgba(0,0,0,0.15)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 13, color: 'var(--ink-1)', fontWeight: 500 }}>{prov}</div>
+                  <RecurrentSparkline rows={rows} proveedor={prov} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       {loading ? (
-        <div className="card"><div className="text-muted text-sm">Cargando...</div></div>
+        <TableSkeleton cols={7} rows={6} />
       ) : filtered.length === 0 ? (
-        <div className="card"><div className="empty">
-          <Ruler size={40} className="empty-icon" />
-          <div className="empty-title">Sin lotes controlados</div>
-          <div className="empty-sub">Registrá un lote desde "Nuevo control"</div>
-        </div></div>
+        <div className="card">
+          <EmptyState
+            kind="ruler"
+            title={rows.length === 0 ? 'Sin lotes controlados' : 'Sin resultados con esos filtros'}
+            sub={rows.length === 0 ? 'Cada lote (una invoice) queda registrado acá con su muestreo por modelo.' : 'Probá quitar filtros o cambiarlos.'}
+            action={rows.length === 0 ? <button className="btn btn-primary btn-sm" onClick={() => navigate('/canaletas')}>Nuevo control</button> : undefined}
+          />
+        </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <table className="table">
