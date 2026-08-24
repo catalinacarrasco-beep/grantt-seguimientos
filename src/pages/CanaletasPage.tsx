@@ -521,77 +521,96 @@ export default function CanaletasPage() {
                   </div>
                 </div>
 
-                {/* Espesor */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 12, marginBottom: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: 0.5, textTransform: 'uppercase' }}>Espesor (micrómetro)</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Comparación contra ficha técnica del proveedor</div>
-                  </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>
-                    Ej: ficha dice <span style={{ color: '#e2e8f0' }}>&quot;1,5 mm ± 0,1 mm&quot;</span> → Declarado <span style={{ color: '#e2e8f0' }}>1.5</span>, Tolerancia <span style={{ color: '#e2e8f0' }}>0.1</span>, Tipo <span style={{ color: '#e2e8f0' }}>mm</span>.
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+                {/* Espesor — bloque rediseñado */}
+                <div style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 12, padding: 18, marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="Espesor que declara el proveedor en su ficha técnica">Declarado <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
+                      <div className="eyebrow" style={{ marginBottom: 2 }}>Espesor · micrómetro</div>
+                      <div style={{ fontSize: 12, color: 'var(--ink-4)', lineHeight: 1.5 }}>
+                        Ficha dice <strong style={{ color: 'var(--ink-2)' }}>&quot;1,5 mm ± 0,1 mm&quot;</strong> → Declarado <strong>1.5</strong>, Tolerancia <strong>0.1</strong>, Tipo <strong>mm</strong>.
+                      </div>
+                    </div>
+                    {r.veredicto !== 'pendiente' && (
+                      <span className={r.veredicto === 'cumple' ? 'badge badge-green' : 'badge badge-red'}>
+                        {r.veredicto === 'cumple' ? '✓ Cumple' : '✗ No cumple'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Row 1: valores declarados */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+                    <div>
+                      <label className="field-label" title="Espesor que declara el proveedor en su ficha técnica">Declarado</label>
                       <input className="input" type="number" step="0.01" value={p.espesor.declarado}
-                        onChange={e => updateEspesor(idx, { declarado: e.target.value })} placeholder="1.5"
-                        title="Espesor declarado por el proveedor" />
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>ficha técnica</div>
+                        onChange={e => updateEspesor(idx, { declarado: e.target.value })} placeholder="1.5" />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="Variación aceptada arriba y abajo del valor declarado">Tolerancia <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
+                      <label className="field-label" title="Variación aceptada arriba y abajo">Tolerancia (±)</label>
                       <input className="input" type="number" step="0.01" value={p.espesor.tolerancia}
-                        onChange={e => updateEspesor(idx, { tolerancia: e.target.value })} placeholder="0.1"
-                        title="Cuánto se acepta que varíe (± del declarado)" />
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>± permitido</div>
+                        onChange={e => updateEspesor(idx, { tolerancia: e.target.value })} placeholder="0.1" />
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="mm: la tolerancia es absoluta (ej. ±0.1 mm). %: es relativa al declarado (ej. ±5%)">Tipo tol. <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
-                      <select className="input" value={p.espesor.tipoTol} onChange={e => updateEspesor(idx, { tipoTol: e.target.value as 'mm' | 'pct' })}
-                        title="mm = tolerancia en milímetros. % = tolerancia como porcentaje del declarado">
+                      <label className="field-label" title="mm = absoluta. % = relativa al declarado">Tipo</label>
+                      <select className="input" value={p.espesor.tipoTol} onChange={e => updateEspesor(idx, { tipoTol: e.target.value as 'mm' | 'pct' })}>
                         <option value="mm">mm</option>
                         <option value="pct">%</option>
                       </select>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{p.espesor.tipoTol === 'mm' ? 'absoluto' : 'relativo'}</div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="Unidad de las mediciones y del declarado (usualmente mm)">Unidad <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
-                      <input className="input" value={p.espesor.unidad} onChange={e => updateEspesor(idx, { unidad: e.target.value })} placeholder="mm"
-                        title="Unidad de medida (usualmente milímetros)" />
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>medición</div>
+                      <label className="field-label">Unidad</label>
+                      <input className="input" value={p.espesor.unidad} onChange={e => updateEspesor(idx, { unidad: e.target.value })} placeholder="mm" />
                     </div>
                   </div>
+
                   {/* Rango calculado en vivo */}
                   {parseFloat(p.espesor.declarado) > 0 && parseFloat(p.espesor.tolerancia) >= 0 && (
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 8, padding: '6px 10px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 6 }}>
-                      Rango aceptable: <strong style={{ color: '#a5b4fc' }}>[{r.rango.inf.toFixed(3)}, {r.rango.sup.toFixed(3)}] {p.espesor.unidad}</strong>
+                    <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 14, padding: '10px 14px', background: 'var(--accent-soft)', border: '1px solid var(--accent-line)', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                        <span>Rango aceptable:</span>
+                        <strong style={{ color: 'var(--accent-hi)', fontVariantNumeric: 'tabular-nums' }}>
+                          [{r.rango.inf.toFixed(3)} , {r.rango.sup.toFixed(3)}] {p.espesor.unidad}
+                        </strong>
+                      </div>
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }} title="Lo que medís con el micrómetro en cada muestra tomada al azar del lote">Mediciones <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span> — una por muestra:</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+
+                  {/* Row 2: mediciones */}
+                  <div style={{ marginBottom: 4 }}>
+                    <label className="field-label" title="Lo que medís con el micrómetro en cada muestra">Mediciones · una por muestra</label>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                     {p.espesor.mediciones.map((m, mi) => (
-                      <div key={mi} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <input className="input" style={{ width: 70, textAlign: 'center' }} type="number" step="0.01"
+                      <div key={mi} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'var(--surface)', border: '1px solid var(--line-strong)', borderRadius: 8, padding: '0 2px 0 0' }}>
+                        <input className="input" style={{ width: 82, textAlign: 'center', border: 'none', background: 'transparent', padding: '8px 8px' }} type="number" step="0.01"
                           value={m} onChange={e => setMedicion(idx, mi, e.target.value)} placeholder="0.00" />
                         <button className="btn-icon" onClick={() => delMedicion(idx, mi)} title="Eliminar"><X size={12} /></button>
                       </div>
                     ))}
                     <button className="btn btn-secondary btn-sm" onClick={() => addMedicion(idx)}><Plus size={12} /> Medición</button>
                   </div>
+
+                  {/* Resumen estadístico */}
                   {r.veredicto !== 'pendiente' && (
-                    <div style={{ fontSize: 12, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>avg: <strong style={{ color: '#e2e8f0' }}>{r.avg.toFixed(3)}</strong></span>
-                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>min: <strong style={{ color: '#e2e8f0' }}>{r.min.toFixed(3)}</strong></span>
-                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>max: <strong style={{ color: '#e2e8f0' }}>{r.max.toFixed(3)}</strong></span>
-                      <span style={{ color: 'rgba(255,255,255,0.6)' }}>rango: <strong style={{ color: '#e2e8f0' }}>[{r.rango.inf.toFixed(3)}, {r.rango.sup.toFixed(3)}]</strong></span>
-                      <span className={r.veredicto === 'cumple' ? 'badge badge-green' : 'badge badge-red'}>{r.veredicto === 'cumple' ? '✓ Cumple' : '✗ No cumple'}</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+                      <div>
+                        <div style={{ fontSize: 10.5, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Promedio</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-1)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{r.avg.toFixed(3)}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10.5, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Mínimo</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: r.min < r.rango.inf ? 'var(--danger)' : 'var(--ink-1)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{r.min.toFixed(3)}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10.5, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Máximo</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: r.max > r.rango.sup ? 'var(--danger)' : 'var(--ink-1)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{r.max.toFixed(3)}</div>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Resistencia */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 12, marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>Resistencia</div>
+                <div style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 12, padding: 18, marginBottom: 14 }}>
+                  <div className="eyebrow" style={{ marginBottom: 12 }}>Resistencia</div>
                   <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 8 }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>
                       <input type="checkbox" checked={p.resistencia.deformacion} onChange={e => updateResistencia(idx, { deformacion: e.target.checked })} style={{ accentColor: '#818cf8' }} />
@@ -609,8 +628,8 @@ export default function CanaletasPage() {
                 </div>
 
                 {/* Otras verificaciones */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 12, marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>Otras verificaciones</div>
+                <div style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 12, padding: 18, marginBottom: 14 }}>
+                  <div className="eyebrow" style={{ marginBottom: 12 }}>Otras verificaciones</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
                     {p.otras.checklist.map((c, ci) => (
                       <div key={ci} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -634,8 +653,8 @@ export default function CanaletasPage() {
                 </div>
 
                 {/* Fotos */}
-                <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>Fotos de evidencia ({p.fotos.length})</div>
+                <div style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 12, padding: 18 }}>
+                  <div className="eyebrow" style={{ marginBottom: 12 }}>Fotos de evidencia · {p.fotos.length}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
                     {p.fotos.map((f, fi) => (
                       <div key={fi} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'rgba(74,222,128,0.1)', borderRadius: 6, fontSize: 11, border: '1px solid rgba(74,222,128,0.2)' }}>
