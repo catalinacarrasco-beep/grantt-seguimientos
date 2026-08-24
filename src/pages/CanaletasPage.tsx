@@ -481,9 +481,12 @@ export default function CanaletasPage() {
               )
             })}
           </div>
-          <button className="btn btn-primary btn-full" style={{ marginTop: 14 }} disabled={!seleccionados.size} onClick={irAControl}>
-            <Ruler size={14} /> Registrar control · {seleccionados.size} modelo{seleccionados.size !== 1 ? 's' : ''} del lote
-          </button>
+          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+            <button className="btn btn-secondary" onClick={() => { setPhase('upload'); setCandidatos([]); setSeleccionados(new Set()); setReadSteps([]) }}>← Volver a subir</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} disabled={!seleccionados.size} onClick={irAControl}>
+              <Ruler size={14} /> Registrar control · {seleccionados.size} modelo{seleccionados.size !== 1 ? 's' : ''} del lote
+            </button>
+          </div>
         </div>
       )}
 
