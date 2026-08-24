@@ -302,10 +302,15 @@ export default function NuevoPage() {
           <DropZone label="DIN (PDF)" hint="Declaración de Ingreso de Aduanas" file={dinFile} onFile={setDinFile} />
 
           {readSteps.length === 0 ? (
-            <button className="btn btn-primary btn-full" style={{ marginTop: 4 }}
-              disabled={(!invoiceFile && !fromCalidad) || !dinFile || reading} onClick={readDocs}>
-              <FileSearch size={15} /> Leer documentos
-            </button>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              {fromCalidad && (
+                <button className="btn btn-secondary" onClick={() => navigate('/calidad')}>← Volver a Calidad</button>
+              )}
+              <button className="btn btn-primary" style={{ flex: 1 }}
+                disabled={(!invoiceFile && !fromCalidad) || !dinFile || reading} onClick={readDocs}>
+                <FileSearch size={15} /> Leer documentos
+              </button>
+            </div>
           ) : (
             <div style={{ marginTop: 12 }}>
               <StepList steps={readSteps} />
@@ -351,9 +356,17 @@ export default function NuevoPage() {
           </div>
 
           {phase === 'review' && (
-            <button className="btn btn-primary btn-full" onClick={generate}>
-              <Download size={15} /> Generar Excel
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary" onClick={() => {
+                if (!window.confirm('¿Volver al paso anterior? Perderás la lectura de la DIN y el cruce con BD Maestra — vas a tener que leer los documentos de nuevo.')) return
+                setPhase('upload')
+                setReadSteps([])
+                setRows([])
+              }}>← Atrás</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={generate}>
+                <Download size={15} /> Generar Excel
+              </button>
+            </div>
           )}
 
           {(phase === 'generating' || phase === 'done') && genSteps.length > 0 && (
