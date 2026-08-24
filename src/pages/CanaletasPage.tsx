@@ -17,8 +17,6 @@ type ProductoControl = {
   muestras: number
   espesor: {
     declarado: string   // input controlado en string; convierto al calcular
-    tolerancia: string
-    tipoTol: 'mm' | 'pct'
     unidad: string
     mediciones: string[]
   }
@@ -150,7 +148,7 @@ export default function CanaletasPage() {
       nombre: c.nombre,
       cantidad: c.cantidad,
       muestras: 5,
-      espesor: { declarado: '', tolerancia: '', tipoTol: 'mm', unidad: 'mm', mediciones: [''] },
+      espesor: { declarado: '1.7', unidad: 'mm', mediciones: [''] },
       resistencia: { deformacion: false, descripcion: '', resultado: 'pendiente' },
       otras: {
         checklist: CHECKLIST_DEFAULT.map(item => ({ item, ok: null, nota: '' })),
@@ -194,11 +192,9 @@ export default function CanaletasPage() {
     updateOtras(idx, { checklist: productos[idx].otras.checklist.filter((_, j) => j !== ci) })
   }
 
-  // Calcula veredicto de espesor a partir del input actual
+  // Calcula stats de espesor (avg/min/max) a partir del input actual
   const espesorResult = (p: ProductoControl) => evaluarEspesor({
     declarado: parseFloat(p.espesor.declarado),
-    tolerancia: parseFloat(p.espesor.tolerancia),
-    tipoTol: p.espesor.tipoTol,
     mediciones: p.espesor.mediciones.map(m => parseFloat(m)).filter(m => Number.isFinite(m)),
   })
 
@@ -256,10 +252,9 @@ export default function CanaletasPage() {
           modelo: p.modelo, nombre: p.nombre, cantidad: p.cantidad, muestras: p.muestras,
           espesor: {
             declarado: parseFloat(p.espesor.declarado) || null,
-            tolerancia: parseFloat(p.espesor.tolerancia) || null,
-            tipoTol: p.espesor.tipoTol, unidad: p.espesor.unidad,
+            unidad: p.espesor.unidad,
             mediciones: p.espesor.mediciones.map(m => parseFloat(m)).filter(Number.isFinite),
-            avg: r.avg, min: r.min, max: r.max, veredicto: r.veredicto,
+            avg: r.avg, min: r.min, max: r.max, count: r.count,
           },
           resistencia: p.resistencia,
           otras: p.otras,
@@ -530,52 +525,23 @@ export default function CanaletasPage() {
                     <div>
                       <div className="eyebrow" style={{ marginBottom: 2 }}>Espesor · micrómetro</div>
                       <div style={{ fontSize: 12, color: 'var(--ink-4)', lineHeight: 1.5 }}>
-                        Ficha dice <strong style={{ color: 'var(--ink-2)' }}>&quot;1,5 mm ± 0,1 mm&quot;</strong> → Declarado <strong>1.5</strong>, Tolerancia <strong>0.1</strong>, Tipo <strong>mm</strong>.
+                        Valor declarado por el proveedor + mediciones con micrómetro por cada muestra.
                       </div>
                     </div>
-                    {r.veredicto !== 'pendiente' && (
-                      <span className={r.veredicto === 'cumple' ? 'badge badge-green' : 'badge badge-red'}>
-                        {r.veredicto === 'cumple' ? '✓ Cumple' : '✗ No cumple'}
-                      </span>
-                    )}
                   </div>
 
-                  {/* Row 1: valores declarados */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+                  {/* Row 1: Declarado + Unidad */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, marginBottom: 14 }}>
                     <div>
                       <label className="field-label" title="Espesor que declara el proveedor en su ficha técnica">Declarado</label>
                       <input className="input" type="number" step="0.01" value={p.espesor.declarado}
-                        onChange={e => updateEspesor(idx, { declarado: e.target.value })} placeholder="1.5" />
-                    </div>
-                    <div>
-                      <label className="field-label" title="Variación aceptada arriba y abajo">Tolerancia (±)</label>
-                      <input className="input" type="number" step="0.01" value={p.espesor.tolerancia}
-                        onChange={e => updateEspesor(idx, { tolerancia: e.target.value })} placeholder="0.1" />
-                    </div>
-                    <div>
-                      <label className="field-label" title="mm = absoluta. % = relativa al declarado">Tipo</label>
-                      <select className="input" value={p.espesor.tipoTol} onChange={e => updateEspesor(idx, { tipoTol: e.target.value as 'mm' | 'pct' })}>
-                        <option value="mm">mm</option>
-                        <option value="pct">%</option>
-                      </select>
+                        onChange={e => updateEspesor(idx, { declarado: e.target.value })} placeholder="1.7" />
                     </div>
                     <div>
                       <label className="field-label">Unidad</label>
                       <input className="input" value={p.espesor.unidad} onChange={e => updateEspesor(idx, { unidad: e.target.value })} placeholder="mm" />
                     </div>
                   </div>
-
-                  {/* Rango calculado en vivo */}
-                  {parseFloat(p.espesor.declarado) > 0 && parseFloat(p.espesor.tolerancia) >= 0 && (
-                    <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 14, padding: '10px 14px', background: 'var(--accent-soft)', border: '1px solid var(--accent-line)', borderRadius: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                        <span>Rango aceptable:</span>
-                        <strong style={{ color: 'var(--accent-hi)', fontVariantNumeric: 'tabular-nums' }}>
-                          [{r.rango.inf.toFixed(3)} , {r.rango.sup.toFixed(3)}] {p.espesor.unidad}
-                        </strong>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Row 2: mediciones */}
                   <div style={{ marginBottom: 4 }}>
@@ -592,8 +558,8 @@ export default function CanaletasPage() {
                     <button className="btn btn-secondary btn-sm" onClick={() => addMedicion(idx)}><Plus size={12} /> Medición</button>
                   </div>
 
-                  {/* Resumen estadístico */}
-                  {r.veredicto !== 'pendiente' && (
+                  {/* Resumen estadístico (sin coloreo por veredicto) */}
+                  {r.count > 0 && (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
                       <div>
                         <div style={{ fontSize: 10.5, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Promedio</div>
@@ -601,11 +567,11 @@ export default function CanaletasPage() {
                       </div>
                       <div>
                         <div style={{ fontSize: 10.5, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Mínimo</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: r.min < r.rango.inf ? 'var(--danger)' : 'var(--ink-1)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{r.min.toFixed(3)}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-1)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{r.min.toFixed(3)}</div>
                       </div>
                       <div>
                         <div style={{ fontSize: 10.5, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Máximo</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: r.max > r.rango.sup ? 'var(--danger)' : 'var(--ink-1)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{r.max.toFixed(3)}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink-1)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{r.max.toFixed(3)}</div>
                       </div>
                     </div>
                   )}
