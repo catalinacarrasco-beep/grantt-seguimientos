@@ -523,31 +523,51 @@ export default function CanaletasPage() {
 
                 {/* Espesor */}
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: 12, marginBottom: 10 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 }}>Espesor (micrómetro)</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#a5b4fc', letterSpacing: 0.5, textTransform: 'uppercase' }}>Espesor (micrómetro)</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Comparación contra ficha técnica del proveedor</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>
+                    Ej: ficha dice <span style={{ color: '#e2e8f0' }}>&quot;1,5 mm ± 0,1 mm&quot;</span> → Declarado <span style={{ color: '#e2e8f0' }}>1.5</span>, Tolerancia <span style={{ color: '#e2e8f0' }}>0.1</span>, Tipo <span style={{ color: '#e2e8f0' }}>mm</span>.
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Declarado</label>
+                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="Espesor que declara el proveedor en su ficha técnica">Declarado <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
                       <input className="input" type="number" step="0.01" value={p.espesor.declarado}
-                        onChange={e => updateEspesor(idx, { declarado: e.target.value })} placeholder="1.5" />
+                        onChange={e => updateEspesor(idx, { declarado: e.target.value })} placeholder="1.5"
+                        title="Espesor declarado por el proveedor" />
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>ficha técnica</div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Tolerancia</label>
+                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="Variación aceptada arriba y abajo del valor declarado">Tolerancia <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
                       <input className="input" type="number" step="0.01" value={p.espesor.tolerancia}
-                        onChange={e => updateEspesor(idx, { tolerancia: e.target.value })} placeholder="0.1" />
+                        onChange={e => updateEspesor(idx, { tolerancia: e.target.value })} placeholder="0.1"
+                        title="Cuánto se acepta que varíe (± del declarado)" />
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>± permitido</div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Tipo tol.</label>
-                      <select className="input" value={p.espesor.tipoTol} onChange={e => updateEspesor(idx, { tipoTol: e.target.value as 'mm' | 'pct' })}>
+                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="mm: la tolerancia es absoluta (ej. ±0.1 mm). %: es relativa al declarado (ej. ±5%)">Tipo tol. <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
+                      <select className="input" value={p.espesor.tipoTol} onChange={e => updateEspesor(idx, { tipoTol: e.target.value as 'mm' | 'pct' })}
+                        title="mm = tolerancia en milímetros. % = tolerancia como porcentaje del declarado">
                         <option value="mm">mm</option>
                         <option value="pct">%</option>
                       </select>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{p.espesor.tipoTol === 'mm' ? 'absoluto' : 'relativo'}</div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Unidad</label>
-                      <input className="input" value={p.espesor.unidad} onChange={e => updateEspesor(idx, { unidad: e.target.value })} placeholder="mm" />
+                      <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} title="Unidad de las mediciones y del declarado (usualmente mm)">Unidad <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span></label>
+                      <input className="input" value={p.espesor.unidad} onChange={e => updateEspesor(idx, { unidad: e.target.value })} placeholder="mm"
+                        title="Unidad de medida (usualmente milímetros)" />
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>medición</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Mediciones:</div>
+                  {/* Rango calculado en vivo */}
+                  {parseFloat(p.espesor.declarado) > 0 && parseFloat(p.espesor.tolerancia) >= 0 && (
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginBottom: 8, padding: '6px 10px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 6 }}>
+                      Rango aceptable: <strong style={{ color: '#a5b4fc' }}>[{r.rango.inf.toFixed(3)}, {r.rango.sup.toFixed(3)}] {p.espesor.unidad}</strong>
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }} title="Lo que medís con el micrómetro en cada muestra tomada al azar del lote">Mediciones <span style={{ color: 'rgba(165,180,252,0.5)', cursor: 'help' }}>ⓘ</span> — una por muestra:</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                     {p.espesor.mediciones.map((m, mi) => (
                       <div key={mi} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
