@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Upload, CheckCircle2, Camera, Loader2, FileSearch, X, RefreshCw, ArrowRight, Smartphone, Wifi, Zap, Search } from 'lucide-react'
 import QRCode from 'qrcode'
@@ -459,12 +459,16 @@ export default function CalidadPage() {
   }
 
 
-  const filteredProducts = searchTerm.trim()
-    ? products.filter(p => {
-        const q = searchTerm.toLowerCase()
-        return p.modelo.toLowerCase().includes(q) || p.nombre.toLowerCase().includes(q)
-      })
-    : products
+  // ponytail: useMemo explícito + normalización (quita acentos y colapsa espacios).
+  // Antes: filter inline sin memo se veía OK en el .tsx pero el bundle re-renderizaba
+  // cards huérfanas al reducir la lista.
+  const filteredProducts = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase()
+    if (!q) return products
+    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    const qn = norm(q)
+    return products.filter(p => norm(p.modelo).includes(qn) || norm(p.nombre || '').includes(qn))
+  }, [products, searchTerm])
 
   const setFechaFab = (modelo: string, value: string) => {
     setProducts(prev => prev.map(p => p.modelo === modelo ? { ...p, fechaFab: value } : p))
@@ -702,6 +706,13 @@ export default function CalidadPage() {
           )}
 
           {/* Product cards */}
+          {searchTerm.trim() && filteredProducts.length === 0 && (
+            <div className="card"><div className="empty">
+              <div className="empty-title">Sin resultados para "{searchTerm}"</div>
+              <div className="empty-sub">Probá otro código o descripción.</div>
+            </div></div>
+          )}
+          <div key={`prods-${searchTerm.trim()}`}>
           {filteredProducts.map(prod => (
             <div key={prod.modelo} className="card" style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
@@ -752,6 +763,7 @@ export default function CalidadPage() {
               <CRow label="País fabricación" val={prod.cuerpo.pais_fab} onSI={() => upd(prod.modelo,'cuerpo','pais_fab','SI')} onNO={() => upd(prod.modelo,'cuerpo','pais_fab','NO')} />
             </div>
           ))}
+          </div>
 
           {/* Actions inline (desktop) */}
           <div className="card action-bar-inline" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', justifyContent: 'flex-end' }}>
