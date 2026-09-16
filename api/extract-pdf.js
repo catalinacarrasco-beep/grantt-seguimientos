@@ -10,45 +10,33 @@ export default async function handler(req, res) {
     const pdfData = await pdfParse(buffer)
     const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 50000)
 
-    // DINs: parseo por bloques delimitados por "ITEM N".
-    // El regex anterior requeria "ITEM N Nombre Codigo Arancel" exacto, lo que
-    // fallaba en paginas posteriores donde el header de tabla no se repite.
-    // Ahora busca cualquier "ITEM N" y valida con el patron de cantidad DIN.
+    // DINs (formato Pollmann): parseo por BLOQUES. Cada ítem empieza en un header
+    // "ITEM [N] Nombre Codigo Arancel". El bloque va hasta el siguiente header.
     if (type === 'din') {
-      const headerRe = /\bITEM\s+(\d+)\b/gi
-      const allMatches = []
+      const items = []
+      const headerRe = /ITEM\s+(?:(\d+)\s+)?Nombre\s+Codigo\s+Arancel/gi
+      const heads = []
       let hm
-      while ((hm = headerRe.exec(text)) !== null) allMatches.push({ num: hm[1], start: hm.index })
+      while ((hm = headerRe.exec(text)) !== null) heads.push({ num: hm[1] || null, start: hm.index })
 
-      const validItems = new Map()
-      for (let i = 0; i < allMatches.length; i++) {
-        const start = allMatches[i].start
-        const end = i + 1 < allMatches.length ? allMatches[i + 1].start : text.length
+      for (let i = 0; i < heads.length; i++) {
+        const start = heads[i].start
+        const end = i + 1 < heads.length ? heads[i + 1].start : text.length
         const block = text.slice(start, end)
-        const itemNum = allMatches[i].num
-
-        // Cantidad: "0000NNNNN.000000 UNIDAD" — requiere >=2 letras para no confundir con Ad Valorem
+        const itemNum = heads[i].num || String(i + 1)
         const qm = block.match(/0*(\d+)\.000000\s+[A-Z]{2,}/)
-        if (!qm) continue
-        const quantity = parseInt(qm[1], 10)
-        if (quantity <= 0) continue
-
-        // Primer match valido por itemNum gana (el bloque real viene antes que las referencias)
-        if (validItems.has(itemNum)) continue
-
-        const cut = block.indexOf(qm[0]) + qm[0].length
+        const quantity = qm ? parseInt(qm[1], 10) : 0
+        const cut = qm ? block.indexOf(qm[0]) + qm[0].length : Math.min(block.length, 600)
         const description = block.slice(0, cut).replace(/\s+/g, ' ').trim().slice(0, 600)
 
         // Supplier code: patron "-F; CODE;" comun en DINs chilenas
         const scMatch = block.match(/-F;\s*([A-Z0-9][\w-]*)\s*;/i)
-        const supplierCode = scMatch ? scMatch[1] : undefined
 
         const item = { itemNum, quantity, description }
-        if (supplierCode) item.supplierCode = supplierCode
-        validItems.set(itemNum, item)
+        if (scMatch) item.supplierCode = scMatch[1]
+        if (!items.find(x => x.itemNum === itemNum)) items.push(item)
       }
 
-      const items = Array.from(validItems.values())
       const dinMatch = text.match(/\b(\d{10}-\d)\b/)
       items.sort((a, b) => parseInt(a.itemNum) - parseInt(b.itemNum))
       const result = { dinNum: dinMatch ? dinMatch[1] : '', items }
@@ -77,7 +65,6 @@ Format: {"dinNum":"3630753019-2","items":[{"itemNum":"1","quantity":20160,"descr
 - items: extract ALL items
 - quantity: integer PCS only (pattern "000006000.000000 PCS" -> 6000). Must be integer.
 - supplierCode: code after any "-F;" pattern (e.g. "NINGBO YLK-F; 99002;" -> "99002"). Extract for every item.
-- IMPORTANT: Exclude items whose description contains: PVC, CANALETA, TRUNKING, DUCTO, CONDUIT, CARRETE, CARRETES, ACCESORIO, FITTING, BRACKET, CLIPS, TAPA, UNION, CURVA, TEE
 
 TEXT:
 ${text}`
