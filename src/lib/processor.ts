@@ -1,4 +1,4 @@
-﻿import { lookupProduct, lookupProductByDescCode } from './products'
+import { lookupProduct, lookupProductByDescCode } from './products'
 import modeloCertMap from './modeloCertMap.json'
 
 export type ProductRow = {
@@ -140,31 +140,10 @@ export async function parseInvoice(file: File): Promise<{ invoiceNum: string; tr
   return safeParseJSON(txt) as { invoiceNum: string; trazabilidad: string; products: { modelo: string; altCode?: string; cantidad: number }[] }
 }
 
-const EXCLUDED_DIN_KEYWORDS = ['CANALETA', 'CANALETAS', 'TRUNKING', 'DUCTO', 'DUCTOS', 'CONDUIT', 'CARRETE', 'CARRETES']
-
-function isExcludedDinItem(description: string): boolean {
-  const upper = description.toUpperCase()
-  if (EXCLUDED_DIN_KEYWORDS.some(kw => upper.includes(kw))) return true
-  if (upper.includes('PVC') && /\b(CANAL|DUCT|TUBO|TUBERIA|FITTING|TAPA|UNION|CURVA|TEE|BRACKET|CLIP)\b/.test(upper)) return true
-  return false
-}
-
 export async function parseDIN(file: File): Promise<{ dinNum: string; items: { itemNum: string; quantity: number; description?: string; supplierCode?: string }[] }> {
   const data = await parsePDF(file, 'din')
   const txt = getText(data)
-  const raw = safeParseJSON(txt) as { dinNum: string; items: { itemNum: string; quantity: number; description?: string }[] }
-
-  if (raw.items) {
-    raw.items = raw.items.filter(item => {
-      if (isExcludedDinItem(item.description || '')) {
-        console.log(`[DIN] Descartando ítem ${item.itemNum} (${item.description})`)
-        return false
-      }
-      return true
-    })
-  }
-
-  return raw
+  return safeParseJSON(txt) as { dinNum: string; items: { itemNum: string; quantity: number; description?: string }[] }
 }
 
 function descKeywords(description: string): string[] {
@@ -377,4 +356,3 @@ export async function uploadFileToDrive(b64: string, fileName: string, mimeType:
 export async function uploadToDrive(b64: string, fileName: string, folderId?: string): Promise<string> {
   return uploadFileToDrive(b64, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', folderId || '')
 }
-
