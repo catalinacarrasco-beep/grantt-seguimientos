@@ -10,32 +10,45 @@ export default async function handler(req, res) {
     const pdfData = await pdfParse(buffer)
     const text = pdfData.text.replace(/[^\x20-\x7E\n]/g, ' ').substring(0, 50000)
 
-    // DINs (formato Pollmann): parseo por BLOQUES. Cada ítem empieza en un header
-    // "ITEM [N] Nombre Codigo Arancel". El bloque va hasta el siguiente header.
-    // Robusto: cualquier cantidad de ítems, unidad PCS o UNIDADES, y captura la
-    // descripción (con los códigos) para que la asignación matchee por código.
+    // DINs: parseo por bloques delimitados por "ITEM N".
+    // El regex anterior requeria "ITEM N Nombre Codigo Arancel" exacto, lo que
+    // fallaba en paginas posteriores donde el header de tabla no se repite.
+    // Ahora busca cualquier "ITEM N" y valida con el patron de cantidad DIN.
     if (type === 'din') {
-      const items = []
-      const headerRe = /ITEM\s+(?:(\d+)\s+)?Nombre\s+Codigo\s+Arancel/gi
-      const heads = []
+      const headerRe = /\bITEM\s+(\d+)\b/gi
+      const allMatches = []
       let hm
-      while ((hm = headerRe.exec(text)) !== null) heads.push({ num: hm[1] || null, start: hm.index })
+      while ((hm = headerRe.exec(text)) !== null) allMatches.push({ num: hm[1], start: hm.index })
 
-      for (let i = 0; i < heads.length; i++) {
-        const start = heads[i].start
-        const end = i + 1 < heads.length ? heads[i + 1].start : text.length
+      const validItems = new Map()
+      for (let i = 0; i < allMatches.length; i++) {
+        const start = allMatches[i].start
+        const end = i + 1 < allMatches.length ? allMatches[i + 1].start : text.length
         const block = text.slice(start, end)
-        const itemNum = heads[i].num || String(i + 1)
-        // Cantidad: "0000NNNNN.000000 UNIDAD" (acepta PCS, UNIDADES, etc. — cualquier palabra de unidad).
-        // Requiere ≥2 letras tras el ".000000" para no confundir con el Ad Valorem ("19.000000 178").
+        const itemNum = allMatches[i].num
+
+        // Cantidad: "0000NNNNN.000000 UNIDAD" — requiere >=2 letras para no confundir con Ad Valorem
         const qm = block.match(/0*(\d+)\.000000\s+[A-Z]{2,}/)
-        const quantity = qm ? parseInt(qm[1], 10) : 0
-        // Descripción: del header hasta la cantidad (evita el footer de página).
-        const cut = qm ? block.indexOf(qm[0]) + qm[0].length : Math.min(block.length, 600)
+        if (!qm) continue
+        const quantity = parseInt(qm[1], 10)
+        if (quantity <= 0) continue
+
+        // Primer match valido por itemNum gana (el bloque real viene antes que las referencias)
+        if (validItems.has(itemNum)) continue
+
+        const cut = block.indexOf(qm[0]) + qm[0].length
         const description = block.slice(0, cut).replace(/\s+/g, ' ').trim().slice(0, 600)
-        if (!items.find(x => x.itemNum === itemNum)) items.push({ itemNum, quantity, description })
+
+        // Supplier code: patron "-F; CODE;" comun en DINs chilenas
+        const scMatch = block.match(/-F;\s*([A-Z0-9][\w-]*)\s*;/i)
+        const supplierCode = scMatch ? scMatch[1] : undefined
+
+        const item = { itemNum, quantity, description }
+        if (supplierCode) item.supplierCode = supplierCode
+        validItems.set(itemNum, item)
       }
 
+      const items = Array.from(validItems.values())
       const dinMatch = text.match(/\b(\d{10}-\d)\b/)
       items.sort((a, b) => parseInt(a.itemNum) - parseInt(b.itemNum))
       const result = { dinNum: dinMatch ? dinMatch[1] : '', items }
@@ -88,4 +101,3 @@ ${text}`
     return res.status(500).json({ error: error.message })
   }
 }
-
