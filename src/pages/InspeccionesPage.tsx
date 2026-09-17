@@ -46,6 +46,16 @@ export default function InspeccionesPage() {
     day: '2-digit', month: 'short', year: 'numeric',
   })
 
+  const countFailing = (productos: any[]) => {
+    if (!Array.isArray(productos)) return 0
+    return productos.filter(p => {
+      const e = p.envase || {}
+      const c = p.cuerpo || {}
+      return e.modelo !== 'SI' || e.sello_qr !== 'SI' || e.fecha_fab !== 'SI' || e.placa_info !== 'SI' || e.pais_fab !== 'SI' ||
+        c.modelo !== 'SI' || c.sello_qr !== 'SI' || c.fecha_fab !== 'SI' || c.pais_fab !== 'SI'
+    }).length
+  }
+
   return (
     <div className="page">
       <div style={{ marginBottom: 24 }}>
@@ -90,7 +100,7 @@ export default function InspeccionesPage() {
                   <td>
                     {r.cumple
                       ? <span className="badge badge-green">✓ Cumple</span>
-                      : <span className="badge badge-red">✗ No cumple</span>}
+                      : <span className="badge badge-red">✗ {countFailing(r.productos as any[])} No cumple{countFailing(r.productos as any[]) !== 1 ? 'n' : ''}</span>}
                   </td>
                   <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>{r.user_email?.split('@')[0]}</td>
                   <td>
