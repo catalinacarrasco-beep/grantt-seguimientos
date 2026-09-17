@@ -12,7 +12,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Calidad Grantt <calidad@grantt.cl>',
+        from: 'Calidad Grantt <onboarding@resend.dev>',
         to: Array.isArray(to) ? to : [to],
         cc: cc ? (Array.isArray(cc) ? cc : [cc]) : undefined,
         subject,
