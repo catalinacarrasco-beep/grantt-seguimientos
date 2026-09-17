@@ -57,7 +57,7 @@ export default function InspeccionesPage() {
   }
 
   return (
-    <div className="page">
+    <div className="page" style={{ maxWidth: 1100 }}>
       <div style={{ marginBottom: 24 }}>
         <div className="page-title">Inspecciones de calidad</div>
         <div className="page-sub" style={{ marginBottom: 0 }}>Historial de controles de marcado guardados</div>
