@@ -22,8 +22,6 @@ function saveNotas(notas: NotaEntry[]) {
 export default function NotaVentaPage() {
   const [notas, setNotas] = useState<NotaEntry[]>(loadNotas)
   const [newCode, setNewCode] = useState<Record<string, string>>({})
-  const [sending, setSending] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<Record<string, { ok: boolean; msg: string }>>({})
 
   const updateQuantity = (invoiceNum: string, modelo: string, value: string) => {
     setNotas(prev => {
@@ -71,14 +69,15 @@ export default function NotaVentaPage() {
     })
   }
 
-  const buildEmailBody = (nota: NotaEntry) => {
+  const sendNota = (nota: NotaEntry) => {
     const filled = nota.codes.filter(c => {
       const qty = nota.quantities[c.modelo]
       return qty && parseInt(qty) > 0
     })
-    if (!filled.length) return null
+    if (!filled.length) return
+
     const lines = filled.map(c => `• ${c.modelo}: ${nota.quantities[c.modelo]} uds.`)
-    return [
+    const body = [
       'Estimada Paula,',
       '',
       'Favor su ayuda con nota de venta para muestras para certificación de seguimiento para CESMEC, los modelos son:',
@@ -87,34 +86,12 @@ export default function NotaVentaPage() {
       '',
       'Saludos cordiales',
     ].join('\n')
-  }
 
-  const sendNota = async (nota: NotaEntry) => {
-    const body = buildEmailBody(nota)
-    if (!body) return
-
-    setSending(nota.invoiceNum)
-    setFeedback(prev => ({ ...prev, [nota.invoiceNum]: undefined! }))
-
-    try {
-      const res = await fetch('/api/send-nota', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: 'paula.villa@grantt.cl',
-          cc: 'victor.guerra@grantt.cl',
-          subject: `Nota de venta para muestras ${nota.invoiceNum}`,
-          body,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error enviando')
-      setFeedback(prev => ({ ...prev, [nota.invoiceNum]: { ok: true, msg: 'Enviado a Paula y Víctor' } }))
-    } catch (e: any) {
-      setFeedback(prev => ({ ...prev, [nota.invoiceNum]: { ok: false, msg: e.message } }))
-    } finally {
-      setSending(null)
-    }
+    const subject = `Nota de venta para muestras ${nota.invoiceNum}`
+    window.open(
+      `https://mail.google.com/mail/?view=cm&to=paula.villa@grantt.cl&cc=victor.guerra@grantt.cl&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      '_blank'
+    )
   }
 
   const deleteNota = (invoiceNum: string) => {
@@ -149,7 +126,6 @@ export default function NotaVentaPage() {
           const q = nota.quantities[c.modelo]
           return q && parseInt(q) > 0
         }).length
-        const fb = feedback[nota.invoiceNum]
 
         return (
           <div className="card" key={nota.invoiceNum} style={{ marginBottom: 16 }}>
@@ -223,16 +199,10 @@ export default function NotaVentaPage() {
               </table>
             </div>
 
-            <div className="flex gap-2" style={{ marginTop: 16, alignItems: 'center' }}>
-              <button className="btn btn-primary" onClick={() => sendNota(nota)}
-                disabled={filledCount === 0 || sending === nota.invoiceNum}>
-                <Send size={14} /> {sending === nota.invoiceNum ? 'Enviando...' : 'Enviar a Paula'}
+            <div className="flex gap-2" style={{ marginTop: 16 }}>
+              <button className="btn btn-primary" onClick={() => sendNota(nota)} disabled={filledCount === 0}>
+                <Send size={14} /> Enviar a Paula
               </button>
-              {fb && (
-                <span style={{ fontSize: 12, color: fb.ok ? '#4ade80' : '#f87171', marginLeft: 8 }}>
-                  {fb.ok ? '✓' : '✗'} {fb.msg}
-                </span>
-              )}
               <button className="btn btn-secondary" onClick={() => deleteNota(nota.invoiceNum)} style={{ marginLeft: 'auto' }}>
                 <Trash2 size={14} /> Eliminar
               </button>
