@@ -1,4 +1,4 @@
-﻿import productsRaw from './productsDB.json'
+﻿﻿import productsRaw from './productsDB.json'
 import noCertRaw from './noChertCodes.json'
 
 export type ProductEntry = {
@@ -60,13 +60,23 @@ for (const [k, v] of Object.entries(PRODUCTS_DB)) {
   }
 }
 
+// ponytail: suffix variant index — invoices use -B2/-N2 but DB has -B/-N
+function stripSuffixDigit(code: string): string | null {
+  const m = code.match(/^(.+-(B|N))\d+$/i)
+  return m ? m[1].toUpperCase() : null
+}
+
 export function lookupProduct(codigo: string): ProductEntry | null {
   const normalised = norm(codigo)
   // Check blacklist first — fast skip
   if (NO_CERT_CODES.has(normalised) || NO_CERT_CODES.has(codigo.trim().toUpperCase())) {
     return null
   }
-  return DB_INDEX[normalised] || null
+  if (DB_INDEX[normalised]) return DB_INDEX[normalised]
+  // Fallback: strip trailing digit from -B2/-N2 suffix → try -B/-N
+  const stripped = stripSuffixDigit(normalised)
+  if (stripped && DB_INDEX[stripped]) return DB_INDEX[stripped]
+  return null
 }
 
 // Fallback: look up a product by its supplier code embedded in the description.
@@ -81,7 +91,14 @@ export function lookupProductByDescCode(code: string): { entry: ProductEntry; mo
   // Alphanumeric codes like "YLK-H3"
   const upper = trimmed.toUpperCase()
   if (NO_CERT_CODES.has(upper)) return null
-  return ALPHA_CODE_INDEX[upper] || BASE_CODE_INDEX[upper] || null
+  if (ALPHA_CODE_INDEX[upper]) return ALPHA_CODE_INDEX[upper]
+  if (BASE_CODE_INDEX[upper]) return BASE_CODE_INDEX[upper]
+  const stripped = stripSuffixDigit(upper)
+  if (stripped) {
+    if (ALPHA_CODE_INDEX[stripped]) return ALPHA_CODE_INDEX[stripped]
+    if (BASE_CODE_INDEX[stripped]) return BASE_CODE_INDEX[stripped]
+  }
+  return null
 }
 
 export function getCertifiableCount(): number {
@@ -91,4 +108,5 @@ export function getCertifiableCount(): number {
 export function getNoCertCount(): number {
   return NO_CERT_CODES.size
 }
+
 
