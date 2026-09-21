@@ -59,6 +59,7 @@ export default function BDMaestraPage() {
   const [qrPushing, setQrPushing] = useState(false)
   const [qrResult, setQrResult] = useState<{ ok: boolean; msg: string } | null>(null)
   const qrInputRef = useRef<HTMLInputElement>(null)
+  const [qrLastUpdate, setQrLastUpdate] = useState<string | null>(null)
 
   const loadHistory = async () => {
     setHistoryLoading(true)
@@ -74,7 +75,15 @@ export default function BDMaestraPage() {
     } catch { setHistory([]) }
     finally { setHistoryLoading(false) }
   }
-  useEffect(() => { loadHistory() }, [])
+  const loadQrLastUpdate = async () => {
+    try {
+      const r = await fetch('https://api.github.com/repos/catalinacarrasco-beep/grantt-seguimientos/commits?path=src/lib/qrDB.json&per_page=1')
+      if (!r.ok) return
+      const data = await r.json() as any[]
+      if (data[0]) setQrLastUpdate(data[0].commit.author.date)
+    } catch {}
+  }
+  useEffect(() => { loadHistory(); loadQrLastUpdate() }, [])
 
   // ── BD Maestra parser ──
   const parseFile = (f: File) => {
@@ -229,6 +238,7 @@ export default function BDMaestraPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al actualizar')
       setQrResult({ ok: true, msg: `QR actualizado: ${data.count} códigos. Se aplicará en ~1 min.` })
+      setTimeout(loadQrLastUpdate, 3000)
     } catch (err) {
       setQrResult({ ok: false, msg: err instanceof Error ? err.message : 'Error desconocido' })
     } finally {
@@ -397,7 +407,14 @@ export default function BDMaestraPage() {
               Actualiza la tabla de códigos QR vigentes por modelo
             </div>
           </div>
-          <span className="badge badge-blue">{Object.keys(qrDBData).length} códigos</span>
+          <div style={{ textAlign: 'right' }}>
+            <span className="badge badge-blue">{Object.keys(qrDBData).length} códigos</span>
+            {qrLastUpdate && (
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>
+                Última carga: {new Date(qrLastUpdate).toLocaleDateString('es-CL')} · {relativeTime(qrLastUpdate)}
+              </div>
+            )}
+          </div>
         </div>
 
         <div
