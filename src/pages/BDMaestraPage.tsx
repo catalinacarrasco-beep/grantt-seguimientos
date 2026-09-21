@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
-import { CheckCircle2, AlertCircle, Loader2, Database, RefreshCw, X, Clock, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, Database, RefreshCw, X, Clock, ChevronDown, ChevronUp, QrCode } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { getCertifiableCount, getNoCertCount } from '../lib/products'
+import qrDBData from '../lib/qrDB.json'
 
-// ── Historial de actualizaciones (viene de los commits de GitHub) ─────
 type UpdateEntry = { date: string; message: string; author: string; sha: string; count: number | null }
 const parseCount = (msg: string): number | null => {
-  const m = msg.match(/\((\d+)\s*productos?\)/i)
+  const m = msg.match(/\((\d+)\s*(?:productos?|códigos?)\)/i)
   return m ? parseInt(m[1], 10) : null
 }
 function relativeTime(iso: string): string {
@@ -40,6 +40,7 @@ function parseExcelDate(val: unknown): number {
 type ProductEntry = { nombre: string; qr: string | number; cert: string; proto: string; sistema: string }
 
 export default function BDMaestraPage() {
+  // ── BD Maestra state ──
   const [file, setFile] = useState<File | null>(null)
   const [parsing, setParsing] = useState(false)
   const [parsed, setParsed] = useState<Record<string, ProductEntry> | null>(null)
@@ -51,10 +52,17 @@ export default function BDMaestraPage() {
   const [historyLoading, setHistoryLoading] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
 
+  // ── QR Vigentes state ──
+  const [qrFile, setQrFile] = useState<File | null>(null)
+  const [qrParsing, setQrParsing] = useState(false)
+  const [qrParsed, setQrParsed] = useState<Record<string, string | number> | null>(null)
+  const [qrPushing, setQrPushing] = useState(false)
+  const [qrResult, setQrResult] = useState<{ ok: boolean; msg: string } | null>(null)
+  const qrInputRef = useRef<HTMLInputElement>(null)
+
   const loadHistory = async () => {
     setHistoryLoading(true)
     try {
-      // GitHub commits que tocaron productsDB.json (público, 60 req/h por IP)
       const r = await fetch('https://api.github.com/repos/catalinacarrasco-beep/grantt-seguimientos/commits?path=src/lib/productsDB.json&per_page=15')
       if (!r.ok) throw new Error()
       const data = await r.json() as any[]
@@ -68,6 +76,7 @@ export default function BDMaestraPage() {
   }
   useEffect(() => { loadHistory() }, [])
 
+  // ── BD Maestra parser ──
   const parseFile = (f: File) => {
     setFile(f)
     setParsing(true)
@@ -82,7 +91,6 @@ export default function BDMaestraPage() {
 
         const db: Record<string, ProductEntry & { _fecha: number }> = {}
 
-        // "Registros importaciones": import log with dates — most recent wins per code
         const ws1 = wb.Sheets['Registros importaciones']
         if (ws1) {
           const rows = XLSX.utils.sheet_to_json<unknown[]>(ws1, { header: 1 })
@@ -106,7 +114,6 @@ export default function BDMaestraPage() {
           }
         }
 
-        // "DB desde informe HC": product catalog — fill gaps not covered by imports
         const ws2 = wb.Sheets['DB desde informe HC']
         if (ws2) {
           const rows = XLSX.utils.sheet_to_json<unknown[]>(ws2, { header: 1 })
@@ -129,7 +136,6 @@ export default function BDMaestraPage() {
           }
         }
 
-        // Strip internal _fecha field
         const clean: Record<string, ProductEntry> = {}
         for (const [k, v] of Object.entries(db)) {
           const { _fecha, ...entry } = v
@@ -158,7 +164,6 @@ export default function BDMaestraPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al actualizar')
       setResult({ ok: true, msg: `BD actualizada: ${data.count} productos certificables. Se aplicará en ~1 min (redeploy automático).` })
-      // Refresh history after successful push
       setTimeout(loadHistory, 3000)
     } catch (err) {
       setResult({ ok: false, msg: err instanceof Error ? err.message : 'Error desconocido' })
@@ -167,11 +172,76 @@ export default function BDMaestraPage() {
     }
   }
 
+  // ── QR Vigentes parser ──
+  // Columns: PROVEEDOR | MODELO PROVEDOR | MODELO CERTIFICADO | MARCAS | DESCIPCION | CERTIFICACION | QR VIGENTE
+  const parseQrFile = (f: File) => {
+    setQrFile(f)
+    setQrParsing(true)
+    setQrResult(null)
+    setQrParsed(null)
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target!.result as ArrayBuffer)
+        const wb = XLSX.read(data, { type: 'array' })
+        const ws = wb.Sheets[wb.SheetNames[0]]
+        if (!ws) throw new Error('Hoja vacía')
+
+        const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1 })
+        const qr: Record<string, string | number> = {}
+
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i] as unknown[]
+          if (!r) continue
+          const cert = String(r[5] || '').trim().toUpperCase()
+          if (cert !== 'SI') continue
+          const modeloProv = String(r[1] || '').trim()
+          const modeloCert = String(r[2] || '').trim()
+          const qrVal = String(r[6] || '').trim()
+          if (!qrVal || qrVal === '0' || qrVal === 'undefined') continue
+
+          const qrNum = /^\d+$/.test(qrVal) ? parseInt(qrVal, 10) : qrVal
+          if (modeloProv) qr[modeloProv] = qrNum
+          if (modeloCert && modeloCert !== modeloProv) qr[modeloCert] = qrNum
+        }
+
+        setQrParsed(qr)
+      } catch (err) {
+        setQrResult({ ok: false, msg: err instanceof Error ? err.message : 'Error al parsear' })
+      } finally {
+        setQrParsing(false)
+      }
+    }
+    reader.readAsArrayBuffer(f)
+  }
+
+  const pushQrUpdate = async () => {
+    if (!qrParsed) return
+    setQrPushing(true)
+    setQrResult(null)
+    try {
+      const res = await fetch('/api/update-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qrDB: qrParsed }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al actualizar')
+      setQrResult({ ok: true, msg: `QR actualizado: ${data.count} códigos. Se aplicará en ~1 min.` })
+    } catch (err) {
+      setQrResult({ ok: false, msg: err instanceof Error ? err.message : 'Error desconocido' })
+    } finally {
+      setQrPushing(false)
+    }
+  }
+
   return (
     <div className="page">
       <div className="page-title">BD Maestra</div>
       <div className="page-sub">Actualiza la base de datos de productos certificables</div>
 
+      {/* ── BD Maestra Card ── */}
       <div className="card">
         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
           <div className="summary-card"><div className="summary-label">Certificables</div><div className="summary-val">{getCertifiableCount()}</div></div>
@@ -236,7 +306,7 @@ export default function BDMaestraPage() {
         )}
 
         <div
-          className={`drop-zone${file ? ' has-file' : ''}${false ? ' dragging' : ''}`}
+          className={`drop-zone${file ? ' has-file' : ''}`}
           onClick={() => !file && inputRef.current?.click()}
           onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('dragging') }}
           onDragLeave={e => { e.currentTarget.classList.remove('dragging') }}
@@ -312,6 +382,97 @@ export default function BDMaestraPage() {
           }}>
             {result.ok ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
             {result.msg}
+          </div>
+        )}
+      </div>
+
+      {/* ── QR Vigentes Card ── */}
+      <div className="card" style={{ marginTop: 24 }}>
+        <div className="card-header" style={{ marginBottom: 16 }}>
+          <div>
+            <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <QrCode size={16} /> QR Vigentes
+            </div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+              Actualiza la tabla de códigos QR vigentes por modelo
+            </div>
+          </div>
+          <span className="badge badge-blue">{Object.keys(qrDBData).length} códigos</span>
+        </div>
+
+        <div
+          className={`drop-zone${qrFile ? ' has-file' : ''}`}
+          onClick={() => !qrFile && qrInputRef.current?.click()}
+          onDragOver={e => { e.preventDefault(); e.currentTarget.classList.add('dragging') }}
+          onDragLeave={e => { e.currentTarget.classList.remove('dragging') }}
+          onDrop={e => { e.preventDefault(); e.currentTarget.classList.remove('dragging'); if (e.dataTransfer.files[0]) parseQrFile(e.dataTransfer.files[0]) }}
+        >
+          <input ref={qrInputRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }}
+            onChange={e => { if (e.target.files?.[0]) parseQrFile(e.target.files[0]); e.target.value = '' }} />
+          <div className="dz-icon">
+            {qrFile ? <CheckCircle2 size={18} color="#4ade80" /> : <QrCode size={18} color="rgba(255,255,255,0.3)" />}
+          </div>
+          <div className="dz-text">
+            <div className="dz-label">{qrFile ? qrFile.name : "QR's Vigentes (.xlsx)"}</div>
+            <div className="dz-hint">{qrFile ? `${(qrFile.size / 1024).toFixed(0)} KB · parseado` : 'Columnas: Proveedor, Modelo, Modelo Cert, Marcas, Descripción, Certificación, QR'}</div>
+          </div>
+          {qrFile && <button className="btn-icon" onClick={e => { e.stopPropagation(); setQrFile(null); setQrParsed(null); setQrResult(null) }}><X size={14} /></button>}
+        </div>
+
+        {qrParsing && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, fontSize: 13, color: '#a5b4fc' }}>
+            <Loader2 size={14} className="spin" /> Leyendo QR...
+          </div>
+        )}
+
+        {qrParsed && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 13, color: '#4ade80', marginBottom: 4 }}>
+              {Object.keys(qrParsed).length} códigos QR encontrados
+            </div>
+            {Object.keys(qrParsed).length !== Object.keys(qrDBData).length && (
+              <div style={{ fontSize: 12, color: '#fbbf24', marginBottom: 8 }}>
+                Cambio: {Object.keys(qrDBData).length} → {Object.keys(qrParsed).length} códigos
+              </div>
+            )}
+
+            <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, marginBottom: 12 }}>
+              <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ position: 'sticky', top: 0, background: '#1a1d2e' }}>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', color: 'rgba(255,255,255,0.5)' }}>Código</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', color: 'rgba(255,255,255,0.5)' }}>QR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(qrParsed).map(([code, qr]) => (
+                    <tr key={code} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '4px 8px', fontFamily: 'monospace', color: '#a5b4fc', whiteSpace: 'nowrap' }}>{code}</td>
+                      <td style={{ padding: '4px 8px', color: 'rgba(255,255,255,0.5)' }}>{String(qr)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button className="btn btn-primary btn-full" onClick={pushQrUpdate} disabled={qrPushing}>
+              {qrPushing
+                ? <><Loader2 size={14} className="spin" /> Actualizando...</>
+                : <><RefreshCw size={14} /> Actualizar QR ({Object.keys(qrParsed).length} códigos)</>}
+            </button>
+          </div>
+        )}
+
+        {qrResult && (
+          <div style={{
+            marginTop: 12, padding: '10px 14px', borderRadius: 8, fontSize: 12,
+            background: qrResult.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${qrResult.ok ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+            color: qrResult.ok ? '#4ade80' : '#f87171',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            {qrResult.ok ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+            {qrResult.msg}
           </div>
         )}
       </div>
