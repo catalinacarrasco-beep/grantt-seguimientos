@@ -11,7 +11,6 @@ export default async function handler(req, res) {
   try {
     const { rows, invoiceNum, dinNum, fechaSolicitud } = req.body
 
-    // Load original template — preserves all formatting, logo, merges, colors
     const templatePath = join(__dirname, 'template.xlsx')
     const templateBuffer = readFileSync(templatePath)
 
@@ -19,13 +18,8 @@ export default async function handler(req, res) {
     await wb.xlsx.load(templateBuffer)
     const ws = wb.worksheets[0]
 
-    // ── Insert CODIGO GRANTT column at D, shifting everything right by 1 ──
-    ws.spliceColumns(4, 0, [])
-
-    // ── Row 3: Fecha Solicitud (shifted D→E after column insert) ─────────────
     ws.getCell('E3').value = fechaSolicitud
 
-    // ── Products (template has 12 empty rows 13-24) ──────────────────────────
     const FIRST = 13
     const SLOTS = 12
     const list = Array.isArray(rows) ? rows : []
