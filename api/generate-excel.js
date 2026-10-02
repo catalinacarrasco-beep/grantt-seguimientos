@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     await wb.xlsx.load(templateBuffer)
     const ws = wb.worksheets[0]
 
-    ws.getCell('E3').value = fechaSolicitud
+    ws.getCell('D3').value = fechaSolicitud
 
     const FIRST = 13
     const SLOTS = 12
