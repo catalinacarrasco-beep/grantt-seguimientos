@@ -74,6 +74,7 @@ function sisterVariant(code: string): string | null {
 }
 
 export function lookupProduct(codigo: string): ProductEntry | null {
+  if (!codigo) return null
   const normalised = norm(codigo)
   // Check blacklist first — fast skip
   if (NO_CERT_CODES.has(normalised) || NO_CERT_CODES.has(codigo.trim().toUpperCase())) {
@@ -92,6 +93,7 @@ export function lookupProduct(codigo: string): ProductEntry | null {
 // Fallback: look up a product by its supplier code embedded in the description.
 // Returns { entry, modelo } where modelo is the real BD code (e.g. "EK-ESX4-30-B").
 export function lookupProductByDescCode(code: string): { entry: ProductEntry; modelo: string } | null {
+  if (!code) return null
   const trimmed = code.trim()
   if (/^\d{4,6}$/.test(trimmed)) {
     const key = String(parseInt(trimmed, 10))
