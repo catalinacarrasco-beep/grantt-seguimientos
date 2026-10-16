@@ -66,6 +66,13 @@ function stripSuffixDigit(code: string): string | null {
   return m ? m[1].toUpperCase() : null
 }
 
+// ponytail: swap trailing -N↔-B — invoice has color variant missing from DB
+function sisterVariant(code: string): string | null {
+  if (code.endsWith('-N')) return code.slice(0, -2) + '-B'
+  if (code.endsWith('-B')) return code.slice(0, -2) + '-N'
+  return null
+}
+
 export function lookupProduct(codigo: string): ProductEntry | null {
   const normalised = norm(codigo)
   // Check blacklist first — fast skip
@@ -76,6 +83,9 @@ export function lookupProduct(codigo: string): ProductEntry | null {
   // Fallback: strip trailing digit from -B2/-N2 suffix → try -B/-N
   const stripped = stripSuffixDigit(normalised)
   if (stripped && DB_INDEX[stripped]) return DB_INDEX[stripped]
+  // Fallback: sister color variant (-N↔-B) — same product, same QR/cert/proto
+  const sister = sisterVariant(normalised)
+  if (sister && DB_INDEX[sister]) return DB_INDEX[sister]
   return null
 }
 
