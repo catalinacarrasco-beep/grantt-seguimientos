@@ -1,17 +1,20 @@
 import qrDB from './qrDB.json'
-import productsRaw from './productsDB.json'
+import { lookupProduct } from './products'
 
 function normalize(code: string): string {
+  if (!code) return ''
   let c = code.trim().toUpperCase().replace(/\s+/g, '-')
   if (/^\d+$/.test(c)) c = c.replace(/^0+/, '') || '0'
   return c
 }
 
 export function lookupQR(modelo: string): string | null {
+  if (!modelo) return null
   const n = normalize(modelo)
   const fromQR = (qrDB as Record<string, string>)[n]
   if (fromQR) return fromQR
-  const entry = (productsRaw as Record<string, { qr?: string | number }>)[n]
+  // ponytail: fall through to full product lookup (handles sister variant, suffix strip, etc)
+  const entry = lookupProduct(modelo)
   return entry?.qr ? String(entry.qr) : null
 }
 
@@ -19,5 +22,10 @@ export function lookupQR(modelo: string): string | null {
 export function verifyQR(modelo: string, scanned: string): boolean {
   const expected = lookupQR(modelo)
   if (!expected || expected === 'N/A') return false
-  return expected.split('/').map(s => s.trim()).some(q => scanned.includes(q))
+  // Strip leading zeros from scanned URL numbers so "0000000594105" matches "594105"
+  const stripped = scanned.replace(/0+(\d)/g, '$1')
+  return expected.split('/').map(s => s.trim()).some(q => {
+    const qStripped = q.replace(/^0+/, '')
+    return scanned.includes(q) || scanned.includes(qStripped) || stripped.includes(q) || stripped.includes(qStripped)
+  })
 }
