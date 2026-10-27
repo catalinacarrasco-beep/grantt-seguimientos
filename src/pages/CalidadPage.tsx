@@ -873,7 +873,7 @@ export default function CalidadPage() {
                   {scannedCode}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-                  {scanOk ? 'QR correcto — cerrando...' : 'No coincide con la planilla — intentando de nuevo...'}
+                  {scanOk ? 'QR correcto — cerrando...' : `No coincide — esperado: ${scanTargetRef.current ? (lookupQR(scanTargetRef.current.modelo) || 'desconocido') : '?'}`}
                 </div>
               </>
             )}
