@@ -1,5 +1,6 @@
 ﻿﻿import productsRaw from './productsDB.json'
 import noCertRaw from './noChertCodes.json'
+import qrDBRaw from './qrDB.json'
 
 export type ProductEntry = {
   nombre: string
@@ -20,9 +21,17 @@ function norm(cod: unknown): string {
   return /^\d+$/.test(s) ? String(parseInt(s, 10)) : s.toUpperCase()
 }
 
+// ponytail: qrDB (from QR Vigentes upload) is source of truth for QR numbers.
+// Override productsDB.qr if qrDB has a different value for the same code.
+const QR_DB = qrDBRaw as Record<string, string>
+const QR_OVERRIDE: Record<string, string> = {}
+for (const [k, v] of Object.entries(QR_DB)) QR_OVERRIDE[norm(k)] = v
+
 const DB_INDEX: Record<string, ProductEntry> = {}
 for (const [k, v] of Object.entries(PRODUCTS_DB)) {
-  DB_INDEX[norm(k)] = v
+  const n = norm(k)
+  const freshQR = QR_OVERRIDE[n]
+  DB_INDEX[n] = freshQR && String(v.qr) !== freshQR ? { ...v, qr: freshQR } : v
 }
 
 // Secondary index: some invoices use supplier codes that appear in the nombre
