@@ -363,6 +363,7 @@ export default function CalidadPage() {
       active = false
       clearInterval(scanIntervalRef.current)
       torchTrackRef.current = null
+      secCheckingRef.current = false
       if (videoRef.current?.srcObject) {
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop())
         videoRef.current.srcObject = null
@@ -372,6 +373,8 @@ export default function CalidadPage() {
 
   const openScanner = (modelo: string, section: 'envase' | 'cuerpo') => {
     scanTargetRef.current = { modelo, section }
+    secCheckingRef.current = false
+    setSecVerifying(false)
     setScannedCode(null)
     setScanOk(false)
     setTorchOn(false)
