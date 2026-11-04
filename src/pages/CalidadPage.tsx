@@ -79,12 +79,14 @@ export default function CalidadPage() {
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scannedCode, setScannedCode] = useState<string | null>(null)
   const [scanOk, setScanOk] = useState(false)
+  const [secVerifying, setSecVerifying] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const scanIntervalRef = useRef<number>(0)
   const torchTrackRef = useRef<MediaStreamTrack | null>(null)
   const realtimeChRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [torchOn, setTorchOn] = useState(false)
   const scanTargetRef = useRef<{ modelo: string; section: 'envase' | 'cuerpo' } | null>(null)
+  const secCheckingRef = useRef(false)
 
   useEffect(() => { autoSaveIdRef.current = editingId }, [editingId])
 
@@ -311,17 +313,41 @@ export default function CalidadPage() {
             const ok = verifyQR(tgt.modelo, found.data)
             setScannedCode(found.data)
             setScanOk(ok)
-            setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
-              ...p,
-              [tgt.section]: { ...p[tgt.section], sello_qr: ok ? 'SI' : p[tgt.section].sello_qr, qrScanned: found.data, qrOk: ok },
-            } : p))
             if (ok) {
+              setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
+                ...p,
+                [tgt.section]: { ...p[tgt.section], sello_qr: 'SI', qrScanned: found.data, qrOk: true },
+              } : p))
               active = false
               clearInterval(scanIntervalRef.current)
               setTimeout(() => setScannerOpen(false), 1500)
-            } else {
-              // Reset result after 2.2s — interval keeps running automatically
-              setTimeout(() => setScannedCode(null), 2200)
+            } else if (!secCheckingRef.current) {
+              // ponytail: local check failed — try SEC website verification as fallback
+              secCheckingRef.current = true
+              setSecVerifying(true)
+              active = false
+              clearInterval(scanIntervalRef.current)
+              fetch(`/api/verify-sec?url=${encodeURIComponent(found.data)}&modelo=${encodeURIComponent(tgt.modelo)}`)
+                .then(r => r.json())
+                .then(data => {
+                  secCheckingRef.current = false
+                  setSecVerifying(false)
+                  if (data.verified) {
+                    setScanOk(true)
+                    setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
+                      ...p,
+                      [tgt.section]: { ...p[tgt.section], sello_qr: 'SI', qrScanned: found.data, qrOk: true },
+                    } : p))
+                    setTimeout(() => setScannerOpen(false), 1500)
+                  } else {
+                    setTimeout(() => { setScannedCode(null); setScannerOpen(false) }, 2500)
+                  }
+                })
+                .catch(() => {
+                  secCheckingRef.current = false
+                  setSecVerifying(false)
+                  setTimeout(() => { setScannedCode(null); setScannerOpen(false) }, 2500)
+                })
             }
           }
         }, 250)
@@ -448,10 +474,28 @@ export default function CalidadPage() {
       const result = jsQR(imageData.data, imageData.width, imageData.height)
       if (result) {
         const ok = verifyQR(pending.modelo, result.data)
-        setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
-          ...p,
-          [pending.section]: { ...p[pending.section], sello_qr: ok ? 'SI' : p[pending.section].sello_qr, qrScanned: result.data, qrOk: ok },
-        } : p))
+        if (ok) {
+          setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
+            ...p,
+            [pending.section]: { ...p[pending.section], sello_qr: 'SI', qrScanned: result.data, qrOk: true },
+          } : p))
+        } else {
+          // ponytail: fallback to SEC verification for image upload path
+          fetch(`/api/verify-sec?url=${encodeURIComponent(result.data)}&modelo=${encodeURIComponent(pending.modelo)}`)
+            .then(r => r.json())
+            .then(data => {
+              setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
+                ...p,
+                [pending.section]: { ...p[pending.section], sello_qr: data.verified ? 'SI' : p[pending.section].sello_qr, qrScanned: result.data, qrOk: data.verified },
+              } : p))
+            })
+            .catch(() => {
+              setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
+                ...p,
+                [pending.section]: { ...p[pending.section], qrScanned: result.data, qrOk: false },
+              } : p))
+            })
+        }
       }
     }
     img.onerror = () => URL.revokeObjectURL(url)
@@ -862,18 +906,18 @@ export default function CalidadPage() {
               </>
             ) : (
               <>
-                <div style={{ fontSize: 38, marginBottom: 4, lineHeight: 1, color: scanOk ? '#4ade80' : '#f87171' }}>
-                  {scanOk ? '✓' : '✗'}
+                <div style={{ fontSize: 38, marginBottom: 4, lineHeight: 1, color: secVerifying ? '#a5b4fc' : scanOk ? '#4ade80' : '#f87171' }}>
+                  {secVerifying ? '⟳' : scanOk ? '✓' : '✗'}
                 </div>
                 <div style={{
                   fontSize: 17, fontWeight: 700, letterSpacing: '0.06em',
                   fontVariantNumeric: 'tabular-nums',
-                  color: scanOk ? '#4ade80' : '#f87171', marginBottom: 6,
+                  color: secVerifying ? '#a5b4fc' : scanOk ? '#4ade80' : '#f87171', marginBottom: 6,
                 }}>
                   {scannedCode}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-                  {scanOk ? 'QR correcto — cerrando...' : `No coincide — esperado: ${scanTargetRef.current ? (lookupQR(scanTargetRef.current.modelo) || 'desconocido') : '?'}`}
+                  {scanOk ? 'QR verificado — cerrando...' : secVerifying ? 'Verificando en SEC...' : `No coincide — esperado: ${scanTargetRef.current ? (lookupQR(scanTargetRef.current.modelo) || 'desconocido') : '?'}`}
                 </div>
               </>
             )}
