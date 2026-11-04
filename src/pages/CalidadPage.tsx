@@ -308,47 +308,46 @@ export default function CalidadPage() {
           const id = ctx.getImageData(0, 0, canvas.width, canvas.height)
           // attemptBoth handles QR codes on both light and dark backgrounds
           const found = jsQR(id.data, id.width, id.height, { inversionAttempts: 'attemptBoth' })
-          if (found && scanTargetRef.current) {
+          if (found && scanTargetRef.current && !secCheckingRef.current) {
             const tgt = scanTargetRef.current
-            const ok = verifyQR(tgt.modelo, found.data)
             setScannedCode(found.data)
-            setScanOk(ok)
-            if (ok) {
-              setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
-                ...p,
-                [tgt.section]: { ...p[tgt.section], sello_qr: 'SI', qrScanned: found.data, qrOk: true },
-              } : p))
-              active = false
-              clearInterval(scanIntervalRef.current)
-              setTimeout(() => setScannerOpen(false), 1500)
-            } else if (!secCheckingRef.current) {
-              // ponytail: local check failed — try SEC website verification as fallback
-              secCheckingRef.current = true
-              setSecVerifying(true)
-              active = false
-              clearInterval(scanIntervalRef.current)
-              fetch(`/api/verify-sec?url=${encodeURIComponent(found.data)}&modelo=${encodeURIComponent(tgt.modelo)}`)
-                .then(r => r.json())
-                .then(data => {
-                  secCheckingRef.current = false
-                  setSecVerifying(false)
-                  if (data.verified) {
-                    setScanOk(true)
-                    setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
-                      ...p,
-                      [tgt.section]: { ...p[tgt.section], sello_qr: 'SI', qrScanned: found.data, qrOk: true },
-                    } : p))
-                    setTimeout(() => setScannerOpen(false), 1500)
-                  } else {
-                    setTimeout(() => { setScannedCode(null); setScannerOpen(false) }, 2500)
-                  }
-                })
-                .catch(() => {
-                  secCheckingRef.current = false
-                  setSecVerifying(false)
+            // ponytail: ALWAYS verify against SEC website — local check is only fallback for network errors
+            secCheckingRef.current = true
+            setSecVerifying(true)
+            active = false
+            clearInterval(scanIntervalRef.current)
+            fetch(`/api/verify-sec?url=${encodeURIComponent(found.data)}&modelo=${encodeURIComponent(tgt.modelo)}`)
+              .then(r => r.json())
+              .then(data => {
+                secCheckingRef.current = false
+                setSecVerifying(false)
+                setScanOk(data.verified)
+                setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
+                  ...p,
+                  [tgt.section]: { ...p[tgt.section], sello_qr: data.verified ? 'SI' : p[tgt.section].sello_qr, qrScanned: found.data, qrOk: data.verified },
+                } : p))
+                if (data.verified) {
+                  setTimeout(() => setScannerOpen(false), 1500)
+                } else {
                   setTimeout(() => { setScannedCode(null); setScannerOpen(false) }, 2500)
-                })
-            }
+                }
+              })
+              .catch(() => {
+                // Network error — fall back to local qrDB check
+                secCheckingRef.current = false
+                setSecVerifying(false)
+                const ok = verifyQR(tgt.modelo, found.data)
+                setScanOk(ok)
+                setProducts(prev => prev.map(p => p.modelo === tgt.modelo ? {
+                  ...p,
+                  [tgt.section]: { ...p[tgt.section], sello_qr: ok ? 'SI' : p[tgt.section].sello_qr, qrScanned: found.data, qrOk: ok },
+                } : p))
+                if (ok) {
+                  setTimeout(() => setScannerOpen(false), 1500)
+                } else {
+                  setTimeout(() => { setScannedCode(null); setScannerOpen(false) }, 2500)
+                }
+              })
           }
         }, 250)
       })
@@ -476,29 +475,22 @@ export default function CalidadPage() {
       const imageData = canvas.getContext('2d')!.getImageData(0, 0, img.width, img.height)
       const result = jsQR(imageData.data, imageData.width, imageData.height)
       if (result) {
-        const ok = verifyQR(pending.modelo, result.data)
-        if (ok) {
-          setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
-            ...p,
-            [pending.section]: { ...p[pending.section], sello_qr: 'SI', qrScanned: result.data, qrOk: true },
-          } : p))
-        } else {
-          // ponytail: fallback to SEC verification for image upload path
-          fetch(`/api/verify-sec?url=${encodeURIComponent(result.data)}&modelo=${encodeURIComponent(pending.modelo)}`)
-            .then(r => r.json())
-            .then(data => {
-              setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
-                ...p,
-                [pending.section]: { ...p[pending.section], sello_qr: data.verified ? 'SI' : p[pending.section].sello_qr, qrScanned: result.data, qrOk: data.verified },
-              } : p))
-            })
-            .catch(() => {
-              setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
-                ...p,
-                [pending.section]: { ...p[pending.section], qrScanned: result.data, qrOk: false },
-              } : p))
-            })
-        }
+        // ponytail: always verify via SEC — local check only as network fallback
+        fetch(`/api/verify-sec?url=${encodeURIComponent(result.data)}&modelo=${encodeURIComponent(pending.modelo)}`)
+          .then(r => r.json())
+          .then(data => {
+            setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
+              ...p,
+              [pending.section]: { ...p[pending.section], sello_qr: data.verified ? 'SI' : p[pending.section].sello_qr, qrScanned: result.data, qrOk: data.verified },
+            } : p))
+          })
+          .catch(() => {
+            const ok = verifyQR(pending.modelo, result.data)
+            setProducts(prev => prev.map(p => p.modelo === pending.modelo ? {
+              ...p,
+              [pending.section]: { ...p[pending.section], sello_qr: ok ? 'SI' : p[pending.section].sello_qr, qrScanned: result.data, qrOk: ok },
+            } : p))
+          })
       }
     }
     img.onerror = () => URL.revokeObjectURL(url)
@@ -884,7 +876,7 @@ export default function CalidadPage() {
               <div style={{
                 width: 220, height: 220, borderRadius: 14,
                 boxShadow: '0 0 0 100vmax rgba(0,0,0,0.5)',
-                border: `2.5px solid ${scannedCode ? (scanOk ? '#4ade80' : '#f87171') : '#6366f1'}`,
+                border: `2.5px solid ${scannedCode ? (secVerifying ? '#a5b4fc' : scanOk ? '#4ade80' : '#f87171') : '#6366f1'}`,
                 transition: 'border-color 0.25s',
               }} />
             </div>
@@ -920,7 +912,7 @@ export default function CalidadPage() {
                   {scannedCode}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-                  {scanOk ? 'QR verificado — cerrando...' : secVerifying ? 'Verificando en SEC...' : `No coincide — esperado: ${scanTargetRef.current ? (lookupQR(scanTargetRef.current.modelo) || 'desconocido') : '?'}`}
+                  {scanOk ? 'Modelo confirmado en SEC — cerrando...' : secVerifying ? 'Verificando modelo en SEC...' : `Modelo no encontrado en certificado SEC`}
                 </div>
               </>
             )}
