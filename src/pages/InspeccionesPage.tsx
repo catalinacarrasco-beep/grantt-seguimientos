@@ -21,6 +21,17 @@ export default function InspeccionesPage() {
   const navigate = useNavigate()
   const [rows, setRows] = useState<Inspeccion[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
+
+  const saveInvoice = async (id: string, current: string) => {
+    const next = draft.trim()
+    setEditingId(null)
+    if (next === current) return
+    const { error } = await supabase.from('inspecciones').update({ invoice_num: next }).eq('id', id)
+    if (error) { alert(`Error al guardar: ${error.message}`); return }
+    setRows(prev => prev.map(r => r.id === id ? { ...r, invoice_num: next } : r))
+  }
 
   const load = async () => {
     setLoading(true)
@@ -93,7 +104,30 @@ export default function InspeccionesPage() {
               {rows.map(r => (
                 <tr key={r.id}>
                   <td style={{ whiteSpace: 'nowrap' }}>{r.fecha_inspeccion || formatDate(r.created_at)}</td>
-                  <td style={{ fontWeight: 600, color: '#e2e8f0' }}>{r.invoice_num || '—'}</td>
+                  <td style={{ fontWeight: 600, color: '#e2e8f0' }}>
+                    {editingId === r.id ? (
+                      <input
+                        autoFocus
+                        className="field-input"
+                        style={{ padding: '4px 8px', fontSize: 13, height: 28, maxWidth: 180 }}
+                        value={draft}
+                        onChange={e => setDraft(e.target.value)}
+                        onBlur={() => saveInvoice(r.id, r.invoice_num || '')}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') saveInvoice(r.id, r.invoice_num || '')
+                          if (e.key === 'Escape') setEditingId(null)
+                        }}
+                      />
+                    ) : (
+                      <span
+                        style={{ cursor: 'pointer', borderBottom: '1px dashed rgba(255,255,255,0.15)' }}
+                        title="Click para editar"
+                        onClick={() => { setDraft(r.invoice_num || ''); setEditingId(r.id) }}
+                      >
+                        {r.invoice_num || '—'}
+                      </span>
+                    )}
+                  </td>
                   <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{r.din_num || '—'}</td>
                   <td>{r.color_lote || '—'}</td>
                   <td><span className="badge badge-blue">{Array.isArray(r.productos) ? r.productos.length : '—'}</span></td>
