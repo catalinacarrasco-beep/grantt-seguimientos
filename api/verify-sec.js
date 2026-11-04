@@ -16,15 +16,13 @@ export default async function handler(req, res) {
     clearTimeout(timer)
     const html = await resp.text()
 
-    // ponytail: specific match â€” td with "Modelos" followed by sibling td with the actual list
-    const match = html.match(/<td[^>]*>\s*Modelos\s*<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i)
-    if (!match) return res.json({ verified: false, reason: 'no_models_field', htmlLen: html.length })
-
-    const modelsText = match[1].replace(/<[^>]*>/g, '').trim()
-    const models = modelsText.split(/[\/,]/).map(m => m.trim().replace(/^0+/, ''))
+    // ponytail: strip tags, search for model number with word boundaries â€” no fragile HTML parsing
+    const text = html.replace(/<[^>]*>/g, ' ')
     const target = modelo.trim().replace(/^0+/, '')
+    const re = new RegExp('\\b' + target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b')
+    const verified = re.test(text)
 
-    return res.json({ verified: models.some(m => m === target), models: modelsText })
+    return res.json({ verified, htmlLen: html.length })
   } catch (e) {
     clearTimeout(timer)
     return res.json({ verified: false, reason: 'fetch_error', detail: e.message })
