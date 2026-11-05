@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList, Trash2, Pencil } from 'lucide-react'
+import { ClipboardList, Trash2, Pencil, ChevronUp, ChevronDown } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { EmptyState, TableSkeleton } from '../components/Empty'
 
@@ -17,12 +17,17 @@ type Inspeccion = {
   user_email: string
 }
 
+type SortKey = 'fecha' | 'invoice'
+type SortDir = 'asc' | 'desc'
+
 export default function InspeccionesPage() {
   const navigate = useNavigate()
   const [rows, setRows] = useState<Inspeccion[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('fecha')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const saveInvoice = async (id: string, current: string) => {
     const next = draft.trim()
@@ -46,6 +51,27 @@ export default function InspeccionesPage() {
 
   useEffect(() => { load() }, [])
 
+  const sorted = [...rows].sort((a, b) => {
+    if (sortKey === 'fecha') {
+      const da = a.fecha_inspeccion || a.created_at
+      const db = b.fecha_inspeccion || b.created_at
+      return sortDir === 'asc' ? da.localeCompare(db) : db.localeCompare(da)
+    }
+    const ia = (a.invoice_num || '').toLowerCase()
+    const ib = (b.invoice_num || '').toLowerCase()
+    return sortDir === 'asc' ? ia.localeCompare(ib) : ib.localeCompare(ia)
+  })
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir(key === 'fecha' ? 'desc' : 'asc') }
+  }
+
+  const SortIcon = ({ col }: { col: SortKey }) => {
+    if (sortKey !== col) return null
+    return sortDir === 'asc' ? <ChevronUp size={14} style={{ marginLeft: 4, verticalAlign: 'middle' }} /> : <ChevronDown size={14} style={{ marginLeft: 4, verticalAlign: 'middle' }} />
+  }
+
   const del = async (id: string) => {
     if (!confirm('¿Eliminar este registro de inspección?')) return
     const { error } = await supabase.from('inspecciones').delete().eq('id', id)
@@ -66,6 +92,12 @@ export default function InspeccionesPage() {
         c.modelo !== 'SI' || c.sello_qr !== 'SI' || c.fecha_fab !== 'SI' || c.pais_fab !== 'SI'
     }).length
   }
+
+  const thStyle = (col: SortKey): React.CSSProperties => ({
+    cursor: 'pointer',
+    userSelect: 'none',
+    color: sortKey === col ? '#a5b4fc' : undefined,
+  })
 
   return (
     <div className="page" style={{ maxWidth: 1100 }}>
@@ -90,8 +122,8 @@ export default function InspeccionesPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>Fecha</th>
-                <th>Invoice</th>
+                <th style={thStyle('fecha')} onClick={() => toggleSort('fecha')}>Fecha<SortIcon col="fecha" /></th>
+                <th style={thStyle('invoice')} onClick={() => toggleSort('invoice')}>Invoice<SortIcon col="invoice" /></th>
                 <th>DIN</th>
                 <th>Color lote</th>
                 <th>Productos</th>
@@ -101,7 +133,7 @@ export default function InspeccionesPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(r => (
+              {sorted.map(r => (
                 <tr key={r.id}>
                   <td style={{ whiteSpace: 'nowrap' }}>{r.fecha_inspeccion || formatDate(r.created_at)}</td>
                   <td style={{ fontWeight: 600, color: '#e2e8f0' }}>
@@ -158,4 +190,3 @@ export default function InspeccionesPage() {
     </div>
   )
 }
-
