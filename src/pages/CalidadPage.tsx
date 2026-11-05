@@ -912,7 +912,7 @@ export default function CalidadPage() {
                   {scannedCode}
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-                  {scanOk ? 'Modelo confirmado en SEC — cerrando...' : secVerifying ? 'Verificando modelo en SEC...' : `Modelo no encontrado en certificado SEC`}
+                  {scanOk ? 'Modelo confirmado en SEC — cerrando...' : secVerifying ? 'Verificando modelo en SEC...' : `Modelo ${scanTargetRef.current?.modelo || '?'} no encontrado en certificado SEC`}
                 </div>
               </>
             )}
@@ -922,3 +922,4 @@ export default function CalidadPage() {
     </div>
   )
 }
+
