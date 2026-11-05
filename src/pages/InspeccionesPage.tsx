@@ -51,11 +51,20 @@ export default function InspeccionesPage() {
 
   useEffect(() => { load() }, [])
 
+  const parseDate = (r: Inspeccion) => {
+    const f = r.fecha_inspeccion
+    if (f && /^\d{2}-\d{2}-\d{4}$/.test(f)) {
+      const [d, m, y] = f.split('-')
+      return new Date(`${y}-${m}-${d}`).getTime()
+    }
+    return new Date(f || r.created_at).getTime()
+  }
+
   const sorted = [...rows].sort((a, b) => {
     if (sortKey === 'fecha') {
-      const da = a.fecha_inspeccion || a.created_at
-      const db = b.fecha_inspeccion || b.created_at
-      return sortDir === 'asc' ? da.localeCompare(db) : db.localeCompare(da)
+      const da = parseDate(a)
+      const db = parseDate(b)
+      return sortDir === 'asc' ? da - db : db - da
     }
     const ia = (a.invoice_num || '').toLowerCase()
     const ib = (b.invoice_num || '').toLowerCase()
