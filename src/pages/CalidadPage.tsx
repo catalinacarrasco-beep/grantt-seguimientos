@@ -282,7 +282,7 @@ export default function CalidadPage() {
     const ctx = canvas.getContext('2d')!
 
     navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } },
       audio: false,
     })
       .then(async stream => {
@@ -291,23 +291,25 @@ export default function CalidadPage() {
 
         const track = stream.getVideoTracks()[0]
         torchTrackRef.current = track
-        // Request continuous autofocus if supported
         try { await track.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] }) } catch {}
 
         videoRef.current.srcObject = stream
         await videoRef.current.play().catch(() => {})
         if (!active) return
 
-        // Scan every 250ms — enough for jsQR to process without dropping frames
+        // ponytail: 100ms interval + low res + center crop = fast professional scan
         scanIntervalRef.current = window.setInterval(() => {
           if (!active || !videoRef.current) return
           const v = videoRef.current
           if (v.readyState < 2 || v.videoWidth === 0) return
-          if (canvas.width !== v.videoWidth) { canvas.width = v.videoWidth; canvas.height = v.videoHeight }
-          ctx.drawImage(v, 0, 0)
-          const id = ctx.getImageData(0, 0, canvas.width, canvas.height)
-          // attemptBoth handles QR codes on both light and dark backgrounds
-          const found = jsQR(id.data, id.width, id.height, { inversionAttempts: 'attemptBoth' })
+          const vw = v.videoWidth, vh = v.videoHeight
+          // crop center 60% — QR is always inside the guide frame
+          const cw = Math.round(vw * 0.6), ch = Math.round(vh * 0.6)
+          const sx = Math.round((vw - cw) / 2), sy = Math.round((vh - ch) / 2)
+          if (canvas.width !== cw) { canvas.width = cw; canvas.height = ch }
+          ctx.drawImage(v, sx, sy, cw, ch, 0, 0, cw, ch)
+          const id = ctx.getImageData(0, 0, cw, ch)
+          const found = jsQR(id.data, id.width, id.height, { inversionAttempts: 'dontInvert' })
           if (found && scanTargetRef.current && !secCheckingRef.current) {
             const tgt = scanTargetRef.current
             setScannedCode(found.data)
@@ -349,7 +351,7 @@ export default function CalidadPage() {
                 }
               })
           }
-        }, 250)
+        }, 100)
       })
       .catch(() => {
         active = false
