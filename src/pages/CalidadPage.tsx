@@ -207,27 +207,34 @@ export default function CalidadPage() {
           productos: products.map(({ modelo, nombre, cantidad, fechaFab, envase, cuerpo }) => ({ modelo, nombre, cantidad, fechaFab, envase, cuerpo })),
           cumple, user_email: user?.email || '',
         }
+        // ponytail: check error on every operation — silent failures were losing data
+        let saved = false
         if (autoSaveIdRef.current) {
-          // ponytail: UPDATE por id; si el id es fantasma (fila borrada), matchea 0 filas → INSERT
-          const { data: upd } = await supabase.from('inspecciones').update(row).eq('id', autoSaveIdRef.current).select('id')
+          const { data: upd, error: updErr } = await supabase.from('inspecciones').update(row).eq('id', autoSaveIdRef.current).select('id')
+          if (updErr) throw new Error(updErr.message)
           if (!upd || upd.length === 0) {
-            const { data } = await supabase.from('inspecciones').insert(row).select('id').single()
-            if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id) }
-          }
+            const { data, error: insErr } = await supabase.from('inspecciones').insert(row).select('id').single()
+            if (insErr) throw new Error(insErr.message)
+            if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id); saved = true }
+          } else { saved = true }
         } else {
-          const { data } = await supabase.from('inspecciones').insert(row).select('id').single()
-          if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id) }
+          const { data, error: insErr } = await supabase.from('inspecciones').insert(row).select('id').single()
+          if (insErr) throw new Error(insErr.message)
+          if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id); saved = true }
         }
-        setAutoSaved(true)
-        setAutoSaveError(false)
-        setTimeout(() => setAutoSaved(false), 2000)
+        if (saved) {
+          setAutoSaved(true)
+          setAutoSaveError(false)
+          setTimeout(() => setAutoSaved(false), 2000)
+        } else {
+          setAutoSaveError(true)
+        }
       } catch {
-        // ponytail: show error so user knows save failed — silent catch was hiding lost data
         setAutoSaveError(true)
       }
     }, 1500)
     return () => clearTimeout(timer)
-  }, [products, dinNum, colorLote, phase])
+  }, [products, dinNum, colorLote, invoiceNum, trazabilidad, phase])
 
   // ── Supabase Realtime: receive changes + broadcasts from the other device ──
   useEffect(() => {
@@ -540,23 +547,29 @@ export default function CalidadPage() {
         productos: products.map(({ modelo, nombre, cantidad, fechaFab, envase, cuerpo }) => ({ modelo, nombre, cantidad, fechaFab, envase, cuerpo })),
         cumple, user_email: user?.email || '',
       }
-      // ponytail: UPDATE por id; si el id es fantasma (fila borrada) matchea 0 filas → INSERT.
-      // Un UPDATE de 0 filas NO devuelve error, por eso antes decía "guardado" sin guardar nada.
-      let error = null
+      // ponytail: every operation checks error + verifies record exists after save
+      let savedId: string | null = null
       if (editingId) {
-        const upd = await supabase.from('inspecciones').update(row).eq('id', editingId).select('id')
-        error = upd.error
-        if (!error && (!upd.data || upd.data.length === 0)) {
-          const ins = await supabase.from('inspecciones').insert(row).select('id').single()
-          error = ins.error
-          if (ins.data?.id) setEditingId(ins.data.id)
+        const { data: upd, error: updErr } = await supabase.from('inspecciones').update(row).eq('id', editingId).select('id')
+        if (updErr) throw new Error(updErr.message)
+        if (upd && upd.length > 0) {
+          savedId = editingId
+        } else {
+          const { data: ins, error: insErr } = await supabase.from('inspecciones').insert(row).select('id').single()
+          if (insErr) throw new Error(insErr.message)
+          savedId = ins?.id || null
         }
       } else {
-        const ins = await supabase.from('inspecciones').insert(row).select('id').single()
-        error = ins.error
-        if (ins.data?.id) setEditingId(ins.data.id)
+        const { data: ins, error: insErr } = await supabase.from('inspecciones').insert(row).select('id').single()
+        if (insErr) throw new Error(insErr.message)
+        savedId = ins?.id || null
       }
-      if (error) throw new Error(error.message)
+      if (!savedId) throw new Error('No se pudo guardar la inspección — intenta cerrar sesión y volver a entrar')
+      setEditingId(savedId)
+      autoSaveIdRef.current = savedId
+      // ponytail: verify record actually exists in DB
+      const { data: check } = await supabase.from('inspecciones').select('id').eq('id', savedId).single()
+      if (!check?.id) throw new Error('El registro se guardó pero no se puede leer — posible problema de permisos')
       setSavedOk(true)
       localStorage.removeItem('calidad_draft')
       if (sessionId) {
