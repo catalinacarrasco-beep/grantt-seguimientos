@@ -60,6 +60,7 @@ export default function CalidadPage() {
   const [saveError, setSaveError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [autoSaved, setAutoSaved] = useState(false)
+  const [autoSaveError, setAutoSaveError] = useState(false)
   const autoSaveIdRef = useRef<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -218,8 +219,12 @@ export default function CalidadPage() {
           if (data?.id) { autoSaveIdRef.current = data.id; setEditingId(data.id) }
         }
         setAutoSaved(true)
+        setAutoSaveError(false)
         setTimeout(() => setAutoSaved(false), 2000)
-      } catch {}
+      } catch {
+        // ponytail: show error so user knows save failed — silent catch was hiding lost data
+        setAutoSaveError(true)
+      }
     }, 1500)
     return () => clearTimeout(timer)
   }, [products, dinNum, colorLote, phase])
@@ -596,7 +601,7 @@ export default function CalidadPage() {
           <div className="page-sub" style={{ marginBottom: 0 }}>
             {phase === 'upload' && 'Inspección de marcado de productos'}
             {phase === 'reading' && (sessionParam ? 'Cargando sesión compartida...' : 'Leyendo invoice...')}
-            {phase === 'checklist' && <>{products.length} productos certificables · {invoiceNum}{autoSaved && <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.4)', marginLeft: 6 }}> · guardado</span>}</>}
+            {phase === 'checklist' && <>{products.length} productos certificables · {invoiceNum}{autoSaved && <span style={{ fontSize: 10, color: 'rgba(74,222,128,0.4)', marginLeft: 6 }}> · guardado</span>}{autoSaveError && <span style={{ fontSize: 10, color: '#f87171', marginLeft: 6, cursor: 'pointer' }} onClick={() => { setAutoSaveError(false); setProducts([...products]) }} title="Click para reintentar"> · ⚠ no guardado</span>}</>}
           </div>
         </div>
         {phase !== 'upload' && (
